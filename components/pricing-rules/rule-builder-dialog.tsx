@@ -144,6 +144,7 @@ function RangeBuilder({ dimension, ranges, onChange }: RangeBuilderProps) {
   const [autoFillStart, setAutoFillStart] = useState('')
   const [autoFillEnd, setAutoFillEnd] = useState('')
   const [autoFillStep, setAutoFillStep] = useState('')
+  const [autoFillIncrement, setAutoFillIncrement] = useState('')
 
   const issues = useMemo(() => validateRanges(ranges), [ranges])
 
@@ -164,9 +165,9 @@ function RangeBuilder({ dimension, ranges, onChange }: RangeBuilderProps) {
   const handleAutoFill = () => {
     const start = parseFloat(autoFillStart)
     const end = parseFloat(autoFillEnd)
-    const step = parseFloat(autoFillStep)
+    const increment = parseFloat(autoFillIncrement) || parseFloat(autoFillStep)
 
-    if (isNaN(start) || isNaN(end) || isNaN(step) || step <= 0 || start >= end) {
+    if (isNaN(start) || isNaN(end) || isNaN(increment) || increment <= 0 || start >= end) {
       return
     }
 
@@ -174,7 +175,7 @@ function RangeBuilder({ dimension, ranges, onChange }: RangeBuilderProps) {
     let current = start
 
     while (current < end) {
-      const rangeEnd = Math.min(current + step - 1, end)
+      const rangeEnd = Math.min(current + increment - 1, end)
       newRanges.push({
         id: generateId(),
         min: current,
@@ -189,120 +190,143 @@ function RangeBuilder({ dimension, ranges, onChange }: RangeBuilderProps) {
   const dim = DIMENSION_OPTIONS.find(d => d.value === dimension)
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <Label className="font-medium">
+    <div className="border rounded-lg bg-white overflow-hidden h-full flex flex-col">
+      {/* Header - Centered and prominent */}
+      <div className="bg-slate-100 border-b px-4 py-3">
+        <h3 className="text-base font-semibold text-slate-800 text-center">
           {dim?.label} Ranges
-        </Label>
-        <Button variant="outline" size="sm" onClick={addRange} className="gap-1">
-          <Plus className="h-3 w-3" />
-          Add Range
-        </Button>
+        </h3>
+        <p className="text-xs text-slate-500 text-center mt-1">
+          Define the {dim?.label?.toLowerCase()} ranges for this dimension
+        </p>
       </div>
 
-      {/* Auto-fill helper */}
-      <div className="bg-gray-50 border rounded-lg p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <Wand2 className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium text-gray-700">Auto-fill Ranges</span>
-        </div>
-        <div className="flex items-end gap-2">
-          <div className="space-y-1">
-            <Label className="text-xs text-gray-500">Start</Label>
-            <Input
-              type="number"
-              placeholder="0"
-              value={autoFillStart}
-              onChange={(e) => setAutoFillStart(e.target.value)}
-              className="h-8 w-28"
-            />
+      <div className="p-4 space-y-4 flex-1 flex flex-col min-h-0">
+        {/* Auto-fill helper - contained section */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Wand2 className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-semibold text-blue-800">Auto-fill Ranges</span>
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-gray-500">End</Label>
-            <Input
-              type="number"
-              placeholder="1000000"
-              value={autoFillEnd}
-              onChange={(e) => setAutoFillEnd(e.target.value)}
-              className="h-8 w-28"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-blue-700">Start Value</Label>
+              <Input
+                type="number"
+                placeholder="e.g., 1"
+                value={autoFillStart}
+                onChange={(e) => setAutoFillStart(e.target.value)}
+                className="h-10 w-full text-sm bg-white"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-blue-700">End Value</Label>
+              <Input
+                type="number"
+                placeholder="e.g., 1000"
+                value={autoFillEnd}
+                onChange={(e) => setAutoFillEnd(e.target.value)}
+                className="h-10 w-full text-sm bg-white"
+              />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <Label className="text-xs font-medium text-blue-700">Increment (range size)</Label>
+              <Input
+                type="number"
+                placeholder="e.g., 25 (creates ranges of 25)"
+                value={autoFillIncrement}
+                onChange={(e) => setAutoFillIncrement(e.target.value)}
+                className="h-10 w-full text-sm bg-white"
+              />
+              <p className="text-xs text-blue-600">
+                Example: Start=1, End=1000, Increment=25 creates ranges: 1-25, 26-50, 51-75, etc.
+              </p>
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-gray-500">Step</Label>
-            <Input
-              type="number"
-              placeholder="100000"
-              value={autoFillStep}
-              onChange={(e) => setAutoFillStep(e.target.value)}
-              className="h-8 w-28"
-            />
-          </div>
-          <Button size="sm" onClick={handleAutoFill} className="h-8">
-            Generate
+          <Button size="sm" onClick={handleAutoFill} className="w-full mt-3 h-9 bg-blue-600 hover:bg-blue-700">
+            Generate Ranges
           </Button>
         </div>
-      </div>
 
-      {/* Range list */}
-      <div className="space-y-2 max-h-48 overflow-y-auto">
-        {ranges.map((range, index) => {
-          const hasIssue = issues.some(i => i.indices.includes(index))
-          return (
-            <div
-              key={range.id}
-              className={cn(
-                'flex items-center gap-2 p-2 rounded-md border',
-                hasIssue ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'
-              )}
-            >
-              <span className="text-xs text-gray-500 w-6">{index + 1}.</span>
-              <Input
-                type="number"
-                value={range.min}
-                onChange={(e) => updateRange(range.id, 'min', parseFloat(e.target.value) || 0)}
-                className="h-8 w-28"
-              />
-              <span className="text-gray-400">to</span>
-              <Input
-                type="number"
-                value={range.max}
-                onChange={(e) => updateRange(range.id, 'max', parseFloat(e.target.value) || 0)}
-                className="h-8 w-28"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                onClick={() => removeRange(range.id)}
+        {/* Range list - scrollable */}
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+          {ranges.map((range, index) => {
+            const hasIssue = issues.some(i => i.indices.includes(index))
+            return (
+              <div
+                key={range.id}
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border',
+                  hasIssue ? 'border-yellow-400 bg-yellow-50' : 'border-slate-200 bg-slate-50'
+                )}
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          )
-        })}
-      </div>
+                <span className="text-sm font-medium text-slate-600 w-8 shrink-0">#{index + 1}</span>
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="flex-1">
+                    <Label className="text-xs text-slate-500 mb-1 block">Min</Label>
+                    <Input
+                      type="number"
+                      value={range.min}
+                      onChange={(e) => updateRange(range.id, 'min', parseFloat(e.target.value) || 0)}
+                      className="h-10 w-full text-sm font-mono"
+                    />
+                  </div>
+                  <span className="text-slate-400 mt-5">to</span>
+                  <div className="flex-1">
+                    <Label className="text-xs text-slate-500 mb-1 block">Max</Label>
+                    <Input
+                      type="number"
+                      value={range.max}
+                      onChange={(e) => updateRange(range.id, 'max', parseFloat(e.target.value) || 0)}
+                      className="h-10 w-full text-sm font-mono"
+                    />
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 text-red-500 hover:text-red-600 hover:bg-red-50 mt-5 shrink-0"
+                  onClick={() => removeRange(range.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )
+          })}
 
-      {/* Validation issues */}
-      {issues.length > 0 && (
-        <div className="space-y-1">
-          {issues.map((issue, i) => (
-            <div
-              key={i}
-              className={cn(
-                'flex items-center gap-2 text-xs p-2 rounded',
-                issue.type === 'gap' ? 'bg-yellow-50 text-yellow-700' : 'bg-red-50 text-red-700'
-              )}
-            >
-              {issue.type === 'gap' ? (
-                <AlertTriangle className="h-3 w-3" />
-              ) : (
-                <AlertCircle className="h-3 w-3" />
-              )}
-              {issue.message}
-            </div>
-          ))}
+          {/* Add Range button at bottom of list */}
+          <Button 
+            variant="outline" 
+            onClick={addRange} 
+            className="w-full h-10 gap-2 border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-slate-400"
+          >
+            <Plus className="h-4 w-4" />
+            Add Range
+          </Button>
         </div>
-      )}
+
+        {/* Validation issues */}
+        {issues.length > 0 && (
+          <div className="space-y-1 shrink-0">
+            {issues.map((issue, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'flex items-center gap-2 text-xs p-2 rounded',
+                  issue.type === 'gap' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'bg-red-50 text-red-700 border border-red-200'
+                )}
+              >
+                {issue.type === 'gap' ? (
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-3 w-3 shrink-0" />
+                )}
+                {issue.message}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -538,7 +562,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] p-0 gap-0" showCloseButton={false}>
+      <DialogContent className="max-w-7xl w-[90vw] max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col" showCloseButton={false}>
         <DialogHeader className="p-4 border-b">
           <DialogTitle>Rule Builder - Matrix Mode</DialogTitle>
           <DialogDescription>
@@ -546,8 +570,8 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1">
-          <div className="px-4 pt-4">
+        <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col min-h-0">
+          <div className="px-4 pt-4 shrink-0">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
               <TabsTrigger value="ranges">2. Ranges</TabsTrigger>
@@ -556,7 +580,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1 max-h-[calc(90vh-220px)]">
+          <ScrollArea className="flex-1 min-h-0" style={{ maxHeight: 'calc(90vh - 180px)' }}>
             <div className="p-4">
               {/* Step 1: Dimensions */}
               <TabsContent value="dimensions" className="mt-0 space-y-6">
@@ -656,8 +680,8 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
               </TabsContent>
 
               {/* Step 2: Ranges */}
-              <TabsContent value="ranges" className="mt-0 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+              <TabsContent value="ranges" className="mt-0">
+                <div className="grid grid-cols-2 gap-6" style={{ minHeight: '500px' }}>
                   <RangeBuilder
                     dimension={xDimension}
                     ranges={xRanges}
