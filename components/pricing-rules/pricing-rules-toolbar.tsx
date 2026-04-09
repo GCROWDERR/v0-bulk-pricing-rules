@@ -235,14 +235,14 @@ export function PricingRulesToolbar({
           )}
         </Button>
 
-        {/* Rule Builder */}
+        {/* Bulk Rule Builder */}
         <Button
           variant="outline"
           onClick={onOpenRuleBuilder}
           className="gap-2"
         >
           <Grid3X3 className="h-4 w-4" />
-          Rule Builder
+          Bulk Rule Builder
         </Button>
 
         {/* New Rule */}
