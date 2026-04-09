@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
+
 import {
   Select,
   SelectContent,
@@ -562,15 +562,15 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-[90vw] max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col" showCloseButton={false}>
-        <DialogHeader className="p-4 border-b">
+      <DialogContent className="!max-w-[95vw] !w-[95vw] h-[90vh] p-0 gap-0 flex flex-col" showCloseButton={false}>
+        <DialogHeader className="p-4 border-b shrink-0">
           <DialogTitle>Rule Builder - Matrix Mode</DialogTitle>
           <DialogDescription>
             Create multiple rules by defining ranges for two dimensions
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col min-h-0">
+        <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-4 pt-4 shrink-0">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
@@ -580,7 +580,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1 min-h-0" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
             <div className="p-4">
               {/* Step 1: Dimensions */}
               <TabsContent value="dimensions" className="mt-0 space-y-6">
@@ -793,11 +793,10 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                 </div>
               </TabsContent>
             </div>
-          </ScrollArea>
+          </div>
         </Tabs>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t bg-white">
+        <div className="flex items-center justify-between p-4 border-t bg-white shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
