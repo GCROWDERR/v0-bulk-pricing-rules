@@ -351,15 +351,128 @@ function MatrixGrid({
   cellValueType,
 }: MatrixGridProps) {
   const [fillValue, setFillValue] = useState('')
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set())
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [selectionStart, setSelectionStart] = useState<{ xIdx: number; yIdx: number } | null>(null)
 
-  const handleFillAll = () => {
+  const allCellKeys = useMemo(() => {
+    const keys: string[] = []
     xRanges.forEach(xRange => {
       yRanges.forEach(yRange => {
-        const key = `${xRange.id}-${yRange.id}`
-        onCellChange(key, fillValue)
+        keys.push(`${xRange.id}-${yRange.id}`)
       })
     })
+    return keys
+  }, [xRanges, yRanges])
+
+  const handleFillCells = () => {
+    const cellsToFill = selectedCells.size > 0 ? selectedCells : new Set(allCellKeys)
+    cellsToFill.forEach(key => {
+      onCellChange(key, fillValue)
+    })
   }
+
+  const handleSelectAll = () => {
+    setSelectedCells(new Set(allCellKeys))
+  }
+
+  const handleClearSelection = () => {
+    setSelectedCells(new Set())
+  }
+
+  const toggleCellSelection = (key: string, event: React.MouseEvent) => {
+    event.preventDefault()
+    setSelectedCells(prev => {
+      const next = new Set(prev)
+      if (event.ctrlKey || event.metaKey) {
+        // Toggle individual cell with Ctrl/Cmd click
+        if (next.has(key)) {
+          next.delete(key)
+        } else {
+          next.add(key)
+        }
+      } else if (event.shiftKey && selectionStart) {
+        // Range selection with Shift click
+        const xIdx = xRanges.findIndex(x => key.startsWith(x.id))
+        const yIdx = yRanges.findIndex(y => key.endsWith(y.id))
+        const minX = Math.min(selectionStart.xIdx, xIdx)
+        const maxX = Math.max(selectionStart.xIdx, xIdx)
+        const minY = Math.min(selectionStart.yIdx, yIdx)
+        const maxY = Math.max(selectionStart.yIdx, yIdx)
+        
+        for (let xi = minX; xi <= maxX; xi++) {
+          for (let yi = minY; yi <= maxY; yi++) {
+            const cellKey = `${xRanges[xi].id}-${yRanges[yi].id}`
+            next.add(cellKey)
+          }
+        }
+      } else {
+        // Single click - start new selection
+        next.clear()
+        next.add(key)
+      }
+      return next
+    })
+    
+    // Update selection start for shift-click range selection
+    const xIdx = xRanges.findIndex(x => key.startsWith(x.id))
+    const yIdx = yRanges.findIndex(y => key.endsWith(y.id))
+    if (!event.shiftKey) {
+      setSelectionStart({ xIdx, yIdx })
+    }
+  }
+
+  const handleMouseDown = (key: string, xIdx: number, yIdx: number, event: React.MouseEvent) => {
+    if (event.button !== 0) return // Only left click
+    event.preventDefault()
+    setIsSelecting(true)
+    setSelectionStart({ xIdx, yIdx })
+    
+    if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      setSelectedCells(new Set([key]))
+    } else if (event.ctrlKey || event.metaKey) {
+      setSelectedCells(prev => {
+        const next = new Set(prev)
+        if (next.has(key)) {
+          next.delete(key)
+        } else {
+          next.add(key)
+        }
+        return next
+      })
+    }
+  }
+
+  const handleMouseEnter = (key: string, xIdx: number, yIdx: number) => {
+    if (!isSelecting || !selectionStart) return
+    
+    const minX = Math.min(selectionStart.xIdx, xIdx)
+    const maxX = Math.max(selectionStart.xIdx, xIdx)
+    const minY = Math.min(selectionStart.yIdx, yIdx)
+    const maxY = Math.max(selectionStart.yIdx, yIdx)
+    
+    const newSelection = new Set<string>()
+    for (let xi = minX; xi <= maxX; xi++) {
+      for (let yi = minY; yi <= maxY; yi++) {
+        const cellKey = `${xRanges[xi].id}-${yRanges[yi].id}`
+        newSelection.add(cellKey)
+      }
+    }
+    setSelectedCells(newSelection)
+  }
+
+  const handleMouseUp = () => {
+    setIsSelecting(false)
+  }
+
+  // Add global mouse up listener to handle mouse up outside the table
+  useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const handleGlobalMouseUp = () => setIsSelecting(false)
+      window.addEventListener('mouseup', handleGlobalMouseUp)
+      return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
+  }, [])
 
   if (xRanges.length === 0 || yRanges.length === 0) {
     return (
@@ -371,25 +484,42 @@ function MatrixGrid({
 
   return (
     <div className="space-y-3">
-      {/* Fill all helper */}
-      <div className="flex items-center gap-2">
-        <Label className="text-sm text-gray-600">Fill all cells with:</Label>
-        <Input
-          type={cellValueType === 'disallow' ? 'text' : 'number'}
-          step={cellValueType === 'price' || cellValueType === 'margin' ? '0.001' : '0.01'}
-          value={fillValue}
-          onChange={(e) => setFillValue(e.target.value)}
-          className="h-8 w-28"
-          placeholder={cellValueType === 'disallow' ? 'Yes/No' : '0.000'}
-        />
-        <Button size="sm" variant="outline" onClick={handleFillAll} className="h-8">
-          Apply
-        </Button>
+      {/* Fill cells helper */}
+      <div className="bg-slate-50 border rounded-lg p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Label className="text-sm font-medium text-slate-700">Fill cells with:</Label>
+            <Input
+              type={cellValueType === 'disallow' ? 'text' : 'number'}
+              step={cellValueType === 'price' || cellValueType === 'margin' ? '0.001' : '0.01'}
+              value={fillValue}
+              onChange={(e) => setFillValue(e.target.value)}
+              className="h-9 w-32"
+              placeholder={cellValueType === 'disallow' ? 'Yes/No' : '0.000'}
+            />
+            <Button size="sm" onClick={handleFillCells} className="h-9">
+              {selectedCells.size > 0 ? `Fill ${selectedCells.size} Selected` : 'Fill All Cells'}
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={handleSelectAll} className="h-9">
+              Select All
+            </Button>
+            {selectedCells.size > 0 && (
+              <Button size="sm" variant="ghost" onClick={handleClearSelection} className="h-9">
+                Clear Selection ({selectedCells.size})
+              </Button>
+            )}
+          </div>
+        </div>
+        <p className="text-xs text-slate-500">
+          Click cells to select them. Hold Ctrl/Cmd to toggle individual cells. Click and drag to select a range. Shift+click to extend selection.
+        </p>
       </div>
 
       {/* Matrix table */}
-      <div className="overflow-auto border rounded-lg">
-        <table className="w-full border-collapse">
+      <div className="overflow-auto border rounded-lg" onMouseUp={handleMouseUp}>
+        <table className="w-full border-collapse select-none">
           <thead>
             <tr className="bg-gray-100">
               <th className="border p-2 text-xs font-semibold text-gray-700 min-w-[120px]">
@@ -404,22 +534,35 @@ function MatrixGrid({
             </tr>
           </thead>
           <tbody>
-            {xRanges.map((xRange) => (
+            {xRanges.map((xRange, xIdx) => (
               <tr key={xRange.id}>
                 <td className="border p-2 text-xs font-medium text-gray-700 bg-gray-50">
                   {formatRangeLabel(xRange, xDimension)}
                 </td>
-                {yRanges.map((yRange) => {
+                {yRanges.map((yRange, yIdx) => {
                   const key = `${xRange.id}-${yRange.id}`
+                  const isSelected = selectedCells.has(key)
                   return (
-                    <td key={key} className="border p-1">
+                    <td 
+                      key={key} 
+                      className={cn(
+                        'border p-1 cursor-pointer transition-colors',
+                        isSelected && 'bg-blue-100 ring-2 ring-inset ring-blue-500'
+                      )}
+                      onMouseDown={(e) => handleMouseDown(key, xIdx, yIdx, e)}
+                      onMouseEnter={() => handleMouseEnter(key, xIdx, yIdx)}
+                    >
                       <Input
                         type={cellValueType === 'disallow' ? 'text' : 'number'}
                         step={cellValueType === 'price' || cellValueType === 'margin' ? '0.001' : '0.01'}
                         value={cellValues[key] || ''}
                         onChange={(e) => onCellChange(key, e.target.value)}
-                        className="h-8 text-center text-sm font-mono"
+                        className={cn(
+                          'h-8 text-center text-sm font-mono pointer-events-auto',
+                          isSelected && 'bg-blue-50 border-blue-300'
+                        )}
                         placeholder={cellValueType === 'disallow' ? '-' : '0'}
+                        onClick={(e) => e.stopPropagation()}
                       />
                     </td>
                   )
