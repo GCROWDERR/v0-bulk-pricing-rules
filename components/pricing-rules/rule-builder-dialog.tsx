@@ -488,7 +488,7 @@ function MatrixGrid({
       <div className="bg-slate-50 border rounded-lg p-3 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Label className="text-sm font-medium text-slate-700">Fill cells with:</Label>
+            <Label className="text-sm font-medium text-slate-700">Fill selected cells with:</Label>
             <Input
               type={cellValueType === 'disallow' ? 'text' : 'number'}
               step={cellValueType === 'price' || cellValueType === 'margin' ? '0.001' : '0.01'}
