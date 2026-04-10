@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -178,6 +179,9 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
           <DialogTitle className="text-lg text-gray-900">
             {isNew ? 'Create New Rule' : `Edit Rule ${formData.RuleId > 0 ? `#${formData.RuleId}` : '(New)'}`}
           </DialogTitle>
+          <DialogDescription className="text-gray-600">
+            {isNew ? 'Configure the new pricing rule settings below' : 'Modify the pricing rule settings below'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">
