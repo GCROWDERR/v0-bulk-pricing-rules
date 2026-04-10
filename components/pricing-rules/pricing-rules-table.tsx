@@ -472,7 +472,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-200"
                                 onClick={(e) => handleRestoreRule(displayRule, e)}
                               >
                                 <Undo2 className="h-4 w-4" />
