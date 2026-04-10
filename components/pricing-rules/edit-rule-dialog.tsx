@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { ScrollArea } from '@/components/ui/scroll-area'
+
 import {
   Select,
   SelectContent,
@@ -173,14 +173,14 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0" showCloseButton={false}>
-        <DialogHeader className="p-4 border-b">
+      <DialogContent className="!max-w-[90vw] !w-[90vw] h-[90vh] p-0 gap-0 flex flex-col" showCloseButton={false}>
+        <DialogHeader className="p-4 border-b shrink-0">
           <DialogTitle className="text-lg">
             {isNew ? 'Create New Rule' : `Edit Rule ${formData.RuleId > 0 ? `#${formData.RuleId}` : '(New)'}`}
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[calc(90vh-140px)]">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
             {/* Step 1: Apply these rules */}
             <CollapsibleSection title="Apply these rules" step={1}>
@@ -663,10 +663,10 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               </div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Sticky Footer */}
-        <div className="flex items-center justify-between p-4 border-t bg-white">
+        <div className="flex items-center justify-between p-4 border-t bg-white shrink-0">
           <Button variant="outline" onClick={handleClose}>
             Return to Pricing
           </Button>
