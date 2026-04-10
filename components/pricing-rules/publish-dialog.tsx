@@ -192,7 +192,7 @@ function DraftItem({ draft }: DraftItemProps) {
   return (
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
       <div className="border rounded-lg overflow-hidden">
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-gray-50 text-left">
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-gray-200 text-left">
           <div className="flex items-center gap-3">
             {isExpanded ? (
               <ChevronDown className="h-4 w-4 text-gray-500" />

@@ -67,7 +67,7 @@ function CollapsibleSection({ title, step, defaultOpen = true, children }: Colla
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border rounded-lg">
-      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-gray-50 transition-colors">
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-gray-200 transition-colors">
         <div className="flex items-center gap-3">
           <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
             {step}

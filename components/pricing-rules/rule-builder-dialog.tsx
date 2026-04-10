@@ -889,7 +889,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                       onOpenChange={(open) => setPreviewExpanded(open ? description : null)}
                     >
                       <div className="border rounded-lg">
-                        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-gray-50">
+                        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-gray-200">
                           <div className="flex items-center gap-3">
                             {previewExpanded === description ? (
                               <ChevronDown className="h-4 w-4 text-gray-500" />
