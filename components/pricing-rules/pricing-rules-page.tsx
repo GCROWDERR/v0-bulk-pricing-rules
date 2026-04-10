@@ -50,12 +50,12 @@ function PricingRulesContent() {
       'flex flex-col bg-background',
       isFullscreen ? 'fixed inset-0 z-50' : 'h-screen'
     )}>
-      {/* Header with Bankrate branding */}
+      {/* Header with LoanTek branding */}
       <div className="px-6 py-4 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-4">
           <img 
-            src="https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/bankrate_logos/Bankrate%20Primary%20Logo%20-%20Blue.svg" 
-            alt="Bankrate" 
+            src="/loantek-logo.webp" 
+            alt="LoanTek" 
             className="h-8"
           />
           <div className="h-8 w-px bg-gray-300" />
