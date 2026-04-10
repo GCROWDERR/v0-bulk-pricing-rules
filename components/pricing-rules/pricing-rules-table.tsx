@@ -370,7 +370,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                     </TableCell>
 
                     {visibleColumns.has('RuleId') && (
-                      <TableCell className={cn('font-mono text-sm', isDeleted && 'line-through text-muted-foreground')}>
+                      <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
                         {rule.RuleId < 0 ? '—' : rule.RuleId}
                         {isDraft && (
                           <Badge variant="outline" className="ml-2 text-xs bg-green-100 text-green-700 border-green-300">
@@ -393,19 +393,19 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                     )}
 
                     {visibleColumns.has('Fee') && (
-                      <TableCell className={cn('font-mono text-sm', isDeleted && 'line-through text-muted-foreground')}>
+                      <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
                         {formatCurrency(displayRule.Fee)}
                       </TableCell>
                     )}
 
                     {visibleColumns.has('Price') && (
-                      <TableCell className={cn('font-mono text-sm', isDeleted && 'line-through text-muted-foreground')}>
+                      <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
                         {formatPrice(displayRule.Price)}
                       </TableCell>
                     )}
 
                     {visibleColumns.has('CompPercent') && (
-                      <TableCell className={cn('font-mono text-sm', isDeleted && 'line-through text-muted-foreground')}>
+                      <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
                         {formatPercent(displayRule.CompPercent)}
                       </TableCell>
                     )}
