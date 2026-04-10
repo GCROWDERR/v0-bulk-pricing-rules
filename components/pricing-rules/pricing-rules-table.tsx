@@ -240,19 +240,27 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                     )}
                     onClick={(e) => handleRowClick(displayRule, e)}
                   >
-                    {/* Expand toggle */}
-                    <TableCell className="w-10 p-0">
-                      <button
-                        onClick={(e) => handleExpandClick(rule.RuleId, e)}
-                        className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                        data-no-navigate
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4 text-gray-500" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-gray-500" />
-                        )}
-                      </button>
+                    {/* Expand toggle with Quick Edit indicator */}
+                    <TableCell className="w-28 p-0">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={(e) => handleExpandClick(rule.RuleId, e)}
+                            className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-500 hover:text-gray-700"
+                            data-no-navigate
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                            <span className="text-xs font-medium">Quick Edit</span>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>Expand to edit key fields inline</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </TableCell>
 
                     {visibleColumns.has('RuleId') && (
