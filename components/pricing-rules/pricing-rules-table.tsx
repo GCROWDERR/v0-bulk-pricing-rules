@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import {
   Table,
   TableBody,
@@ -230,9 +230,8 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
               const isEven = index % 2 === 0
 
               return (
-                <>
+                <Fragment key={rule.RuleId}>
                   <TableRow
-                    key={rule.RuleId}
                     className={cn(
                       densityClasses[density],
                       'cursor-pointer transition-colors',
@@ -413,7 +412,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </Fragment>
               )
             })}
             

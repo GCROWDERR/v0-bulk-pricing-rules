@@ -99,18 +99,37 @@ export const PRODUCT_TERMS = ['10 Year', '15 Year', '20 Year', '25 Year', '30 Ye
 export const FEE_SETS = ['Standard', 'Low Fee', 'Premium', 'Wholesale']
 export const MI_COMPANIES = ['MGIC', 'Radian', 'Essent', 'National MI', 'Arch MI', 'Genworth']
 
-// Generate sample rules
+// Generate sample rules with deterministic data (no Math.random for SSR compatibility)
+// Use global counters to ensure deterministic results across SSR and client
+let lenderSeed = 0
+let itemSeed = 0
+
 function getRandomLenders(count: number): string[] {
-  const shuffled = [...LENDERS].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, count)
+  // Deterministic selection based on incrementing seed
+  const start = lenderSeed % LENDERS.length
+  lenderSeed += 3 // Increment to get different results each call
+  const result: string[] = []
+  for (let i = 0; i < count; i++) {
+    result.push(LENDERS[(start + i) % LENDERS.length])
+  }
+  return result
 }
 
 function getRandomItems<T>(arr: T[], count: number): T[] {
-  const shuffled = [...arr].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, count)
+  const start = itemSeed % arr.length
+  itemSeed += 2 // Increment to get different results each call
+  const result: T[] = []
+  for (let i = 0; i < count; i++) {
+    result.push(arr[(start + i) % arr.length])
+  }
+  return result
 }
 
 export const generateSampleRules = (): PricingRule[] => {
+  // Reset seeds for deterministic generation
+  lenderSeed = 0
+  itemSeed = 0
+  
   const rules: PricingRule[] = [
     // Conventional Rules
     {
