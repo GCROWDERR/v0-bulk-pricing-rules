@@ -208,7 +208,7 @@ export function PricingRulesToolbar({
         {/* Column Visibility */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-9 w-9 hover:bg-gray-200 hover:text-gray-900">
+            <Button variant="outline" size="icon" className="h-9 w-9 hover:bg-gray-50 hover:text-gray-900">
               <Eye className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -230,7 +230,7 @@ export function PricingRulesToolbar({
         {/* Density */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-9 w-9 hover:bg-gray-200 hover:text-gray-900">
+            <Button variant="outline" size="icon" className="h-9 w-9 hover:bg-gray-50 hover:text-gray-900">
               <Rows3 className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -262,7 +262,7 @@ export function PricingRulesToolbar({
         <Button
           variant="outline"
           size="icon"
-          className="h-9 w-9 hover:bg-gray-200 hover:text-gray-900"
+          className="h-9 w-9 hover:bg-gray-50 hover:text-gray-900"
           onClick={() => setIsFullscreen(!isFullscreen)}
         >
           {isFullscreen ? (
