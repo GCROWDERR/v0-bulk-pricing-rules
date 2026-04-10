@@ -152,6 +152,16 @@ function getLenders(ruleId: number): string[] {
   return RULE_LENDERS[ruleId] || getLendersForRule(ruleId, 4)
 }
 
+// Deterministic item selection for arrays (used for States, etc.)
+function getRandomItems<T>(arr: T[], count: number, seed: number = 0): T[] {
+  const start = seed % arr.length
+  const result: T[] = []
+  for (let i = 0; i < Math.min(count, arr.length); i++) {
+    result.push(arr[(start + i) % arr.length])
+  }
+  return result
+}
+
 export const generateSampleRules = (): PricingRule[] => {
   const rules: PricingRule[] = [
     // Conventional Rules
