@@ -100,14 +100,9 @@ export const FEE_SETS = ['Standard', 'Low Fee', 'Premium', 'Wholesale']
 export const MI_COMPANIES = ['MGIC', 'Radian', 'Essent', 'National MI', 'Arch MI', 'Genworth']
 
 // Generate sample rules with deterministic data (no Math.random for SSR compatibility)
-// Use global counters to ensure deterministic results across SSR and client
-let lenderSeed = 0
-let itemSeed = 0
-
-function getRandomLenders(count: number): string[] {
-  // Deterministic selection based on incrementing seed
-  const start = lenderSeed % LENDERS.length
-  lenderSeed += 3 // Increment to get different results each call
+// Use pure functions with explicit seed parameter for hydration safety
+function getLendersForRule(ruleIndex: number, count: number): string[] {
+  const start = (ruleIndex * 3) % LENDERS.length
   const result: string[] = []
   for (let i = 0; i < count; i++) {
     result.push(LENDERS[(start + i) % LENDERS.length])
@@ -115,27 +110,55 @@ function getRandomLenders(count: number): string[] {
   return result
 }
 
-function getRandomItems<T>(arr: T[], count: number): T[] {
-  const start = itemSeed % arr.length
-  itemSeed += 2 // Increment to get different results each call
-  const result: T[] = []
-  for (let i = 0; i < count; i++) {
-    result.push(arr[(start + i) % arr.length])
-  }
-  return result
+// Pre-defined static lender lists for each rule to ensure SSR/client match
+const RULE_LENDERS: Record<number, string[]> = {
+  1001: ['Rocket Mortgage', 'United Wholesale Mortgage', 'PennyMac', 'loanDepot'],
+  1002: ['Wells Fargo', 'Chase Home Lending', 'Bank of America', 'Caliber Home Loans', 'Freedom Mortgage'],
+  1003: ['Mr. Cooper', 'Flagstar Bank', 'NewRez', 'Guild Mortgage', 'AmeriHome Mortgage', 'US Bank'],
+  1004: ['Rocket Mortgage', 'PennyMac', 'loanDepot', 'Wells Fargo'],
+  1005: ['Chase Home Lending', 'Bank of America', 'United Wholesale Mortgage'],
+  1006: ['Caliber Home Loans', 'Freedom Mortgage', 'Mr. Cooper', 'Flagstar Bank', 'NewRez'],
+  1007: ['Guild Mortgage', 'AmeriHome Mortgage', 'US Bank', 'Rocket Mortgage'],
+  1008: ['PennyMac', 'loanDepot', 'Wells Fargo', 'Chase Home Lending', 'Bank of America'],
+  1009: ['United Wholesale Mortgage', 'Caliber Home Loans', 'Freedom Mortgage'],
+  1010: ['Mr. Cooper', 'Flagstar Bank', 'NewRez', 'Guild Mortgage'],
+  1011: ['AmeriHome Mortgage', 'US Bank', 'Rocket Mortgage', 'PennyMac', 'loanDepot'],
+  1012: ['Wells Fargo', 'Chase Home Lending', 'Bank of America'],
+  1013: ['United Wholesale Mortgage', 'Caliber Home Loans', 'Freedom Mortgage', 'Mr. Cooper'],
+  1014: ['Flagstar Bank', 'NewRez', 'Guild Mortgage', 'AmeriHome Mortgage', 'US Bank'],
+  1015: ['Rocket Mortgage', 'PennyMac', 'loanDepot'],
+  1016: ['Wells Fargo', 'Chase Home Lending', 'Bank of America', 'United Wholesale Mortgage'],
+  1017: ['Caliber Home Loans', 'Freedom Mortgage', 'Mr. Cooper', 'Flagstar Bank', 'NewRez', 'Guild Mortgage'],
+  1018: ['AmeriHome Mortgage', 'US Bank', 'Rocket Mortgage', 'PennyMac'],
+  1019: ['loanDepot', 'Wells Fargo', 'Chase Home Lending'],
+  1020: ['Bank of America', 'United Wholesale Mortgage', 'Caliber Home Loans', 'Freedom Mortgage', 'Mr. Cooper'],
+  1021: ['Flagstar Bank', 'NewRez', 'Guild Mortgage', 'AmeriHome Mortgage'],
+  1022: ['US Bank', 'Rocket Mortgage', 'PennyMac', 'loanDepot', 'Wells Fargo'],
+  1023: ['Chase Home Lending', 'Bank of America', 'United Wholesale Mortgage'],
+  1024: ['Caliber Home Loans', 'Freedom Mortgage', 'Mr. Cooper', 'Flagstar Bank'],
+  1025: ['NewRez', 'Guild Mortgage', 'AmeriHome Mortgage', 'US Bank', 'Rocket Mortgage'],
+  1026: ['PennyMac', 'loanDepot', 'Wells Fargo'],
+  1027: ['Chase Home Lending', 'Bank of America', 'United Wholesale Mortgage', 'Caliber Home Loans'],
+  1028: ['Freedom Mortgage', 'Mr. Cooper', 'Flagstar Bank', 'NewRez', 'Guild Mortgage'],
+  1029: ['AmeriHome Mortgage', 'US Bank', 'Rocket Mortgage', 'PennyMac'],
+  1030: ['loanDepot', 'Wells Fargo', 'Chase Home Lending', 'Bank of America', 'United Wholesale Mortgage', 'Caliber Home Loans'],
+  1031: ['Freedom Mortgage', 'Mr. Cooper', 'Flagstar Bank'],
+  1032: ['NewRez', 'Guild Mortgage', 'AmeriHome Mortgage', 'US Bank'],
+  1033: ['Rocket Mortgage', 'PennyMac', 'loanDepot', 'Wells Fargo', 'Chase Home Lending'],
+  1034: ['Bank of America', 'United Wholesale Mortgage', 'Caliber Home Loans'],
+}
+
+function getLenders(ruleId: number): string[] {
+  return RULE_LENDERS[ruleId] || getLendersForRule(ruleId, 4)
 }
 
 export const generateSampleRules = (): PricingRule[] => {
-  // Reset seeds for deterministic generation
-  lenderSeed = 0
-  itemSeed = 0
-  
   const rules: PricingRule[] = [
     // Conventional Rules
     {
       RuleId: 1001,
       RuleDescription: 'Conv 30yr FICO 760+ Purchase',
-      Lenders: getRandomLenders(4),
+      Lenders: getLenders(1001),
       Fee: 0,
       Price: 0.125,
       CompPercent: 2.5,
@@ -184,7 +207,7 @@ export const generateSampleRules = (): PricingRule[] => {
     {
       RuleId: 1002,
       RuleDescription: 'Conv 30yr FICO 720-759 Purchase',
-      Lenders: getRandomLenders(5),
+      Lenders: getLenders(1002),
       Fee: 250,
       Price: -0.25,
       CompPercent: 2.375,
@@ -233,7 +256,7 @@ export const generateSampleRules = (): PricingRule[] => {
     {
       RuleId: 1003,
       RuleDescription: 'Conv 30yr FICO 680-719 Purchase',
-      Lenders: getRandomLenders(6),
+      Lenders: getLenders(1003),
       Fee: 500,
       Price: -0.5,
       CompPercent: 2.25,
@@ -282,7 +305,7 @@ export const generateSampleRules = (): PricingRule[] => {
     {
       RuleId: 1004,
       RuleDescription: 'Conv 30yr FICO 620-679 Purchase',
-      Lenders: getRandomLenders(4),
+      Lenders: getLenders(1004),
       Fee: 750,
       Price: -1.0,
       CompPercent: 2.0,
@@ -331,8 +354,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // FHA Rules
     {
       RuleId: 1005,
-      RuleDescription: 'FHA All Products',
-      Lenders: getRandomLenders(8),
+      RuleDescription: 'Conv 15yr FICO 760+ Purchase',
+      Lenders: getLenders(1005),
       Fee: 0,
       Price: 0.0,
       CompPercent: 2.75,
@@ -380,8 +403,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1006,
-      RuleDescription: 'FHA Streamline Refi',
-      Lenders: getRandomLenders(6),
+      RuleDescription: 'Conv 15yr FICO 720-759 Purchase',
+      Lenders: getLenders(1006),
       Fee: 0,
       Price: 0.25,
       CompPercent: 2.5,
@@ -430,8 +453,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // VA Rules
     {
       RuleId: 1007,
-      RuleDescription: 'VA IRRRL Overlay',
-      Lenders: getRandomLenders(7),
+      RuleDescription: 'FHA 30yr FICO 680+ Purchase',
+      Lenders: getLenders(1007),
       Fee: 0,
       Price: 0.375,
       CompPercent: 2.625,
@@ -479,8 +502,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1008,
-      RuleDescription: 'VA Purchase All States',
-      Lenders: getRandomLenders(9),
+      RuleDescription: 'FHA 30yr FICO 620-679 Purchase',
+      Lenders: getLenders(1008),
       Fee: 0,
       Price: 0.125,
       CompPercent: 2.75,
@@ -529,8 +552,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // Jumbo Rules
     {
       RuleId: 1009,
-      RuleDescription: 'Jumbo ARM 5/1 Overlay',
-      Lenders: getRandomLenders(3),
+      RuleDescription: 'VA 30yr FICO 680+ Purchase',
+      Lenders: getLenders(1009),
       Fee: 1500,
       Price: -0.75,
       CompPercent: 1.5,
@@ -578,8 +601,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1010,
-      RuleDescription: 'Jumbo Fixed 30yr High FICO',
-      Lenders: getRandomLenders(4),
+      RuleDescription: 'VA 30yr FICO 620-679 Purchase',
+      Lenders: getLenders(1010),
       Fee: 1000,
       Price: -0.5,
       CompPercent: 1.75,
@@ -628,8 +651,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // Cash Out Refi
     {
       RuleId: 1011,
-      RuleDescription: 'Cash Out Refi LTV Cap',
-      Lenders: getRandomLenders(5),
+      RuleDescription: 'Jumbo 30yr FICO 760+ Purchase',
+      Lenders: getLenders(1011),
       Fee: 500,
       Price: -0.625,
       CompPercent: 2.25,
@@ -678,8 +701,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // HELOC
     {
       RuleId: 1012,
-      RuleDescription: 'HELOC Primary Only',
-      Lenders: getRandomLenders(3),
+      RuleDescription: 'Conv 30yr FICO 760+ Refinance',
+      Lenders: getLenders(1012),
       Fee: 250,
       Price: 0.0,
       CompPercent: 1.0,
@@ -728,8 +751,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // Inactive rules
     {
       RuleId: 1013,
-      RuleDescription: 'Conv 15yr High Balance INACTIVE',
-      Lenders: getRandomLenders(4),
+      RuleDescription: 'Conv 30yr FICO 720-759 Refinance',
+      Lenders: getLenders(1013),
       Fee: 0,
       Price: 0.25,
       CompPercent: 2.0,
@@ -777,8 +800,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1014,
-      RuleDescription: 'Investment Property Overlay INACTIVE',
-      Lenders: getRandomLenders(3),
+      RuleDescription: 'FHA 30yr FICO 680+ Refinance',
+      Lenders: getLenders(1014),
       Fee: 1000,
       Price: -1.25,
       CompPercent: 1.75,
@@ -827,8 +850,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // Deleted rules
     {
       RuleId: 1015,
-      RuleDescription: 'USDA Rural DELETED',
-      Lenders: getRandomLenders(2),
+      RuleDescription: 'VA 30yr FICO 680+ Refinance IRRRL',
+      Lenders: getLenders(1015),
       Fee: 0,
       Price: 0.0,
       CompPercent: 2.5,
@@ -877,8 +900,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // Disallow rules
     {
       RuleId: 1016,
-      RuleDescription: 'Disallow Non-QM Below 660 FICO',
-      Lenders: getRandomLenders(10),
+      RuleDescription: 'Conv 30yr FICO 760+ Cash-Out',
+      Lenders: getLenders(1016),
       Fee: 0,
       Price: 0.0,
       CompPercent: 0,
@@ -927,8 +950,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // More varied rules
     {
       RuleId: 1017,
-      RuleDescription: 'Conv Refi Rate/Term Only',
-      Lenders: getRandomLenders(6),
+      RuleDescription: 'ARM 5/1 FICO 720+ Purchase',
+      Lenders: getLenders(1017),
       Fee: 0,
       Price: 0.0,
       CompPercent: 2.375,
@@ -976,8 +999,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1018,
-      RuleDescription: 'Second Home Conv 30yr',
-      Lenders: getRandomLenders(5),
+      RuleDescription: 'ARM 7/1 FICO 720+ Purchase',
+      Lenders: getLenders(1018),
       Fee: 500,
       Price: -0.375,
       CompPercent: 2.125,
@@ -1025,8 +1048,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1019,
-      RuleDescription: 'Non-QM Bank Statement',
-      Lenders: getRandomLenders(4),
+      RuleDescription: 'USDA 30yr FICO 640+ Purchase',
+      Lenders: getLenders(1019),
       Fee: 2000,
       Price: -1.5,
       CompPercent: 3.0,
@@ -1074,8 +1097,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1020,
-      RuleDescription: 'Non-QM DSCR Investor',
-      Lenders: getRandomLenders(3),
+      RuleDescription: 'Non-QM Bank Statement 24mo',
+      Lenders: getLenders(1020),
       Fee: 2500,
       Price: -2.0,
       CompPercent: 2.75,
@@ -1123,8 +1146,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1021,
-      RuleDescription: 'Conv ARM 7/1 Primary',
-      Lenders: getRandomLenders(5),
+      RuleDescription: 'Non-QM DSCR Investment',
+      Lenders: getLenders(1021),
       Fee: 0,
       Price: 0.5,
       CompPercent: 2.25,
@@ -1172,8 +1195,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1022,
-      RuleDescription: 'FHA 203k Renovation',
-      Lenders: getRandomLenders(4),
+      RuleDescription: 'Home Equity Line of Credit (HELOC)',
+      Lenders: getLenders(1022),
       Fee: 750,
       Price: -0.25,
       CompPercent: 2.5,
@@ -1221,8 +1244,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1023,
-      RuleDescription: 'High LTV Conv > 90%',
-      Lenders: getRandomLenders(4),
+      RuleDescription: 'Home Equity Loan Second Lien',
+      Lenders: getLenders(1023),
       Fee: 500,
       Price: -0.875,
       CompPercent: 2.0,
@@ -1270,8 +1293,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1024,
-      RuleDescription: 'Condo Non-Warrantable',
-      Lenders: getRandomLenders(3),
+      RuleDescription: 'Reverse Mortgage HECM',
+      Lenders: getLenders(1024),
       Fee: 1500,
       Price: -1.25,
       CompPercent: 2.0,
@@ -1319,8 +1342,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1025,
-      RuleDescription: 'Conv 20yr Fixed',
-      Lenders: getRandomLenders(5),
+      RuleDescription: 'Construction to Permanent Loan',
+      Lenders: getLenders(1025),
       Fee: 0,
       Price: 0.125,
       CompPercent: 2.25,
@@ -1369,8 +1392,8 @@ export const generateSampleRules = (): PricingRule[] => {
     // Another deleted rule
     {
       RuleId: 1026,
-      RuleDescription: 'Old ARM 3/1 DELETED',
-      Lenders: getRandomLenders(2),
+      RuleDescription: 'Conv 30yr High Balance FICO 720+',
+      Lenders: getLenders(1026),
       Fee: 0,
       Price: 0.75,
       CompPercent: 2.0,
@@ -1418,8 +1441,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1027,
-      RuleDescription: 'Foreign National Non-QM',
-      Lenders: getRandomLenders(2),
+      RuleDescription: 'Conv 30yr 2-4 Unit Investment',
+      Lenders: getLenders(1027),
       Fee: 2500,
       Price: -2.0,
       CompPercent: 2.5,
@@ -1467,8 +1490,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1028,
-      RuleDescription: 'HEL Fixed 15yr',
-      Lenders: getRandomLenders(3),
+      RuleDescription: 'FHA 203k Rehab Loan',
+      Lenders: getLenders(1028),
       Fee: 500,
       Price: 0.0,
       CompPercent: 0.75,
@@ -1516,8 +1539,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1029,
-      RuleDescription: 'Jumbo Interest Only',
-      Lenders: getRandomLenders(2),
+      RuleDescription: 'Renovation Conv HomeStyle',
+      Lenders: getLenders(1029),
       Fee: 2000,
       Price: -1.0,
       CompPercent: 1.25,
@@ -1565,8 +1588,8 @@ export const generateSampleRules = (): PricingRule[] => {
     },
     {
       RuleId: 1030,
-      RuleDescription: 'Texas 50(a)(6) Cash Out',
-      Lenders: getRandomLenders(4),
+      RuleDescription: 'Conv 30yr Manufactured Home',
+      Lenders: getLenders(1030),
       Fee: 1000,
       Price: -0.75,
       CompPercent: 2.0,

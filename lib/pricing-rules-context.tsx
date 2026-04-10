@@ -4,14 +4,20 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo } fr
 import type { PricingRule, DraftEntry, DraftType } from './pricing-rules-data'
 import { generateSampleRules, getChangedFields, createBlankRule } from './pricing-rules-data'
 
+export type SortField = 'RuleId' | 'RuleDescription' | 'Lenders' | 'Fee' | 'Price' | 'CompPercent' | 'Active' | 'Disallow' | 'RuleIsDeleted'
+export type SortDirection = 'asc' | 'desc'
+
 interface PricingRulesState {
   rules: PricingRule[]
   drafts: DraftEntry[]
   showDeleted: boolean
   searchTerm: string
   expandedRows: Set<number>
+  selectedRows: Set<number>
   editingRule: PricingRule | null
   nextTempId: number
+  sortField: SortField | null
+  sortDirection: SortDirection
 }
 
 type Action =
@@ -23,9 +29,15 @@ type Action =
   | { type: 'SET_SHOW_DELETED'; payload: boolean }
   | { type: 'SET_SEARCH_TERM'; payload: string }
   | { type: 'TOGGLE_EXPANDED_ROW'; payload: number }
+  | { type: 'EXPAND_ROWS'; payload: number[] }
   | { type: 'COLLAPSE_ALL_ROWS' }
   | { type: 'SET_EDITING_RULE'; payload: PricingRule | null }
   | { type: 'UPDATE_DRAFT'; payload: { ruleId: number; updates: Partial<PricingRule> } }
+  | { type: 'TOGGLE_SELECTED_ROW'; payload: number }
+  | { type: 'SELECT_ROWS'; payload: number[] }
+  | { type: 'CLEAR_SELECTION' }
+  | { type: 'SET_SORT'; payload: { field: SortField; direction: SortDirection } }
+  | { type: 'CLEAR_SORT' }
 
 function reducer(state: PricingRulesState, action: Action): PricingRulesState {
   switch (action.type) {
@@ -92,8 +104,38 @@ function reducer(state: PricingRulesState, action: Action): PricingRulesState {
       return { ...state, expandedRows: newExpanded }
     }
 
+    case 'EXPAND_ROWS': {
+      const newExpanded = new Set(state.expandedRows)
+      action.payload.forEach(id => newExpanded.add(id))
+      return { ...state, expandedRows: newExpanded }
+    }
+
     case 'COLLAPSE_ALL_ROWS':
       return { ...state, expandedRows: new Set() }
+
+    case 'TOGGLE_SELECTED_ROW': {
+      const newSelected = new Set(state.selectedRows)
+      if (newSelected.has(action.payload)) {
+        newSelected.delete(action.payload)
+      } else {
+        newSelected.add(action.payload)
+      }
+      return { ...state, selectedRows: newSelected }
+    }
+
+    case 'SELECT_ROWS': {
+      const newSelected = new Set(action.payload)
+      return { ...state, selectedRows: newSelected }
+    }
+
+    case 'CLEAR_SELECTION':
+      return { ...state, selectedRows: new Set() }
+
+    case 'SET_SORT':
+      return { ...state, sortField: action.payload.field, sortDirection: action.payload.direction }
+
+    case 'CLEAR_SORT':
+      return { ...state, sortField: null, sortDirection: 'asc' }
 
     case 'SET_EDITING_RULE':
       return { ...state, editingRule: action.payload }
@@ -128,8 +170,11 @@ const initialState: PricingRulesState = {
   showDeleted: false,
   searchTerm: '',
   expandedRows: new Set(),
+  selectedRows: new Set(),
   editingRule: null,
   nextTempId: -1,
+  sortField: null,
+  sortDirection: 'asc',
 }
 
 interface PricingRulesContextType {
@@ -147,8 +192,15 @@ interface PricingRulesContextType {
   setShowDeleted: (show: boolean) => void
   setSearchTerm: (term: string) => void
   toggleExpandedRow: (ruleId: number) => void
+  expandRows: (ruleIds: number[]) => void
   collapseAllRows: () => void
   setEditingRule: (rule: PricingRule | null) => void
+  toggleSelectedRow: (ruleId: number) => void
+  selectRows: (ruleIds: number[]) => void
+  clearSelection: () => void
+  setSort: (field: SortField, direction: SortDirection) => void
+  toggleSort: (field: SortField) => void
+  clearSort: () => void
   // Helpers
   getRuleWithDraft: (ruleId: number) => PricingRule
   getDraftForRule: (ruleId: number) => DraftEntry | undefined
@@ -248,8 +300,44 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
     dispatch({ type: 'TOGGLE_EXPANDED_ROW', payload: ruleId })
   }, [])
 
+  const expandRows = useCallback((ruleIds: number[]) => {
+    dispatch({ type: 'EXPAND_ROWS', payload: ruleIds })
+  }, [])
+
   const collapseAllRows = useCallback(() => {
     dispatch({ type: 'COLLAPSE_ALL_ROWS' })
+  }, [])
+
+  const toggleSelectedRow = useCallback((ruleId: number) => {
+    dispatch({ type: 'TOGGLE_SELECTED_ROW', payload: ruleId })
+  }, [])
+
+  const selectRows = useCallback((ruleIds: number[]) => {
+    dispatch({ type: 'SELECT_ROWS', payload: ruleIds })
+  }, [])
+
+  const clearSelection = useCallback(() => {
+    dispatch({ type: 'CLEAR_SELECTION' })
+  }, [])
+
+  const setSort = useCallback((field: SortField, direction: SortDirection) => {
+    dispatch({ type: 'SET_SORT', payload: { field, direction } })
+  }, [])
+
+  const toggleSort = useCallback((field: SortField) => {
+    if (state.sortField === field) {
+      if (state.sortDirection === 'asc') {
+        dispatch({ type: 'SET_SORT', payload: { field, direction: 'desc' } })
+      } else {
+        dispatch({ type: 'CLEAR_SORT' })
+      }
+    } else {
+      dispatch({ type: 'SET_SORT', payload: { field, direction: 'asc' } })
+    }
+  }, [state.sortField, state.sortDirection])
+
+  const clearSort = useCallback(() => {
+    dispatch({ type: 'CLEAR_SORT' })
   }, [])
 
   const setEditingRule = useCallback((rule: PricingRule | null) => {
@@ -302,19 +390,73 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
       displayRules = displayRules.filter(rule => !rule.RuleIsDeleted)
     }
 
-    // Sort: drafts first, then by description
+    // Sort by selected field or default (drafts first, then by description)
     displayRules.sort((a, b) => {
       const aDraft = state.drafts.some(d => d.ruleId === a.RuleId)
       const bDraft = state.drafts.some(d => d.ruleId === b.RuleId)
       
+      // Always show drafts first
       if (aDraft && !bDraft) return -1
       if (!aDraft && bDraft) return 1
       
+      // Apply user-selected sort
+      if (state.sortField) {
+        const field = state.sortField
+        const direction = state.sortDirection === 'asc' ? 1 : -1
+        
+        let aVal: string | number | boolean = ''
+        let bVal: string | number | boolean = ''
+        
+        switch (field) {
+          case 'RuleId':
+            aVal = a.RuleId
+            bVal = b.RuleId
+            break
+          case 'RuleDescription':
+            aVal = a.RuleDescription.toLowerCase()
+            bVal = b.RuleDescription.toLowerCase()
+            break
+          case 'Lenders':
+            aVal = a.Lenders.length
+            bVal = b.Lenders.length
+            break
+          case 'Fee':
+            aVal = a.Fee
+            bVal = b.Fee
+            break
+          case 'Price':
+            aVal = a.Price
+            bVal = b.Price
+            break
+          case 'CompPercent':
+            aVal = a.CompPercent
+            bVal = b.CompPercent
+            break
+          case 'Active':
+            aVal = a.Active ? 1 : 0
+            bVal = b.Active ? 1 : 0
+            break
+          case 'Disallow':
+            aVal = a.Disallow ? 1 : 0
+            bVal = b.Disallow ? 1 : 0
+            break
+          case 'RuleIsDeleted':
+            aVal = a.RuleIsDeleted ? 1 : 0
+            bVal = b.RuleIsDeleted ? 1 : 0
+            break
+        }
+        
+        if (aVal < bVal) return -1 * direction
+        if (aVal > bVal) return 1 * direction
+        return 0
+      }
+      
+      // Default: sort by description
       return a.RuleDescription.localeCompare(b.RuleDescription)
     })
 
     return displayRules
-  }, [state.rules, state.drafts, state.searchTerm, state.showDeleted])
+  }, [state.rules, state.drafts, state.searchTerm, state.showDeleted, state.sortField, state.sortDirection])
 
   const getDraftCounts = useCallback(() => {
     return {
@@ -338,8 +480,15 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
     setShowDeleted,
     setSearchTerm,
     toggleExpandedRow,
+    expandRows,
     collapseAllRows,
     setEditingRule,
+    toggleSelectedRow,
+    selectRows,
+    clearSelection,
+    setSort,
+    toggleSort,
+    clearSort,
     getRuleWithDraft,
     getDraftForRule,
     hasDraft,
@@ -359,8 +508,15 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
     setShowDeleted,
     setSearchTerm,
     toggleExpandedRow,
+    expandRows,
     collapseAllRows,
     setEditingRule,
+    toggleSelectedRow,
+    selectRows,
+    clearSelection,
+    setSort,
+    toggleSort,
+    clearSort,
     getRuleWithDraft,
     getDraftForRule,
     hasDraft,

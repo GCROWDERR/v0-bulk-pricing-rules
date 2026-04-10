@@ -24,6 +24,8 @@ import {
   Plus,
   X,
   Grid3X3,
+  Pencil,
+  XCircle,
 } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
 
@@ -68,6 +70,9 @@ export function PricingRulesToolbar({
     setSearchTerm,
     discardAllDrafts,
     getDraftCounts,
+    expandRows,
+    collapseAllRows,
+    clearSelection,
   } = usePricingRules()
 
   const [showSearch, setShowSearch] = useState(false)
@@ -127,6 +132,38 @@ export function PricingRulesToolbar({
 
       {/* Right side - Actions */}
       <div className="flex items-center gap-3">
+        {/* Selection actions - only visible when rows are selected */}
+        {state.selectedRows.size > 0 && (
+          <>
+            <Button
+              onClick={() => {
+                expandRows(Array.from(state.selectedRows))
+              }}
+              variant="outline"
+              className="gap-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+            >
+              <Pencil className="h-4 w-4" />
+              Quick Edit Selected
+              <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-700">
+                {state.selectedRows.size}
+              </Badge>
+            </Button>
+            
+            <Button
+              onClick={() => {
+                collapseAllRows()
+                clearSelection()
+              }}
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-gray-500 hover:text-gray-700"
+            >
+              <XCircle className="h-4 w-4" />
+              Clear Selection
+            </Button>
+          </>
+        )}
+
         {/* Publish Changes - only visible when drafts exist */}
         {totalDrafts > 0 && (
           <>

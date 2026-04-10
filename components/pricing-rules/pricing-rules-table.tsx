@@ -26,16 +26,54 @@ import {
   ChevronLeft,
   ChevronsLeft,
   ChevronsRight,
+  ChevronUp,
   Pencil,
   Copy,
   Trash2,
   Undo2,
+  ArrowUpDown,
 } from 'lucide-react'
-import { usePricingRules } from '@/lib/pricing-rules-context'
+import { Checkbox } from '@/components/ui/checkbox'
+import { usePricingRules, type SortField } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import { formatCurrency, formatPrice, formatPercent } from '@/lib/pricing-rules-data'
 import { InlineQuickEdit } from './inline-quick-edit'
 import { cn } from '@/lib/utils'
+
+interface SortableHeaderProps {
+  field: SortField
+  label: string
+  sortField: SortField | null
+  sortDirection: 'asc' | 'desc'
+  onSort: (field: SortField) => void
+  className?: string
+}
+
+function SortableHeader({ field, label, sortField, sortDirection, onSort, className }: SortableHeaderProps) {
+  const isActive = sortField === field
+  
+  return (
+    <button
+      onClick={() => onSort(field)}
+      className={cn(
+        'flex items-center gap-1 hover:text-gray-900 transition-colors w-full text-left',
+        isActive && 'text-blue-700 font-bold',
+        className
+      )}
+    >
+      <span>{label}</span>
+      {isActive ? (
+        sortDirection === 'asc' ? (
+          <ChevronUp className="h-4 w-4" />
+        ) : (
+          <ChevronDown className="h-4 w-4" />
+        )
+      ) : (
+        <ArrowUpDown className="h-3 w-3 opacity-50" />
+      )}
+    </button>
+  )
+}
 
 interface PricingRulesTableProps {
   density: 'comfortable' | 'compact' | 'spacious'
@@ -58,6 +96,10 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
     setEditingRule,
     stageCreate,
     getRuleWithDraft,
+    toggleSelectedRow,
+    selectRows,
+    clearSelection,
+    toggleSort,
   } = usePricingRules()
 
   const [currentPage, setCurrentPage] = useState(1)
@@ -123,6 +165,22 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
     toggleExpandedRow(ruleId)
   }
 
+  const handleSelectRow = (ruleId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleSelectedRow(ruleId)
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      selectRows(paginatedRules.map(r => r.RuleId))
+    } else {
+      clearSelection()
+    }
+  }
+
+  const isAllSelected = paginatedRules.length > 0 && paginatedRules.every(r => state.selectedRows.has(r.RuleId))
+  const isSomeSelected = paginatedRules.some(r => state.selectedRows.has(r.RuleId))
+
   const getRowBackground = (rule: PricingRule) => {
     const draft = getDraftForRule(rule.RuleId)
     
@@ -166,52 +224,113 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
         <Table>
           <TableHeader className="sticky top-0 z-10">
             <TableRow className="bg-gray-200 hover:bg-gray-200">
-              {/* Expand column */}
-              <TableHead className="w-10 bg-gray-200" />
+              {/* Select all checkbox */}
+              <TableHead className="w-12 bg-gray-200">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Select all"
+                  className={isSomeSelected && !isAllSelected ? 'opacity-50' : ''}
+                />
+              </TableHead>
               
               {visibleColumns.has('RuleId') && (
                 <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
-                  Rule ID
+                  <SortableHeader
+                    field="RuleId"
+                    label="Rule ID"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {visibleColumns.has('RuleDescription') && (
                 <TableHead className="w-[260px] bg-gray-200 text-gray-700 font-semibold">
-                  Rule Description
+                  <SortableHeader
+                    field="RuleDescription"
+                    label="Rule Description"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {visibleColumns.has('Lenders') && (
                 <TableHead className="w-[240px] bg-gray-200 text-gray-700 font-semibold">
-                  Included Lenders
+                  <SortableHeader
+                    field="Lenders"
+                    label="Included Lenders"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {visibleColumns.has('Fee') && (
                 <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
-                  Fee
+                  <SortableHeader
+                    field="Fee"
+                    label="Fee"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {visibleColumns.has('Price') && (
                 <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
-                  Price
+                  <SortableHeader
+                    field="Price"
+                    label="Price"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {visibleColumns.has('CompPercent') && (
                 <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
-                  Margin %
+                  <SortableHeader
+                    field="CompPercent"
+                    label="Margin %"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {visibleColumns.has('Active') && (
                 <TableHead className="w-[120px] bg-gray-200 text-gray-700 font-semibold">
-                  Active
+                  <SortableHeader
+                    field="Active"
+                    label="Active"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {visibleColumns.has('Disallow') && (
                 <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
-                  Disallow
+                  <SortableHeader
+                    field="Disallow"
+                    label="Disallow"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {state.showDeleted && visibleColumns.has('RuleIsDeleted') && (
                 <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
-                  Deleted
+                  <SortableHeader
+                    field="RuleIsDeleted"
+                    label="Deleted"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               <TableHead className="w-[175px] bg-gray-200 text-gray-700 font-semibold">
@@ -240,27 +359,14 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                     )}
                     onClick={(e) => handleRowClick(displayRule, e)}
                   >
-                    {/* Expand toggle with Quick Edit indicator */}
-                    <TableCell className="w-28 p-0">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={(e) => handleExpandClick(rule.RuleId, e)}
-                            className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-500 hover:text-gray-700"
-                            data-no-navigate
-                          >
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                            <span className="text-xs font-medium">Quick Edit</span>
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Expand to edit key fields inline</p>
-                        </TooltipContent>
-                      </Tooltip>
+                    {/* Row selection checkbox */}
+                    <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={state.selectedRows.has(rule.RuleId)}
+                        onCheckedChange={() => toggleSelectedRow(rule.RuleId)}
+                        aria-label={`Select rule ${rule.RuleId}`}
+                        data-no-navigate
+                      />
                     </TableCell>
 
                     {visibleColumns.has('RuleId') && (
