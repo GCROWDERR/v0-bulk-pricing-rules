@@ -706,9 +706,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!max-w-[95vw] !w-[95vw] h-[90vh] p-0 gap-0 flex flex-col" showCloseButton={false}>
-        <DialogHeader className="p-4 border-b shrink-0">
-          <DialogTitle>Rule Builder - Matrix Mode</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="p-4 border-b border-gray-200 shrink-0 bg-blue-50">
+          <DialogTitle className="text-gray-900">Bulk Rule Builder - Matrix Mode</DialogTitle>
+          <DialogDescription className="text-gray-600">
             Create multiple rules by defining ranges for two dimensions
           </DialogDescription>
         </DialogHeader>
@@ -939,8 +939,8 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
           </div>
         </Tabs>
 
-        <div className="flex items-center justify-between p-4 border-t bg-white shrink-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50 shrink-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-300">
             Cancel
           </Button>
           <div className="flex items-center gap-2">
@@ -961,7 +961,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
             {currentStep === 'review' ? (
               <Button
                 onClick={handleStageAll}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-teal-500 hover:bg-teal-600 text-white font-medium"
                 disabled={previewRules.length === 0}
               >
                 Stage All ({previewRules.length} rules)

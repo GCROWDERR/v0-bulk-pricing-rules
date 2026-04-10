@@ -3,80 +3,302 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Bankrate Brand Colors */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: rgb(229, 231, 235);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Blues */
+  --blue-900: #00143D;
+  --blue-800: #013497;
+  --blue-700: #0049C0;
+  --blue-600: #0157FF;
+  --blue-500: #548DFF;
+  --blue-400: #80ABFF;
+  --blue-300: #AAC7FE;
+  --blue-200: #D5E3FD;
+  --blue-100: #EAF1FF;
+  --blue-50: #F6FAFF;
+
+  /* Lavenders */
+  --lavender-900: #270A23;
+  --lavender-800: #671B5C;
+  --lavender-700: #8A2A7C;
+  --lavender-600: #9B4F8F;
+  --lavender-500: #B480AF;
+  --lavender-400: #C79FC5;
+  --lavender-300: #DEBCDB;
+  --lavender-200: #F0DCEF;
+  --lavender-100: #F6EEF5;
+  --lavender-50: #FBF9FB;
+
+  /* Teals */
+  --teal-900: #001917;
+  --teal-800: #07444A;
+  --teal-700: #095C5D;
+  --teal-600: #007871;
+  --teal-500: #00A391;
+  --teal-400: #64BAAB;
+  --teal-300: #9BD1C7;
+  --teal-200: #CDE8E3;
+  --teal-100: #E5F4F2;
+  --teal-50: #F3FBFA;
+
+  /* Yellows */
+  --yellow-900: #1D1407;
+  --yellow-800: #4F3715;
+  --yellow-700: #6E4C1C;
+  --yellow-600: #8E6223;
+  --yellow-500: #B7892C;
+  --yellow-400: #D3A434;
+  --yellow-300: #EFC138;
+  --yellow-200: #FFDD83;
+  --yellow-100: #FFF0CA;
+  --yellow-50: #FFF9E7;
+
+  /* Corals */
+  --coral-900: #2C0A0B;
+  --coral-800: #721B1D;
+  --coral-700: #9D2528;
+  --coral-600: #BA413E;
+  --coral-500: #E5665E;
+  --coral-400: #EC9489;
+  --coral-300: #F1B6AC;
+  --coral-200: #F9DCDA;
+  --coral-100: #FBEEED;
+  --coral-50: #FFF7F6;
+
+  /* Grays */
+  --gray-900: #151515;
+  --gray-800: #3B3B44;
+  --gray-700: #515260;
+  --gray-600: #676A79;
+  --gray-500: #898F9E;
+  --gray-400: #A8ADBB;
+  --gray-300: #C1C7D3;
+  --gray-200: #E2E5ED;
+  --gray-100: #F2F3F7;
+  --gray-50: #F9F9FC;
+
+  /* Semantic tokens mapped to Bankrate colors */
+  --background: #FFFFFF;
+  --foreground: var(--gray-900);
+  --card: #FFFFFF;
+  --card-foreground: var(--gray-900);
+  --popover: #FFFFFF;
+  --popover-foreground: var(--gray-900);
+  --primary: var(--blue-600);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--lavender-200);
+  --secondary-foreground: var(--gray-900);
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-700);
+  --accent: var(--teal-500);
+  --accent-foreground: #FFFFFF;
+  --destructive: var(--coral-500);
+  --destructive-foreground: #FFFFFF;
+  --success: var(--teal-500);
+  --success-foreground: #FFFFFF;
+  --warning: var(--yellow-200);
+  --warning-foreground: var(--gray-900);
+  --border: var(--gray-300);
+  --input: var(--gray-200);
+  --ring: var(--blue-500);
+  --chart-1: var(--blue-600);
+  --chart-2: var(--teal-500);
+  --chart-3: var(--lavender-600);
+  --chart-4: var(--yellow-400);
+  --chart-5: var(--coral-500);
+  --radius: 0.5rem;
+  --sidebar: var(--blue-900);
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: var(--blue-600);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: var(--blue-800);
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: var(--blue-800);
+  --sidebar-ring: var(--blue-500);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: var(--gray-900);
+  --foreground: var(--gray-50);
+  --card: var(--gray-800);
+  --card-foreground: var(--gray-50);
+  --popover: var(--gray-800);
+  --popover-foreground: var(--gray-50);
+  --primary: var(--blue-500);
+  --primary-foreground: var(--blue-900);
+  --secondary: var(--lavender-800);
+  --secondary-foreground: var(--lavender-100);
+  --muted: var(--gray-800);
+  --muted-foreground: var(--gray-400);
+  --accent: var(--teal-400);
+  --accent-foreground: var(--teal-900);
+  --destructive: var(--coral-600);
+  --destructive-foreground: #FFFFFF;
+  --border: var(--gray-700);
+  --input: var(--gray-700);
+  --ring: var(--blue-400);
+  --sidebar: var(--gray-900);
+  --sidebar-foreground: var(--gray-50);
+  --sidebar-primary: var(--blue-500);
+  --sidebar-primary-foreground: var(--blue-900);
+  --sidebar-accent: var(--gray-800);
+  --sidebar-accent-foreground: var(--gray-50);
+  --sidebar-border: var(--gray-700);
+  --sidebar-ring: var(--blue-400);
+}
+
+/* Bankrate Brand Gradients */
+.gradient-yellow-1 { background: linear-gradient(135deg, #FFF9E7, #FFDD83); }
+.gradient-yellow-2 { background: linear-gradient(135deg, #FFF0CA, #FFDD83); }
+.gradient-coral-1 { background: linear-gradient(135deg, #FBEEED, #F9DCDA); }
+.gradient-coral-2 { background: linear-gradient(135deg, #FBEEED, #F1B6AC); }
+.gradient-coral-3 { background: linear-gradient(135deg, #F9DCDA, #F1B6AC); }
+.gradient-lavender-1 { background: linear-gradient(135deg, #F6EEF5, #F0DCEF); }
+.gradient-lavender-2 { background: linear-gradient(135deg, #F6EEF5, #C79FC5); }
+.gradient-lavender-3 { background: linear-gradient(135deg, #F0DCEF, #C79FC5); }
+.gradient-blue-1 { background: linear-gradient(135deg, #EAF1FF, #D5E3FD); }
+.gradient-blue-2 { background: linear-gradient(135deg, #0157FF, #013497); }
+.gradient-blue-3 { background: linear-gradient(135deg, #0157FF, #00143D); }
+.gradient-teal-1 { background: linear-gradient(135deg, #CDE8E3, #9BD1C7); }
+.gradient-teal-2 { background: linear-gradient(135deg, #9BD1C7, #64BAAB); }
+.gradient-teal-3 { background: linear-gradient(135deg, #64BAAB, #095C5D); }
+
+/* Circular Std Font */
+@font-face {
+  font-family: 'CircularStd';
+  src: url('https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/fonts/circular-book.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CircularStd';
+  src: url('https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/fonts/circular-book-italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CircularStd';
+  src: url('https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/fonts/circular-medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CircularStd';
+  src: url('https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/fonts/circular-medium-italic.otf') format('opentype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CircularStd';
+  src: url('https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/fonts/circular-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CircularStd';
+  src: url('https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/fonts/circular-bold-italic.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CircularStd';
+  src: url('https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/fonts/circular-black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CircularStd';
+  src: url('https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/fonts/circular-black-italic.otf') format('opentype');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
 }
 
 @theme inline {
-  --font-sans: 'Calibre-Regular', Helvetica, Arial, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-sans: 'CircularStd', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  
+  /* Bankrate color palette */
+  --color-blue-900: var(--blue-900);
+  --color-blue-800: var(--blue-800);
+  --color-blue-700: var(--blue-700);
+  --color-blue-600: var(--blue-600);
+  --color-blue-500: var(--blue-500);
+  --color-blue-400: var(--blue-400);
+  --color-blue-300: var(--blue-300);
+  --color-blue-200: var(--blue-200);
+  --color-blue-100: var(--blue-100);
+  --color-blue-50: var(--blue-50);
+  
+  --color-teal-900: var(--teal-900);
+  --color-teal-800: var(--teal-800);
+  --color-teal-700: var(--teal-700);
+  --color-teal-600: var(--teal-600);
+  --color-teal-500: var(--teal-500);
+  --color-teal-400: var(--teal-400);
+  --color-teal-300: var(--teal-300);
+  --color-teal-200: var(--teal-200);
+  --color-teal-100: var(--teal-100);
+  --color-teal-50: var(--teal-50);
+  
+  --color-coral-900: var(--coral-900);
+  --color-coral-800: var(--coral-800);
+  --color-coral-700: var(--coral-700);
+  --color-coral-600: var(--coral-600);
+  --color-coral-500: var(--coral-500);
+  --color-coral-400: var(--coral-400);
+  --color-coral-300: var(--coral-300);
+  --color-coral-200: var(--coral-200);
+  --color-coral-100: var(--coral-100);
+  --color-coral-50: var(--coral-50);
+  
+  --color-yellow-900: var(--yellow-900);
+  --color-yellow-800: var(--yellow-800);
+  --color-yellow-700: var(--yellow-700);
+  --color-yellow-600: var(--yellow-600);
+  --color-yellow-500: var(--yellow-500);
+  --color-yellow-400: var(--yellow-400);
+  --color-yellow-300: var(--yellow-300);
+  --color-yellow-200: var(--yellow-200);
+  --color-yellow-100: var(--yellow-100);
+  --color-yellow-50: var(--yellow-50);
+  
+  --color-lavender-900: var(--lavender-900);
+  --color-lavender-800: var(--lavender-800);
+  --color-lavender-700: var(--lavender-700);
+  --color-lavender-600: var(--lavender-600);
+  --color-lavender-500: var(--lavender-500);
+  --color-lavender-400: var(--lavender-400);
+  --color-lavender-300: var(--lavender-300);
+  --color-lavender-200: var(--lavender-200);
+  --color-lavender-100: var(--lavender-100);
+  --color-lavender-50: var(--lavender-50);
+  
+  --color-gray-900: var(--gray-900);
+  --color-gray-800: var(--gray-800);
+  --color-gray-700: var(--gray-700);
+  --color-gray-600: var(--gray-600);
+  --color-gray-500: var(--gray-500);
+  --color-gray-400: var(--gray-400);
+  --color-gray-300: var(--gray-300);
+  --color-gray-200: var(--gray-200);
+  --color-gray-100: var(--gray-100);
+  --color-gray-50: var(--gray-50);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

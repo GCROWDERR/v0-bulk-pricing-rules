@@ -174,8 +174,8 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!max-w-[90vw] !w-[90vw] h-[90vh] p-0 gap-0 flex flex-col" showCloseButton={false}>
-        <DialogHeader className="p-4 border-b shrink-0">
-          <DialogTitle className="text-lg">
+        <DialogHeader className="p-4 border-b border-gray-200 shrink-0 bg-blue-50">
+          <DialogTitle className="text-lg text-gray-900">
             {isNew ? 'Create New Rule' : `Edit Rule ${formData.RuleId > 0 ? `#${formData.RuleId}` : '(New)'}`}
           </DialogTitle>
         </DialogHeader>
@@ -666,11 +666,11 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
         </div>
 
         {/* Sticky Footer */}
-        <div className="flex items-center justify-between p-4 border-t bg-white shrink-0">
-          <Button variant="outline" onClick={handleClose}>
+        <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50 shrink-0">
+          <Button variant="outline" onClick={handleClose} className="border-gray-300">
             Return to Pricing
           </Button>
-          <Button onClick={handleStageChange} className="bg-green-600 hover:bg-green-700 text-white">
+          <Button onClick={handleStageChange} className="bg-teal-500 hover:bg-teal-600 text-white font-medium">
             Stage Change
           </Button>
         </div>

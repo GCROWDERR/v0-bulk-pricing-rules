@@ -151,15 +151,15 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
   }
 
   return (
-    <div className="bg-gray-50 border-l-4 border-blue-500 p-4 ml-4 mr-4 mb-2 rounded-r-lg">
+    <div className="bg-blue-50 border-l-4 border-blue-600 p-4 ml-4 mr-4 mb-2 rounded-r-lg">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-semibold text-gray-700">Quick Edit</h4>
+        <h4 className="text-sm font-semibold text-gray-900">Quick Edit</h4>
         {modifiedFields.size > 0 && (
           <Button
             variant="ghost"
             size="sm"
             onClick={handleReset}
-            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 gap-1"
+            className="text-coral-500 hover:text-coral-600 hover:bg-coral-50 gap-1"
           >
             <RotateCcw className="h-3 w-3" />
             Reset Changes
@@ -175,7 +175,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               Price
             </Label>
             {modifiedFields.has('price') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-50 text-green-700 border-green-300">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
                 Staged
               </Badge>
             )}
@@ -189,7 +189,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             onBlur={() => handleBlur('price')}
             className={cn(
               'h-8 text-sm font-mono',
-              modifiedFields.has('price') && 'border-green-400 bg-green-50/50'
+              modifiedFields.has('price') && 'border-teal-400 bg-teal-50/50'
             )}
           />
         </div>
@@ -201,7 +201,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               Fee ($)
             </Label>
             {modifiedFields.has('fee') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-50 text-green-700 border-green-300">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
                 Staged
               </Badge>
             )}
@@ -215,7 +215,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             onBlur={() => handleBlur('fee')}
             className={cn(
               'h-8 text-sm font-mono',
-              modifiedFields.has('fee') && 'border-green-400 bg-green-50/50'
+              modifiedFields.has('fee') && 'border-teal-400 bg-teal-50/50'
             )}
           />
         </div>
@@ -227,7 +227,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               Margin %
             </Label>
             {modifiedFields.has('compPercent') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-50 text-green-700 border-green-300">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
                 Staged
               </Badge>
             )}
@@ -241,7 +241,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             onBlur={() => handleBlur('compPercent')}
             className={cn(
               'h-8 text-sm font-mono',
-              modifiedFields.has('compPercent') && 'border-green-400 bg-green-50/50'
+              modifiedFields.has('compPercent') && 'border-teal-400 bg-teal-50/50'
             )}
           />
         </div>
@@ -251,7 +251,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
           <div className="flex items-center gap-2">
             <Label className="text-xs text-gray-600">FICO Range</Label>
             {(modifiedFields.has('ficoMin') || modifiedFields.has('ficoMax')) && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-50 text-green-700 border-green-300">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
                 Staged
               </Badge>
             )}
@@ -266,7 +266,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               onBlur={() => handleBlur('ficoMin')}
               className={cn(
                 'h-8 text-sm font-mono w-20',
-                modifiedFields.has('ficoMin') && 'border-green-400 bg-green-50/50'
+                modifiedFields.has('ficoMin') && 'border-teal-400 bg-teal-50/50'
               )}
             />
             <span className="text-gray-400">-</span>
@@ -279,7 +279,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               onBlur={() => handleBlur('ficoMax')}
               className={cn(
                 'h-8 text-sm font-mono w-20',
-                modifiedFields.has('ficoMax') && 'border-green-400 bg-green-50/50'
+                modifiedFields.has('ficoMax') && 'border-teal-400 bg-teal-50/50'
               )}
             />
           </div>
@@ -290,7 +290,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
           <div className="flex items-center gap-2">
             <Label className="text-xs text-gray-600">Loan Amount</Label>
             {(modifiedFields.has('loanAmountMin') || modifiedFields.has('loanAmountMax')) && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-50 text-green-700 border-green-300">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
                 Staged
               </Badge>
             )}
@@ -305,7 +305,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               onBlur={() => handleBlur('loanAmountMin')}
               className={cn(
                 'h-8 text-sm font-mono',
-                modifiedFields.has('loanAmountMin') && 'border-green-400 bg-green-50/50'
+                modifiedFields.has('loanAmountMin') && 'border-teal-400 bg-teal-50/50'
               )}
             />
             <span className="text-gray-400">-</span>
@@ -318,7 +318,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               onBlur={() => handleBlur('loanAmountMax')}
               className={cn(
                 'h-8 text-sm font-mono',
-                modifiedFields.has('loanAmountMax') && 'border-green-400 bg-green-50/50'
+                modifiedFields.has('loanAmountMax') && 'border-teal-400 bg-teal-50/50'
               )}
             />
           </div>

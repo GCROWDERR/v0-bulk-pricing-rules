@@ -56,20 +56,20 @@ function SortableHeader({ field, label, sortField, sortDirection, onSort, classN
     <button
       onClick={() => onSort(field)}
       className={cn(
-        'flex items-center gap-1 hover:text-gray-900 transition-colors w-full text-left',
-        isActive && 'text-blue-700 font-bold',
+        'flex items-center gap-1 hover:text-blue-600 transition-colors w-full text-left',
+        isActive && 'text-blue-600 font-semibold',
         className
       )}
     >
       <span>{label}</span>
       {isActive ? (
         sortDirection === 'asc' ? (
-          <ChevronUp className="h-4 w-4" />
+          <ChevronUp className="h-4 w-4 text-blue-600" />
         ) : (
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4 text-blue-600" />
         )
       ) : (
-        <ArrowUpDown className="h-3 w-3 opacity-50" />
+        <ArrowUpDown className="h-3 w-3 opacity-40" />
       )}
     </button>
   )
@@ -220,12 +220,12 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
   return (
     <div className="flex flex-col h-full">
       {/* Table Container */}
-      <div className="flex-1 overflow-auto border rounded-lg">
+      <div className="flex-1 overflow-auto border border-gray-300 rounded-lg bg-white">
         <Table>
           <TableHeader className="sticky top-0 z-10">
-            <TableRow className="bg-gray-200 hover:bg-gray-200">
+            <TableRow className="bg-blue-50 hover:bg-blue-50 border-b border-gray-300">
               {/* Select all checkbox */}
-              <TableHead className="w-12 bg-gray-200">
+              <TableHead className="w-12 bg-blue-50">
                 <Checkbox
                   checked={isAllSelected}
                   onCheckedChange={handleSelectAll}
@@ -235,7 +235,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
               </TableHead>
               
               {visibleColumns.has('RuleId') && (
-                <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="RuleId"
                     label="Rule ID"
@@ -246,7 +246,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('RuleDescription') && (
-                <TableHead className="w-[260px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[260px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="RuleDescription"
                     label="Rule Description"
@@ -257,7 +257,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Lenders') && (
-                <TableHead className="w-[240px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[240px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Lenders"
                     label="Included Lenders"
@@ -268,7 +268,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Fee') && (
-                <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Fee"
                     label="Fee"
@@ -279,7 +279,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Price') && (
-                <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Price"
                     label="Price"
@@ -290,7 +290,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('CompPercent') && (
-                <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="CompPercent"
                     label="Margin %"
@@ -301,7 +301,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Active') && (
-                <TableHead className="w-[120px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[120px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Active"
                     label="Active"
@@ -312,7 +312,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Disallow') && (
-                <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Disallow"
                     label="Disallow"
@@ -323,7 +323,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {state.showDeleted && visibleColumns.has('RuleIsDeleted') && (
-                <TableHead className="w-[90px] bg-gray-200 text-gray-700 font-semibold">
+                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="RuleIsDeleted"
                     label="Deleted"
@@ -333,7 +333,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                   />
                 </TableHead>
               )}
-              <TableHead className="w-[175px] bg-gray-200 text-gray-700 font-semibold">
+              <TableHead className="w-[175px] bg-blue-50 text-gray-900 font-medium">
                 Actions
               </TableHead>
             </TableRow>

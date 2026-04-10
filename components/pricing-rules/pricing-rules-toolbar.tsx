@@ -90,7 +90,7 @@ export function PricingRulesToolbar({
   }
 
   return (
-    <div className="flex items-center justify-between py-3 px-4 bg-white border-b">
+    <div className="flex items-center justify-between py-3 px-4 bg-white border-b border-gray-200">
       {/* Left side - Search */}
       <div className="flex items-center gap-3">
         {showSearch ? (
@@ -140,11 +140,11 @@ export function PricingRulesToolbar({
                 expandRows(Array.from(state.selectedRows))
               }}
               variant="outline"
-              className="gap-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+              className="gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
             >
               <Pencil className="h-4 w-4" />
               Quick Edit Selected
-              <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-700">
+              <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-600">
                 {state.selectedRows.size}
               </Badge>
             </Button>
@@ -169,10 +169,10 @@ export function PricingRulesToolbar({
           <>
             <Button
               onClick={onOpenPublishDialog}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-teal-500 hover:bg-teal-600 text-white"
             >
               Publish Changes
-              <Badge variant="secondary" className="ml-2 bg-green-700 text-white">
+              <Badge variant="secondary" className="ml-2 bg-teal-600 text-white">
                 {totalDrafts}
               </Badge>
             </Button>
@@ -180,7 +180,7 @@ export function PricingRulesToolbar({
             <Button
               variant="outline"
               onClick={discardAllDrafts}
-              className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="border-coral-500 text-coral-500 hover:bg-coral-50 hover:text-coral-600"
             >
               Discard All
             </Button>
@@ -188,7 +188,7 @@ export function PricingRulesToolbar({
         )}
 
         {/* Export Rules */}
-        <Button variant="link" className="text-blue-600 hover:text-blue-700 gap-2">
+        <Button variant="link" className="text-blue-600 hover:text-blue-700 hover:underline gap-2">
           <Download className="h-4 w-4" />
           Export Rules
         </Button>
@@ -285,7 +285,7 @@ export function PricingRulesToolbar({
         {/* New Rule */}
         <Button
           onClick={onNewRule}
-          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+          className="bg-blue-600 hover:bg-blue-700 text-white gap-2 font-medium"
         >
           <Plus className="h-4 w-4" />
           New Rule

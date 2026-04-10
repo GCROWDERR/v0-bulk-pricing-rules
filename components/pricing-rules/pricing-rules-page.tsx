@@ -47,15 +47,25 @@ function PricingRulesContent() {
 
   return (
     <div className={cn(
-      'flex flex-col bg-white',
+      'flex flex-col bg-background',
       isFullscreen ? 'fixed inset-0 z-50' : 'h-screen'
     )}>
-      {/* Header */}
-      <div className="px-6 py-4 border-b">
-        <h1 className="text-2xl font-semibold text-gray-900">Pricing Rules</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Manage client pricing rules and adjustments.
-        </p>
+      {/* Header with Bankrate branding */}
+      <div className="px-6 py-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-4">
+          <img 
+            src="https://bfletnsjftkxgijnmjdp.supabase.co/storage/v1/object/public/bankrate_logos/Bankrate%20Primary%20Logo%20-%20Blue.svg" 
+            alt="Bankrate" 
+            className="h-8"
+          />
+          <div className="h-8 w-px bg-gray-300" />
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">Pricing Rules</h1>
+            <p className="text-sm text-gray-600">
+              Manage client pricing rules and adjustments
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -72,7 +82,7 @@ function PricingRulesContent() {
       />
 
       {/* Table */}
-      <div className="flex-1 overflow-hidden px-4 py-4">
+      <div className="flex-1 overflow-hidden px-4 py-4 bg-gray-50">
         <PricingRulesTable
           density={density}
           visibleColumns={visibleColumns}

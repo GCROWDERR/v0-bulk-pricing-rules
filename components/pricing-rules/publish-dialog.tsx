@@ -247,11 +247,11 @@ function DraftItem({ draft }: DraftItemProps) {
                 </div>
               </div>
             ) : draft.type === 'delete' ? (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-coral-500">
                 This rule will be marked as deleted (soft delete).
               </p>
             ) : draft.type === 'restore' ? (
-              <p className="text-sm text-green-600">
+              <p className="text-sm text-teal-500">
                 This rule will be restored (un-deleted).
               </p>
             ) : fieldChanges.length > 0 ? (
@@ -347,7 +347,7 @@ export function PublishDialog({ open, onOpenChange }: PublishDialogProps) {
             {/* Created rules */}
             {groupedDrafts.created.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-green-700 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-teal-600 flex items-center gap-2">
                   <Plus className="h-4 w-4" />
                   New Rules ({groupedDrafts.created.length})
                 </h3>
@@ -362,7 +362,7 @@ export function PublishDialog({ open, onOpenChange }: PublishDialogProps) {
             {/* Updated rules */}
             {groupedDrafts.updated.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-blue-700 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-blue-600 flex items-center gap-2">
                   <Pencil className="h-4 w-4" />
                   Updated Rules ({groupedDrafts.updated.length})
                 </h3>
@@ -377,7 +377,7 @@ export function PublishDialog({ open, onOpenChange }: PublishDialogProps) {
             {/* Deleted rules */}
             {groupedDrafts.deleted.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-red-700 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-coral-500 flex items-center gap-2">
                   <Trash2 className="h-4 w-4" />
                   Deleted Rules ({groupedDrafts.deleted.length})
                 </h3>
@@ -392,7 +392,7 @@ export function PublishDialog({ open, onOpenChange }: PublishDialogProps) {
             {/* Restored rules */}
             {groupedDrafts.restored.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-green-700 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-teal-600 flex items-center gap-2">
                   <RotateCcw className="h-4 w-4" />
                   Restored Rules ({groupedDrafts.restored.length})
                 </h3>
@@ -412,13 +412,13 @@ export function PublishDialog({ open, onOpenChange }: PublishDialogProps) {
           </div>
         </ScrollArea>
 
-        <DialogFooter className="p-4 border-t bg-white">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="p-4 border-t border-gray-200 bg-gray-50">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-300">
             Cancel
           </Button>
           <Button
             onClick={handlePublish}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-teal-500 hover:bg-teal-600 text-white font-medium"
             disabled={state.drafts.length === 0}
           >
             Publish {state.drafts.length} Change{state.drafts.length !== 1 ? 's' : ''}
