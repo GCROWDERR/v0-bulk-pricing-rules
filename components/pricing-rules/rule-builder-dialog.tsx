@@ -802,7 +802,34 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Lenders</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Lenders</Label>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedLenders([...LENDERS])}
+                            className="h-7 text-xs"
+                          >
+                            Select All
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedLenders([])}
+                            className="h-7 text-xs"
+                          >
+                            Deselect All
+                          </Button>
+                          {selectedLenders.length > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {selectedLenders.length} selected
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                       <div className="grid grid-cols-3 gap-2 p-3 border rounded-md bg-white max-h-40 overflow-y-auto">
                         {LENDERS.map((lender) => (
                           <div key={lender} className="flex items-center gap-2">
