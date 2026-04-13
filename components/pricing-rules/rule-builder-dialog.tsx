@@ -350,6 +350,7 @@ function ListBuilder({ dimension, ranges, onChange, valueType }: ListBuilderProp
   const [autoFillEnd, setAutoFillEnd] = useState('')
   const [autoFillIncrement, setAutoFillIncrement] = useState('')
   const [bulkValue, setBulkValue] = useState('')
+  const [bulkIncrement, setBulkIncrement] = useState('')
 
   const issues = useMemo(() => validateRanges(ranges), [ranges])
   const dim = DIMENSION_OPTIONS.find(d => d.value === dimension)
@@ -396,7 +397,15 @@ function ListBuilder({ dimension, ranges, onChange, valueType }: ListBuilderProp
 
   const handleBulkFill = () => {
     if (!bulkValue) return
-    onChange(ranges.map(r => ({ ...r, value: bulkValue })))
+    const startValue = parseFloat(bulkValue)
+    const increment = parseFloat(bulkIncrement) || 0
+    
+    if (isNaN(startValue)) return
+    
+    onChange(ranges.map((r, index) => ({ 
+      ...r, 
+      value: (startValue + (increment * index)).toFixed(3).replace(/\.?0+$/, '')
+    })))
   }
 
   const getValueLabel = () => {
@@ -475,20 +484,44 @@ function ListBuilder({ dimension, ranges, onChange, valueType }: ListBuilderProp
         {/* Bulk fill values */}
         {ranges.length > 0 && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-            <div className="flex items-center gap-3">
-              <Label className="text-sm font-medium text-gray-700 whitespace-nowrap">Fill all with:</Label>
-              <Input
-                type={valueType === 'disallow' ? 'text' : 'number'}
-                step={valueType === 'price' || valueType === 'margin' ? '0.001' : '0.01'}
-                placeholder={getValuePlaceholder()}
-                value={bulkValue}
-                onChange={(e) => setBulkValue(e.target.value)}
-                className="h-8 text-sm flex-1"
-              />
-              <Button size="sm" variant="outline" onClick={handleBulkFill} className="h-8">
-                Apply to All
-              </Button>
+            <div className="flex items-center gap-3 mb-2">
+              <Wand2 className="h-4 w-4 text-gray-500" />
+              <span className="text-sm font-semibold text-gray-700">Fill Values</span>
             </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs text-gray-500">Starting Value</Label>
+                <Input
+                  type={valueType === 'disallow' ? 'text' : 'number'}
+                  step={valueType === 'price' || valueType === 'margin' ? '0.001' : '0.01'}
+                  placeholder={getValuePlaceholder()}
+                  value={bulkValue}
+                  onChange={(e) => setBulkValue(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="w-32 space-y-1">
+                <Label className="text-xs text-gray-500">Increment</Label>
+                <Input
+                  type="number"
+                  step="0.001"
+                  placeholder="e.g., 0.05"
+                  value={bulkIncrement}
+                  onChange={(e) => setBulkIncrement(e.target.value)}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="pt-5">
+                <Button size="sm" variant="outline" onClick={handleBulkFill} className="h-8">
+                  Apply
+                </Button>
+              </div>
+            </div>
+            {bulkValue && bulkIncrement && ranges.length > 0 && (
+              <p className="text-xs text-gray-500 mt-2">
+                Preview: {bulkValue}, {(parseFloat(bulkValue) + parseFloat(bulkIncrement)).toFixed(3).replace(/\.?0+$/, '')}, {(parseFloat(bulkValue) + parseFloat(bulkIncrement) * 2).toFixed(3).replace(/\.?0+$/, '')}...
+              </p>
+            )}
           </div>
         )}
 
