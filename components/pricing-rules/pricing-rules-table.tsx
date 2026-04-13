@@ -221,11 +221,11 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
     <div className="flex flex-col h-full">
       {/* Table Container */}
       <div className="flex-1 overflow-auto border border-gray-300 rounded-lg bg-white">
-        <Table>
+        <Table className="w-full table-fixed">
           <TableHeader className="sticky top-0 z-10">
             <TableRow className="bg-blue-50 hover:bg-blue-50 border-b border-gray-300">
               {/* Select all checkbox */}
-              <TableHead className="w-12 bg-blue-50">
+              <TableHead className="w-10 min-w-10 bg-blue-50">
                 <Checkbox
                   checked={isAllSelected}
                   onCheckedChange={handleSelectAll}
@@ -235,7 +235,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
               </TableHead>
               
               {visibleColumns.has('RuleId') && (
-                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[8%] min-w-[70px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="RuleId"
                     label="Rule ID"
@@ -246,7 +246,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('RuleDescription') && (
-                <TableHead className="w-[260px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[22%] min-w-[150px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="RuleDescription"
                     label="Rule Description"
@@ -257,7 +257,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Lenders') && (
-                <TableHead className="w-[240px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[18%] min-w-[120px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Lenders"
                     label="Included Lenders"
@@ -268,7 +268,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Fee') && (
-                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[7%] min-w-[60px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Fee"
                     label="Fee"
@@ -279,7 +279,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Price') && (
-                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[7%] min-w-[60px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Price"
                     label="Price"
@@ -290,7 +290,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('CompPercent') && (
-                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[8%] min-w-[70px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="CompPercent"
                     label="Margin %"
@@ -301,7 +301,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Active') && (
-                <TableHead className="w-[120px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[7%] min-w-[60px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Active"
                     label="Active"
@@ -312,7 +312,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {visibleColumns.has('Disallow') && (
-                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[7%] min-w-[60px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="Disallow"
                     label="Disallow"
@@ -323,7 +323,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                 </TableHead>
               )}
               {state.showDeleted && visibleColumns.has('RuleIsDeleted') && (
-                <TableHead className="w-[90px] bg-blue-50 text-gray-900 font-medium">
+                <TableHead className="w-[7%] min-w-[60px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
                     field="RuleIsDeleted"
                     label="Deleted"
@@ -333,7 +333,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                   />
                 </TableHead>
               )}
-              <TableHead className="w-[175px] bg-blue-50 text-gray-900 font-medium">
+              <TableHead className="w-[12%] min-w-[120px] bg-blue-50 text-gray-900 font-medium">
                 Actions
               </TableHead>
             </TableRow>
@@ -360,7 +360,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                     onClick={(e) => handleRowClick(displayRule, e)}
                   >
                     {/* Row selection checkbox */}
-                    <TableCell className="w-12" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="w-10 min-w-10" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={state.selectedRows.has(rule.RuleId)}
                         onCheckedChange={() => toggleSelectedRow(rule.RuleId)}
@@ -370,24 +370,26 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                     </TableCell>
 
                     {visibleColumns.has('RuleId') && (
-                      <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
-                        {rule.RuleId < 0 ? '—' : rule.RuleId}
-                        {isDraft && (
-                          <Badge variant="outline" className="ml-2 text-xs bg-green-100 text-green-700 border-green-300">
-                            Draft
-                          </Badge>
-                        )}
+                      <TableCell className={cn('font-sans text-sm truncate', isDeleted && 'line-through text-muted-foreground')}>
+                        <span className="flex items-center gap-1">
+                          {rule.RuleId < 0 ? '—' : rule.RuleId}
+                          {isDraft && (
+                            <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-300 shrink-0">
+                              Draft
+                            </Badge>
+                          )}
+                        </span>
                       </TableCell>
                     )}
 
                     {visibleColumns.has('RuleDescription') && (
-                      <TableCell className={cn('font-medium', isDeleted && 'line-through text-muted-foreground')}>
+                      <TableCell className={cn('font-medium truncate', isDeleted && 'line-through text-muted-foreground')} title={displayRule.RuleDescription || '(No description)'}>
                         {displayRule.RuleDescription || '(No description)'}
                       </TableCell>
                     )}
 
                     {visibleColumns.has('Lenders') && (
-                      <TableCell className={cn('text-sm', isDeleted && 'line-through text-muted-foreground')}>
+                      <TableCell className={cn('text-sm truncate', isDeleted && 'line-through text-muted-foreground')}>
                         {renderLenders(displayRule.Lenders)}
                       </TableCell>
                     )}
@@ -433,8 +435,8 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                       </TableCell>
                     )}
 
-                    <TableCell>
-                      <div className="flex items-center gap-1">
+                    <TableCell className="overflow-visible">
+                      <div className="flex items-center gap-0.5 flex-wrap">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
