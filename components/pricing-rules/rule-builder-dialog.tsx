@@ -892,7 +892,7 @@ function MatrixGrid({
 
 export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps) {
   const { stageCreate } = usePricingRules()
-  const [currentStep, setCurrentStep] = useState('dimensions')
+  const [currentStep, setCurrentStep] = useState('mode')
   
   // Builder mode: matrix (2D) or list (1D)
   const [builderMode, setBuilderMode] = useState<BuilderMode>('matrix')
@@ -908,7 +908,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   const confirmModeChange = () => {
     if (pendingMode) {
       setBuilderMode(pendingMode)
-      setCurrentStep('dimensions')
+      setCurrentStep('mode')
     }
     setShowModeChangeWarning(false)
     setPendingMode(null)
@@ -1223,9 +1223,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   // Get steps based on builder mode
   const getSteps = () => {
     if (builderMode === 'list') {
-      return ['dimensions', 'values', 'options', 'review']
+      return ['mode', 'dimensions', 'values', 'options', 'review']
     }
-    return ['dimensions', 'ranges', 'matrix', 'options', 'review']
+    return ['mode', 'dimensions', 'ranges', 'matrix', 'options', 'review']
   }
 
   return (
@@ -1235,53 +1235,170 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-gray-900">
-                Bulk Rule Builder - {builderMode === 'matrix' ? 'Matrix Mode' : 'List Mode'}
+                Bulk Rule Builder
               </DialogTitle>
               <DialogDescription className="text-gray-600">
-                {builderMode === 'matrix' 
-                  ? 'Create multiple rules by defining ranges for two dimensions'
-                  : 'Create rules by defining ranges and assigning a value to each'
-                }
+                Create multiple pricing rules efficiently using predefined ranges and values
               </DialogDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-sm text-gray-600">Builder Mode:</Label>
-              <Select value={builderMode} onValueChange={(v) => handleModeChange(v as BuilderMode)}>
-                <SelectTrigger className="w-36 bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="matrix">Matrix (2D)</SelectItem>
-                  <SelectItem value="list">List (1D)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {currentStep !== 'mode' && (
+              <Badge variant="outline" className="bg-white text-blue-700 border-blue-300">
+                {builderMode === 'matrix' ? 'Matrix Mode (2D)' : 'List Mode (1D)'}
+              </Badge>
+            )}
           </div>
         </DialogHeader>
 
         <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-4 pt-4 shrink-0">
             {builderMode === 'matrix' ? (
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
-                <TabsTrigger value="ranges">2. Ranges</TabsTrigger>
-                <TabsTrigger value="matrix">3. Matrix</TabsTrigger>
-                <TabsTrigger value="options">4. Options</TabsTrigger>
-                <TabsTrigger value="review">5. Review</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="mode">1. Mode</TabsTrigger>
+                <TabsTrigger value="dimensions">2. Dimensions</TabsTrigger>
+                <TabsTrigger value="ranges">3. Ranges</TabsTrigger>
+                <TabsTrigger value="matrix">4. Matrix</TabsTrigger>
+                <TabsTrigger value="options">5. Options</TabsTrigger>
+                <TabsTrigger value="review">6. Review</TabsTrigger>
               </TabsList>
             ) : (
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="dimensions">1. Setup</TabsTrigger>
-                <TabsTrigger value="values">2. Ranges & Values</TabsTrigger>
-                <TabsTrigger value="options">3. Options</TabsTrigger>
-                <TabsTrigger value="review">4. Review</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="mode">1. Mode</TabsTrigger>
+                <TabsTrigger value="dimensions">2. Setup</TabsTrigger>
+                <TabsTrigger value="values">3. Ranges & Values</TabsTrigger>
+                <TabsTrigger value="options">4. Options</TabsTrigger>
+                <TabsTrigger value="review">5. Review</TabsTrigger>
               </TabsList>
             )}
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             <div className="p-4">
-              {/* Step 1: Dimensions */}
+              {/* Step 1: Builder Mode Selection */}
+              <TabsContent value="mode" className="mt-0">
+                <div className="max-w-3xl mx-auto py-8">
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">Select Builder Mode</h2>
+                    <p className="text-gray-600">Choose how you want to create your pricing rules</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    {/* Matrix Mode Card */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBuilderMode('matrix')
+                        setCurrentStep('dimensions')
+                      }}
+                      className={cn(
+                        "relative p-6 rounded-xl border-2 text-left transition-all hover:shadow-lg",
+                        builderMode === 'matrix' 
+                          ? "border-blue-500 bg-blue-50 shadow-md" 
+                          : "border-gray-200 bg-white hover:border-blue-300"
+                      )}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className={cn(
+                          "w-12 h-12 rounded-lg flex items-center justify-center shrink-0",
+                          builderMode === 'matrix' ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-600"
+                        )}>
+                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">Matrix Mode (2D)</h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Create rules using a two-dimensional grid with rows and columns representing different ranges.
+                          </p>
+                          <div className="space-y-2 text-sm text-gray-500">
+                            <div className="flex items-center gap-2">
+                              <ChevronRight className="w-4 h-4 text-blue-500" />
+                              <span>Best for FICO vs Loan Amount grids</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <ChevronRight className="w-4 h-4 text-blue-500" />
+                              <span>Define values for each cell intersection</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <ChevronRight className="w-4 h-4 text-blue-500" />
+                              <span>Visual spreadsheet-like editing</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {builderMode === 'matrix' && (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-blue-500 text-white">Selected</Badge>
+                        </div>
+                      )}
+                    </button>
+
+                    {/* List Mode Card */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBuilderMode('list')
+                        setCurrentStep('dimensions')
+                      }}
+                      className={cn(
+                        "relative p-6 rounded-xl border-2 text-left transition-all hover:shadow-lg",
+                        builderMode === 'list' 
+                          ? "border-blue-500 bg-blue-50 shadow-md" 
+                          : "border-gray-200 bg-white hover:border-blue-300"
+                      )}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className={cn(
+                          "w-12 h-12 rounded-lg flex items-center justify-center shrink-0",
+                          builderMode === 'list' ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-600"
+                        )}>
+                          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">List Mode (1D)</h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Create rules using a single dimension with ranges and corresponding values in a simple list format.
+                          </p>
+                          <div className="space-y-2 text-sm text-gray-500">
+                            <div className="flex items-center gap-2">
+                              <ChevronRight className="w-4 h-4 text-blue-500" />
+                              <span>Best for single-variable rules</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <ChevronRight className="w-4 h-4 text-blue-500" />
+                              <span>One value per range</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <ChevronRight className="w-4 h-4 text-blue-500" />
+                              <span>Quick incremental fill options</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {builderMode === 'list' && (
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-blue-500 text-white">Selected</Badge>
+                        </div>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="mt-8 text-center">
+                    <Button 
+                      size="lg" 
+                      onClick={() => setCurrentStep('dimensions')}
+                      className="px-8"
+                    >
+                      Continue with {builderMode === 'matrix' ? 'Matrix' : 'List'} Mode
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Step 2: Dimensions */}
               <TabsContent value="dimensions" className="mt-0 space-y-6">
                 {builderMode === 'matrix' ? (
                   <div className="grid grid-cols-2 gap-6">
