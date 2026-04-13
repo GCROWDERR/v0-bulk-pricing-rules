@@ -8,6 +8,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -868,6 +878,28 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   
   // Builder mode: matrix (2D) or list (1D)
   const [builderMode, setBuilderMode] = useState<BuilderMode>('matrix')
+  const [showModeChangeWarning, setShowModeChangeWarning] = useState(false)
+  const [pendingMode, setPendingMode] = useState<BuilderMode | null>(null)
+
+  const handleModeChange = (newMode: BuilderMode) => {
+    if (newMode === builderMode) return
+    setPendingMode(newMode)
+    setShowModeChangeWarning(true)
+  }
+
+  const confirmModeChange = () => {
+    if (pendingMode) {
+      setBuilderMode(pendingMode)
+      setCurrentStep('dimensions')
+    }
+    setShowModeChangeWarning(false)
+    setPendingMode(null)
+  }
+
+  const cancelModeChange = () => {
+    setShowModeChangeWarning(false)
+    setPendingMode(null)
+  }
 
   // Step 1: Dimensions & Base Rule
   const [xDimension, setXDimension] = useState<DimensionType>('loanAmount')
@@ -1073,10 +1105,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
             </div>
             <div className="flex items-center gap-2">
               <Label className="text-sm text-gray-600">Builder Mode:</Label>
-              <Select value={builderMode} onValueChange={(v) => {
-                setBuilderMode(v as BuilderMode)
-                setCurrentStep('dimensions')
-              }}>
+              <Select value={builderMode} onValueChange={(v) => handleModeChange(v as BuilderMode)}>
                 <SelectTrigger className="w-36 bg-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -1462,6 +1491,24 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
           </div>
         </div>
       </DialogContent>
+
+      {/* Mode Change Warning Dialog */}
+      <AlertDialog open={showModeChangeWarning} onOpenChange={setShowModeChangeWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch Builder Mode?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Switching from {builderMode === 'matrix' ? 'Matrix' : 'List'} mode to {pendingMode === 'matrix' ? 'Matrix' : 'List'} mode will reset all your current configuration. Any ranges, values, or settings you have entered will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelModeChange}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmModeChange} className="bg-blue-600 hover:bg-blue-700">
+              Switch Mode
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }
