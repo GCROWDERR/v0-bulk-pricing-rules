@@ -77,6 +77,12 @@ const CELL_VALUE_OPTIONS: { value: CellValueType; label: string }[] = [
   { value: 'disallow', label: 'Disallow' },
 ]
 
+type BuilderMode = 'matrix' | 'list'
+
+interface RangeWithValue extends Range {
+  value: string
+}
+
 function generateId() {
   return Math.random().toString(36).substr(2, 9)
 }
@@ -299,6 +305,253 @@ function RangeBuilder({ dimension, ranges, onChange }: RangeBuilderProps) {
             variant="outline" 
             onClick={addRange} 
             className="w-full h-10 gap-2 border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-slate-400"
+          >
+            <Plus className="h-4 w-4" />
+            Add Range
+          </Button>
+        </div>
+
+        {/* Validation issues */}
+        {issues.length > 0 && (
+          <div className="space-y-1 shrink-0">
+            {issues.map((issue, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'flex items-center gap-2 text-xs p-2 rounded',
+                  issue.type === 'gap' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'bg-red-50 text-red-700 border border-red-200'
+                )}
+              >
+                {issue.type === 'gap' ? (
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-3 w-3 shrink-0" />
+                )}
+                {issue.message}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// List Builder component for 1D range-to-value mapping
+interface ListBuilderProps {
+  dimension: DimensionType
+  ranges: RangeWithValue[]
+  onChange: (ranges: RangeWithValue[]) => void
+  valueType: CellValueType
+}
+
+function ListBuilder({ dimension, ranges, onChange, valueType }: ListBuilderProps) {
+  const [autoFillStart, setAutoFillStart] = useState('')
+  const [autoFillEnd, setAutoFillEnd] = useState('')
+  const [autoFillIncrement, setAutoFillIncrement] = useState('')
+  const [bulkValue, setBulkValue] = useState('')
+
+  const issues = useMemo(() => validateRanges(ranges), [ranges])
+  const dim = DIMENSION_OPTIONS.find(d => d.value === dimension)
+
+  const addRange = () => {
+    const lastRange = ranges[ranges.length - 1]
+    const newMin = lastRange ? lastRange.max + 1 : 0
+    onChange([...ranges, { id: generateId(), min: newMin, max: newMin + 99, value: '' }])
+  }
+
+  const removeRange = (id: string) => {
+    onChange(ranges.filter(r => r.id !== id))
+  }
+
+  const updateRange = (id: string, field: 'min' | 'max' | 'value', value: number | string) => {
+    onChange(ranges.map(r => r.id === id ? { ...r, [field]: value } : r))
+  }
+
+  const handleAutoFill = () => {
+    const start = parseFloat(autoFillStart)
+    const end = parseFloat(autoFillEnd)
+    const increment = parseFloat(autoFillIncrement)
+
+    if (isNaN(start) || isNaN(end) || isNaN(increment) || increment <= 0 || start >= end) {
+      return
+    }
+
+    const newRanges: RangeWithValue[] = []
+    let current = start
+
+    while (current < end) {
+      const rangeEnd = Math.min(current + increment - 1, end)
+      newRanges.push({
+        id: generateId(),
+        min: current,
+        max: rangeEnd,
+        value: '',
+      })
+      current = rangeEnd + 1
+    }
+
+    onChange(newRanges)
+  }
+
+  const handleBulkFill = () => {
+    if (!bulkValue) return
+    onChange(ranges.map(r => ({ ...r, value: bulkValue })))
+  }
+
+  const getValueLabel = () => {
+    switch (valueType) {
+      case 'price': return 'Price'
+      case 'fee': return 'Fee ($)'
+      case 'margin': return 'Margin (%)'
+      case 'disallow': return 'Disallow'
+    }
+  }
+
+  const getValuePlaceholder = () => {
+    switch (valueType) {
+      case 'price': return '100.000'
+      case 'fee': return '500.00'
+      case 'margin': return '2.50'
+      case 'disallow': return 'Yes/No'
+    }
+  }
+
+  return (
+    <div className="border rounded-lg bg-white overflow-hidden h-full flex flex-col">
+      <div className="bg-slate-100 border-b px-4 py-3">
+        <h3 className="text-base font-semibold text-slate-800 text-center">
+          {dim?.label} Ranges with {getValueLabel()}
+        </h3>
+        <p className="text-xs text-slate-500 text-center mt-1">
+          Define ranges and assign a {getValueLabel().toLowerCase()} to each
+        </p>
+      </div>
+
+      <div className="p-4 space-y-4 flex-1 flex flex-col min-h-0">
+        {/* Auto-fill ranges helper */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Wand2 className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-semibold text-blue-800">Auto-fill Ranges</span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-blue-700">Start</Label>
+              <Input
+                type="number"
+                placeholder="e.g., 100000"
+                value={autoFillStart}
+                onChange={(e) => setAutoFillStart(e.target.value)}
+                className="h-9 text-sm bg-white"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-blue-700">End</Label>
+              <Input
+                type="number"
+                placeholder="e.g., 1000000"
+                value={autoFillEnd}
+                onChange={(e) => setAutoFillEnd(e.target.value)}
+                className="h-9 text-sm bg-white"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-blue-700">Increment</Label>
+              <Input
+                type="number"
+                placeholder="e.g., 50000"
+                value={autoFillIncrement}
+                onChange={(e) => setAutoFillIncrement(e.target.value)}
+                className="h-9 text-sm bg-white"
+              />
+            </div>
+          </div>
+          <Button size="sm" onClick={handleAutoFill} className="w-full mt-3 h-8 bg-blue-600 hover:bg-blue-700">
+            Generate Ranges
+          </Button>
+        </div>
+
+        {/* Bulk fill values */}
+        {ranges.length > 0 && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <div className="flex items-center gap-3">
+              <Label className="text-sm font-medium text-gray-700 whitespace-nowrap">Fill all with:</Label>
+              <Input
+                type={valueType === 'disallow' ? 'text' : 'number'}
+                step={valueType === 'price' || valueType === 'margin' ? '0.001' : '0.01'}
+                placeholder={getValuePlaceholder()}
+                value={bulkValue}
+                onChange={(e) => setBulkValue(e.target.value)}
+                className="h-8 text-sm flex-1"
+              />
+              <Button size="sm" variant="outline" onClick={handleBulkFill} className="h-8">
+                Apply to All
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Range list with values */}
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+          {/* Header row */}
+          {ranges.length > 0 && (
+            <div className="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-gray-600 border-b">
+              <span className="w-8">#</span>
+              <span className="flex-1">Min</span>
+              <span className="flex-1">Max</span>
+              <span className="w-32">{getValueLabel()}</span>
+              <span className="w-10"></span>
+            </div>
+          )}
+          
+          {ranges.map((range, index) => {
+            const hasIssue = issues.some(i => i.indices.includes(index))
+            return (
+              <div
+                key={range.id}
+                className={cn(
+                  'flex items-center gap-3 p-3 rounded-lg border',
+                  hasIssue ? 'border-yellow-400 bg-yellow-50' : 'border-slate-200 bg-slate-50'
+                )}
+              >
+                <span className="text-sm font-medium text-slate-600 w-8 shrink-0">#{index + 1}</span>
+                <Input
+                  type="number"
+                  value={range.min}
+                  onChange={(e) => updateRange(range.id, 'min', parseFloat(e.target.value) || 0)}
+                  className="h-9 text-sm font-sans flex-1"
+                />
+                <Input
+                  type="number"
+                  value={range.max}
+                  onChange={(e) => updateRange(range.id, 'max', parseFloat(e.target.value) || 0)}
+                  className="h-9 text-sm font-sans flex-1"
+                />
+                <Input
+                  type={valueType === 'disallow' ? 'text' : 'number'}
+                  step={valueType === 'price' || valueType === 'margin' ? '0.001' : '0.01'}
+                  value={range.value}
+                  onChange={(e) => updateRange(range.id, 'value', e.target.value)}
+                  placeholder={getValuePlaceholder()}
+                  className="h-9 text-sm font-sans w-32 bg-blue-50 border-blue-200 focus:border-blue-400"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
+                  onClick={() => removeRange(range.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )
+          })}
+
+          <Button 
+            variant="outline" 
+            onClick={addRange} 
+            className="w-full h-9 gap-2 border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-slate-400"
           >
             <Plus className="h-4 w-4" />
             Add Range
@@ -579,16 +832,20 @@ function MatrixGrid({
 export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps) {
   const { stageCreate } = usePricingRules()
   const [currentStep, setCurrentStep] = useState('dimensions')
+  
+  // Builder mode: matrix (2D) or list (1D)
+  const [builderMode, setBuilderMode] = useState<BuilderMode>('matrix')
 
   // Step 1: Dimensions & Base Rule
   const [xDimension, setXDimension] = useState<DimensionType>('loanAmount')
   const [yDimension, setYDimension] = useState<DimensionType>('fico')
+  const [listDimension, setListDimension] = useState<DimensionType>('loanAmount')
   const [descriptionPrefix, setDescriptionPrefix] = useState('Conv 30yr')
   const [disallow, setDisallow] = useState(false)
   const [selectedLenders, setSelectedLenders] = useState<string[]>([])
   const [selectedProductFamily, setSelectedProductFamily] = useState<string>('')
 
-  // Step 2: Ranges
+  // Step 2: Ranges (Matrix mode)
   const [xRanges, setXRanges] = useState<Range[]>([
     { id: generateId(), min: 100000, max: 249999 },
     { id: generateId(), min: 250000, max: 499999 },
@@ -601,9 +858,17 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
     { id: generateId(), min: 720, max: 759 },
     { id: generateId(), min: 760, max: 850 },
   ])
+  
+  // List mode ranges with values
+  const [listRanges, setListRanges] = useState<RangeWithValue[]>([
+    { id: generateId(), min: 100000, max: 249999, value: '' },
+    { id: generateId(), min: 250000, max: 499999, value: '' },
+    { id: generateId(), min: 500000, max: 749999, value: '' },
+    { id: generateId(), min: 750000, max: 1000000, value: '' },
+  ])
 
-  // Step 3: Matrix values
-  const [cellValueType, setCellValueType] = useState<CellValueType>('price')
+  // Step 3: Matrix values (only for matrix mode)
+  const [cellValueType, setCellValueType] = useState<CellValueType>('margin')
   const [cellValues, setCellValues] = useState<Record<string, string>>({})
 
   // Preview state
@@ -617,52 +882,41 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   const previewRules = useMemo(() => {
     const rules: Array<{
       description: string
-      xRange: Range
-      yRange: Range
+      xRange?: Range
+      yRange?: Range
+      listRange?: RangeWithValue
       cellValue: string
       rule: PricingRule
     }> = []
 
     let tempId = -Date.now()
 
-    xRanges.forEach(xRange => {
-      yRanges.forEach(yRange => {
-        const key = `${xRange.id}-${yRange.id}`
-        const cellValue = cellValues[key] || '0'
-        const xLabel = formatRangeLabel(xRange, xDimension)
-        const yLabel = formatRangeLabel(yRange, yDimension)
-        const description = `${descriptionPrefix} | ${xLabel} | ${yLabel}`
+    if (builderMode === 'list') {
+      // List mode: one rule per range
+      listRanges.forEach(range => {
+        const rangeLabel = formatRangeLabel(range, listDimension)
+        const description = `${descriptionPrefix} | ${rangeLabel}`
+        const cellValue = range.value || '0'
 
         const rule = createBlankRule(tempId--)
         rule.RuleDescription = description
-        rule.Disallow = disallow || cellValueType === 'disallow' && cellValue.toLowerCase() === 'yes'
+        rule.Disallow = disallow || (cellValueType === 'disallow' && cellValue.toLowerCase() === 'yes')
         rule.Lenders = selectedLenders
         rule.ProductFamilies = selectedProductFamily ? [selectedProductFamily] : []
 
-        // Set dimension values
-        if (xDimension === 'loanAmount') {
-          rule.LoanAmountMin = xRange.min
-          rule.LoanAmountMax = xRange.max
-        } else if (xDimension === 'fico') {
-          rule.FICOMin = xRange.min
-          rule.FICOMax = xRange.max
-        } else if (xDimension === 'ltv') {
-          rule.LTVMin = xRange.min
-          rule.LTVMax = xRange.max
+        // Set dimension values based on list dimension
+        if (listDimension === 'loanAmount') {
+          rule.LoanAmountMin = range.min
+          rule.LoanAmountMax = range.max
+        } else if (listDimension === 'fico') {
+          rule.FICOMin = range.min
+          rule.FICOMax = range.max
+        } else if (listDimension === 'ltv') {
+          rule.LTVMin = range.min
+          rule.LTVMax = range.max
         }
 
-        if (yDimension === 'loanAmount') {
-          rule.LoanAmountMin = yRange.min
-          rule.LoanAmountMax = yRange.max
-        } else if (yDimension === 'fico') {
-          rule.FICOMin = yRange.min
-          rule.FICOMax = yRange.max
-        } else if (yDimension === 'ltv') {
-          rule.LTVMin = yRange.min
-          rule.LTVMax = yRange.max
-        }
-
-        // Set cell value
+        // Set value
         const numValue = parseFloat(cellValue) || 0
         if (cellValueType === 'price') {
           rule.Price = numValue
@@ -674,16 +928,73 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
 
         rules.push({
           description,
-          xRange,
-          yRange,
+          listRange: range,
           cellValue,
           rule,
         })
       })
-    })
+    } else {
+      // Matrix mode: one rule per cell
+      xRanges.forEach(xRange => {
+        yRanges.forEach(yRange => {
+          const key = `${xRange.id}-${yRange.id}`
+          const cellValue = cellValues[key] || '0'
+          const xLabel = formatRangeLabel(xRange, xDimension)
+          const yLabel = formatRangeLabel(yRange, yDimension)
+          const description = `${descriptionPrefix} | ${xLabel} | ${yLabel}`
+
+          const rule = createBlankRule(tempId--)
+          rule.RuleDescription = description
+          rule.Disallow = disallow || (cellValueType === 'disallow' && cellValue.toLowerCase() === 'yes')
+          rule.Lenders = selectedLenders
+          rule.ProductFamilies = selectedProductFamily ? [selectedProductFamily] : []
+
+          // Set dimension values
+          if (xDimension === 'loanAmount') {
+            rule.LoanAmountMin = xRange.min
+            rule.LoanAmountMax = xRange.max
+          } else if (xDimension === 'fico') {
+            rule.FICOMin = xRange.min
+            rule.FICOMax = xRange.max
+          } else if (xDimension === 'ltv') {
+            rule.LTVMin = xRange.min
+            rule.LTVMax = xRange.max
+          }
+
+          if (yDimension === 'loanAmount') {
+            rule.LoanAmountMin = yRange.min
+            rule.LoanAmountMax = yRange.max
+          } else if (yDimension === 'fico') {
+            rule.FICOMin = yRange.min
+            rule.FICOMax = yRange.max
+          } else if (yDimension === 'ltv') {
+            rule.LTVMin = yRange.min
+            rule.LTVMax = yRange.max
+          }
+
+          // Set cell value
+          const numValue = parseFloat(cellValue) || 0
+          if (cellValueType === 'price') {
+            rule.Price = numValue
+          } else if (cellValueType === 'fee') {
+            rule.Fee = numValue
+          } else if (cellValueType === 'margin') {
+            rule.CompPercent = numValue
+          }
+
+          rules.push({
+            description,
+            xRange,
+            yRange,
+            cellValue,
+            rule,
+          })
+        })
+      })
+    }
 
     return rules
-  }, [xRanges, yRanges, xDimension, yDimension, cellValues, cellValueType, descriptionPrefix, disallow, selectedLenders, selectedProductFamily])
+  }, [builderMode, listRanges, listDimension, xRanges, yRanges, xDimension, yDimension, cellValues, cellValueType, descriptionPrefix, disallow, selectedLenders, selectedProductFamily])
 
   const handleStageAll = () => {
     previewRules.forEach(({ rule }) => {
@@ -703,63 +1014,145 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
     }
   }
 
+  // Get steps based on builder mode
+  const getSteps = () => {
+    if (builderMode === 'list') {
+      return ['dimensions', 'values', 'review']
+    }
+    return ['dimensions', 'ranges', 'matrix', 'review']
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!max-w-[95vw] !w-[95vw] h-[90vh] p-0 gap-0 flex flex-col" showCloseButton={false}>
         <DialogHeader className="p-4 border-b border-gray-200 shrink-0 bg-blue-50">
-          <DialogTitle className="text-gray-900">Bulk Rule Builder - Matrix Mode</DialogTitle>
-          <DialogDescription className="text-gray-600">
-            Create multiple rules by defining ranges for two dimensions
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-gray-900">
+                Bulk Rule Builder - {builderMode === 'matrix' ? 'Matrix Mode' : 'List Mode'}
+              </DialogTitle>
+              <DialogDescription className="text-gray-600">
+                {builderMode === 'matrix' 
+                  ? 'Create multiple rules by defining ranges for two dimensions'
+                  : 'Create rules by defining ranges and assigning a value to each'
+                }
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-gray-600">Builder Mode:</Label>
+              <Select value={builderMode} onValueChange={(v) => {
+                setBuilderMode(v as BuilderMode)
+                setCurrentStep('dimensions')
+              }}>
+                <SelectTrigger className="w-36 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="matrix">Matrix (2D)</SelectItem>
+                  <SelectItem value="list">List (1D)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </DialogHeader>
 
         <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-4 pt-4 shrink-0">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
-              <TabsTrigger value="ranges">2. Ranges</TabsTrigger>
-              <TabsTrigger value="matrix">3. Matrix</TabsTrigger>
-              <TabsTrigger value="review">4. Review</TabsTrigger>
-            </TabsList>
+            {builderMode === 'matrix' ? (
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
+                <TabsTrigger value="ranges">2. Ranges</TabsTrigger>
+                <TabsTrigger value="matrix">3. Matrix</TabsTrigger>
+                <TabsTrigger value="review">4. Review</TabsTrigger>
+              </TabsList>
+            ) : (
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="dimensions">1. Setup</TabsTrigger>
+                <TabsTrigger value="values">2. Ranges & Values</TabsTrigger>
+                <TabsTrigger value="review">3. Review</TabsTrigger>
+              </TabsList>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             <div className="p-4">
               {/* Step 1: Dimensions */}
               <TabsContent value="dimensions" className="mt-0 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Dimension X (Rows)</Label>
-                    <Select value={xDimension} onValueChange={(v) => setXDimension(v as DimensionType)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DIMENSION_OPTIONS.filter(d => d.value !== yDimension).map((dim) => (
-                          <SelectItem key={dim.value} value={dim.value}>
-                            {dim.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {builderMode === 'matrix' ? (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Dimension X (Rows)</Label>
+                      <Select value={xDimension} onValueChange={(v) => setXDimension(v as DimensionType)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DIMENSION_OPTIONS.filter(d => d.value !== yDimension).map((dim) => (
+                            <SelectItem key={dim.value} value={dim.value}>
+                              {dim.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label>Dimension Y (Columns)</Label>
-                    <Select value={yDimension} onValueChange={(v) => setYDimension(v as DimensionType)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DIMENSION_OPTIONS.filter(d => d.value !== xDimension).map((dim) => (
-                          <SelectItem key={dim.value} value={dim.value}>
-                            {dim.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      <Label>Dimension Y (Columns)</Label>
+                      <Select value={yDimension} onValueChange={(v) => setYDimension(v as DimensionType)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DIMENSION_OPTIONS.filter(d => d.value !== xDimension).map((dim) => (
+                            <SelectItem key={dim.value} value={dim.value}>
+                              {dim.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Dimension (Range Variable)</Label>
+                      <Select value={listDimension} onValueChange={(v) => setListDimension(v as DimensionType)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DIMENSION_OPTIONS.filter(d => !['price', 'fee', 'margin'].includes(d.value)).map((dim) => (
+                            <SelectItem key={dim.value} value={dim.value}>
+                              {dim.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500">
+                        Select the variable to create ranges for (e.g., Loan Amount, FICO, LTV)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Value Type (Assigned to Each Range)</Label>
+                      <Select value={cellValueType} onValueChange={(v) => setCellValueType(v as CellValueType)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CELL_VALUE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500">
+                        Select what value to assign to each range (e.g., Margin %, Fee, Price)
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="border-t pt-6">
                   <h3 className="font-medium mb-4">Base Rule Template</h3>
@@ -772,7 +1165,10 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                         placeholder="e.g., Conv 30yr"
                       />
                       <p className="text-xs text-gray-500">
-                        Each rule will be named: {descriptionPrefix} | [X Range] | [Y Range]
+                        {builderMode === 'matrix' 
+                          ? `Each rule will be named: ${descriptionPrefix} | [X Range] | [Y Range]`
+                          : `Each rule will be named: ${descriptionPrefix} | [Range]`
+                        }
                       </p>
                     </div>
 
@@ -849,52 +1245,70 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                 </div>
               </TabsContent>
 
-              {/* Step 2: Ranges */}
-              <TabsContent value="ranges" className="mt-0">
-                <div className="grid grid-cols-2 gap-6" style={{ minHeight: '500px' }}>
-                  <RangeBuilder
-                    dimension={xDimension}
-                    ranges={xRanges}
-                    onChange={setXRanges}
+              {/* Step 2: Ranges (Matrix mode only) */}
+              {builderMode === 'matrix' && (
+                <TabsContent value="ranges" className="mt-0">
+                  <div className="grid grid-cols-2 gap-6" style={{ minHeight: '500px' }}>
+                    <RangeBuilder
+                      dimension={xDimension}
+                      ranges={xRanges}
+                      onChange={setXRanges}
+                    />
+                    <RangeBuilder
+                      dimension={yDimension}
+                      ranges={yRanges}
+                      onChange={setYRanges}
+                    />
+                  </div>
+                </TabsContent>
+              )}
+
+              {/* Step 2: Values (List mode only) */}
+              {builderMode === 'list' && (
+                <TabsContent value="values" className="mt-0">
+                  <div style={{ minHeight: '500px' }}>
+                    <ListBuilder
+                      dimension={listDimension}
+                      ranges={listRanges}
+                      onChange={setListRanges}
+                      valueType={cellValueType}
+                    />
+                  </div>
+                </TabsContent>
+              )}
+
+              {/* Step 3: Matrix (Matrix mode only) */}
+              {builderMode === 'matrix' && (
+                <TabsContent value="matrix" className="mt-0 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Label>Cell value represents:</Label>
+                    <Select value={cellValueType} onValueChange={(v) => setCellValueType(v as CellValueType)}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CELL_VALUE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <MatrixGrid
+                    xRanges={xRanges}
+                    yRanges={yRanges}
+                    xDimension={xDimension}
+                    yDimension={yDimension}
+                    cellValues={cellValues}
+                    onCellChange={handleCellChange}
+                    cellValueType={cellValueType}
                   />
-                  <RangeBuilder
-                    dimension={yDimension}
-                    ranges={yRanges}
-                    onChange={setYRanges}
-                  />
-                </div>
-              </TabsContent>
+                </TabsContent>
+              )}
 
-              {/* Step 3: Matrix */}
-              <TabsContent value="matrix" className="mt-0 space-y-4">
-                <div className="flex items-center gap-4">
-                  <Label>Cell value represents:</Label>
-                  <Select value={cellValueType} onValueChange={(v) => setCellValueType(v as CellValueType)}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CELL_VALUE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <MatrixGrid
-                  xRanges={xRanges}
-                  yRanges={yRanges}
-                  xDimension={xDimension}
-                  yDimension={yDimension}
-                  cellValues={cellValues}
-                  onCellChange={handleCellChange}
-                  cellValueType={cellValueType}
-                />
-              </TabsContent>
-
-              {/* Step 4: Review */}
+              {/* Review Step */}
               <TabsContent value="review" className="mt-0 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -943,18 +1357,24 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                               <span className="text-gray-500">Disallow:</span>
                               <p className="font-medium">{rule.Disallow ? 'Yes' : 'No'}</p>
                             </div>
-                            <div>
-                              <span className="text-gray-500">FICO Range:</span>
-                              <p className="font-medium">{rule.FICOMin} - {rule.FICOMax}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Loan Amount:</span>
-                              <p className="font-medium">${rule.LoanAmountMin.toLocaleString()} - ${rule.LoanAmountMax.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">LTV:</span>
-                              <p className="font-medium">{rule.LTVMin}% - {rule.LTVMax}%</p>
-                            </div>
+                            {(builderMode === 'matrix' || listDimension === 'fico') && (
+                              <div>
+                                <span className="text-gray-500">FICO Range:</span>
+                                <p className="font-medium">{rule.FICOMin} - {rule.FICOMax}</p>
+                              </div>
+                            )}
+                            {(builderMode === 'matrix' || listDimension === 'loanAmount') && (
+                              <div>
+                                <span className="text-gray-500">Loan Amount:</span>
+                                <p className="font-medium">${rule.LoanAmountMin.toLocaleString()} - ${rule.LoanAmountMax.toLocaleString()}</p>
+                              </div>
+                            )}
+                            {(builderMode === 'matrix' || listDimension === 'ltv') && (
+                              <div>
+                                <span className="text-gray-500">LTV:</span>
+                                <p className="font-medium">{rule.LTVMin}% - {rule.LTVMax}%</p>
+                              </div>
+                            )}
                           </div>
                         </CollapsibleContent>
                       </div>
@@ -975,7 +1395,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
               <Button
                 variant="outline"
                 onClick={() => {
-                  const steps = ['dimensions', 'ranges', 'matrix', 'review']
+                  const steps = getSteps()
                   const currentIndex = steps.indexOf(currentStep)
                   if (currentIndex > 0) {
                     setCurrentStep(steps[currentIndex - 1])
@@ -988,7 +1408,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
             {currentStep === 'review' ? (
               <Button
                 onClick={handleStageAll}
-                className="bg-teal-500 hover:bg-teal-600 text-white font-medium"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
                 disabled={previewRules.length === 0}
               >
                 Stage All ({previewRules.length} rules)
@@ -996,7 +1416,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
             ) : (
               <Button
                 onClick={() => {
-                  const steps = ['dimensions', 'ranges', 'matrix', 'review']
+                  const steps = getSteps()
                   const currentIndex = steps.indexOf(currentStep)
                   if (currentIndex < steps.length - 1) {
                     setCurrentStep(steps[currentIndex + 1])
