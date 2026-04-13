@@ -668,6 +668,7 @@ function MatrixGrid({
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set())
   const [isSelecting, setIsSelecting] = useState(false)
   const [selectionStart, setSelectionStart] = useState<{ xIdx: number; yIdx: number } | null>(null)
+  const [editingCell, setEditingCell] = useState<string | null>(null)
 
   const allCellKeys = useMemo(() => {
     const keys: string[] = []
@@ -827,7 +828,7 @@ function MatrixGrid({
           </div>
         </div>
         <p className="text-xs text-slate-500">
-          Click cells to select them. Hold Ctrl/Cmd to toggle individual cells. Click and drag to select a range. Shift+click to extend selection.
+          Double-click or click a cell to edit its value directly. Use Tab to move between cells. Click to select, Ctrl/Cmd+click to multi-select, drag to select a range.
         </p>
       </div>
 
@@ -856,15 +857,24 @@ function MatrixGrid({
                 {yRanges.map((yRange, yIdx) => {
                   const key = `${xRange.id}-${yRange.id}`
                   const isSelected = selectedCells.has(key)
+                  const isEditing = editingCell === key
                   return (
                     <td 
                       key={key} 
                       className={cn(
-                        'border p-1 cursor-pointer transition-colors',
-                        isSelected && 'bg-blue-100 ring-2 ring-inset ring-blue-500'
+                        'border p-1 transition-colors',
+                        isEditing ? 'bg-white' : 'cursor-pointer',
+                        isSelected && !isEditing && 'bg-blue-100 ring-2 ring-inset ring-blue-500'
                       )}
-                      onMouseDown={(e) => handleMouseDown(key, xIdx, yIdx, e)}
-                      onMouseEnter={() => handleMouseEnter(key, xIdx, yIdx)}
+                      onMouseDown={(e) => {
+                        if (isEditing) return
+                        handleMouseDown(key, xIdx, yIdx, e)
+                      }}
+                      onMouseEnter={() => {
+                        if (isEditing) return
+                        handleMouseEnter(key, xIdx, yIdx)
+                      }}
+                      onDoubleClick={() => setEditingCell(key)}
                     >
                       <Input
                         type={cellValueType === 'disallow' ? 'text' : 'number'}
@@ -872,11 +882,51 @@ function MatrixGrid({
                         value={cellValues[key] || ''}
                         onChange={(e) => onCellChange(key, e.target.value)}
                         className={cn(
-                          'h-8 text-center text-sm font-mono pointer-events-auto',
-                          isSelected && 'bg-blue-50 border-blue-300'
+                          'h-8 text-center text-sm font-mono',
+                          isEditing 
+                            ? 'ring-2 ring-blue-500 border-blue-500' 
+                            : 'pointer-events-none',
+                          isSelected && !isEditing && 'bg-blue-50 border-blue-300'
                         )}
                         placeholder={cellValueType === 'disallow' ? '-' : '0'}
-                        onClick={(e) => e.stopPropagation()}
+                        onFocus={() => setEditingCell(key)}
+                        onBlur={() => setEditingCell(null)}
+                        onKeyDown={(e) => {
+                          e.stopPropagation()
+                          if (e.key === 'Enter' || e.key === 'Escape') {
+                            setEditingCell(null)
+                            ;(e.target as HTMLInputElement).blur()
+                          }
+                          if (e.key === 'Tab') {
+                            // Allow tab to move to next cell
+                            e.preventDefault()
+                            const allKeys = xRanges.flatMap((x, xi) => 
+                              yRanges.map((y, yi) => ({ key: `${x.id}-${y.id}`, xi, yi }))
+                            )
+                            const currentIdx = allKeys.findIndex(k => k.key === key)
+                            const nextIdx = e.shiftKey 
+                              ? (currentIdx - 1 + allKeys.length) % allKeys.length
+                              : (currentIdx + 1) % allKeys.length
+                            const nextKey = allKeys[nextIdx].key
+                            setEditingCell(nextKey)
+                            // Focus the next input after state update
+                            setTimeout(() => {
+                              const nextInput = document.querySelector(`input[data-cell-key="${nextKey}"]`) as HTMLInputElement
+                              nextInput?.focus()
+                              nextInput?.select()
+                            }, 0)
+                          }
+                        }}
+                        onMouseDown={(e) => {
+                          if (isEditing) {
+                            e.stopPropagation()
+                          }
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingCell(key)
+                        }}
+                        data-cell-key={key}
                       />
                     </td>
                   )
