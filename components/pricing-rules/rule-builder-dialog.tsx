@@ -45,9 +45,27 @@ import {
   ChevronDown,
   ChevronRight,
   Wand2,
+  Search,
 } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
-import { LENDERS, PRODUCT_FAMILIES, createBlankRule } from '@/lib/pricing-rules-data'
+import { 
+  LENDERS, 
+  PRODUCT_FAMILIES, 
+  PROPERTY_TYPES,
+  PROPERTY_USAGE,
+  LOAN_TYPES,
+  QUOTING_CHANNELS,
+  LOCK_PERIODS,
+  BORROWER_FILTERS,
+  POINT_GROUPS,
+  STATES,
+  PRODUCT_CLASSES,
+  PRODUCT_TYPES,
+  PRODUCT_TERMS,
+  FEE_SETS,
+  MI_COMPANIES,
+  createBlankRule 
+} from '@/lib/pricing-rules-data'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import { cn } from '@/lib/utils'
 
@@ -907,8 +925,51 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   const [listDimension, setListDimension] = useState<DimensionType>('loanAmount')
   const [descriptionPrefix, setDescriptionPrefix] = useState('Conv 30yr')
   const [disallow, setDisallow] = useState(false)
+  
+  // Step 1 - Apply these rules
+  const [lockPeriod, setLockPeriod] = useState<number | null>(null)
+  const [feeSet, setFeeSet] = useState<string>('')
+  const [miCompany, setMiCompany] = useState<string>('')
+  const [price, setPrice] = useState<string>('')
+  const [rate, setRate] = useState<string>('')
+  const [fees, setFees] = useState<string>('')
+  const [marginType, setMarginType] = useState<'percentage' | 'flat'>('percentage')
+  const [compFlatFee, setCompFlatFee] = useState<string>('')
+  const [finalPriceMin, setFinalPriceMin] = useState<string>('')
+  const [finalPriceMax, setFinalPriceMax] = useState<string>('')
+  const [hasSecondMortgage, setHasSecondMortgage] = useState(false)
+  const [ignoreNonEighthRates, setIgnoreNonEighthRates] = useState(false)
+  const [includeUFMIP, setIncludeUFMIP] = useState(false)
+  const [maxCashBack, setMaxCashBack] = useState<string>('')
+  const [financeUFMIP, setFinanceUFMIP] = useState(false)
+  
+  // Step 2 - Optional criteria
+  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([])
+  const [selectedPropertyUsage, setSelectedPropertyUsage] = useState<string[]>([])
+  const [selectedLoanTypes, setSelectedLoanTypes] = useState<string[]>([])
+  const [selectedQuotingChannels, setSelectedQuotingChannels] = useState<string[]>([])
+  const [selectedLockPeriods, setSelectedLockPeriods] = useState<number[]>([])
+  const [selectedBorrowerFilters, setSelectedBorrowerFilters] = useState<string[]>([])
+  const [selectedPointGroups, setSelectedPointGroups] = useState<string[]>([])
+  const [selectedStates, setSelectedStates] = useState<string[]>([])
+  const [statesSearchTerm, setStatesSearchTerm] = useState('')
+  
+  // Step 3 - Program filters
   const [selectedLenders, setSelectedLenders] = useState<string[]>([])
-  const [selectedProductFamily, setSelectedProductFamily] = useState<string>('')
+  const [selectedProductFamilies, setSelectedProductFamilies] = useState<string[]>([])
+  const [selectedProductClasses, setSelectedProductClasses] = useState<string[]>([])
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([])
+  const [selectedProductTerms, setSelectedProductTerms] = useState<string[]>([])
+  
+  // Step 4 - Schedule
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
+  const [startTime, setStartTime] = useState<string>('')
+  const [endTime, setEndTime] = useState<string>('')
+  const [selectedDays, setSelectedDays] = useState<string[]>([])
+  
+  // Visibility
+  const [hideInQuoteAdjustments, setHideInQuoteAdjustments] = useState(false)
 
   // Step 2: Ranges (Matrix mode)
   const [xRanges, setXRanges] = useState<Range[]>([
@@ -943,6 +1004,61 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
     setCellValues(prev => ({ ...prev, [key]: value }))
   }, [])
 
+  // Apply all options to a rule
+  const applyOptionsToRule = useCallback((rule: PricingRule) => {
+    // Rule settings
+    if (lockPeriod) rule.LockPeriod = lockPeriod
+    if (feeSet) rule.FeeSet = feeSet
+    if (miCompany) rule.MICompany = miCompany
+    if (price) rule.Price = parseFloat(price) || 0
+    if (rate) rule.Rate = rate
+    if (fees) rule.Fee = parseFloat(fees) || 0
+    rule.MarginType = marginType
+    if (compFlatFee) rule.CompFlatFee = parseFloat(compFlatFee) || 0
+    if (finalPriceMin) rule.FinalPriceMin = parseFloat(finalPriceMin) || 0
+    if (finalPriceMax) rule.FinalPriceMax = parseFloat(finalPriceMax) || 0
+    rule.HasSecondMortgage = hasSecondMortgage
+    rule.IgnoreNonEighthRates = ignoreNonEighthRates
+    rule.IncludeUFMIP = includeUFMIP
+    if (maxCashBack) rule.MaxCashBack = parseFloat(maxCashBack) || 0
+    rule.FinanceUFMIP = financeUFMIP
+
+    // Optional criteria
+    if (selectedPropertyTypes.length > 0) rule.PropertyTypes = selectedPropertyTypes
+    if (selectedPropertyUsage.length > 0) rule.PropertyUsage = selectedPropertyUsage
+    if (selectedLoanTypes.length > 0) rule.LoanTypes = selectedLoanTypes
+    if (selectedQuotingChannels.length > 0) rule.QuotingChannels = selectedQuotingChannels
+    if (selectedLockPeriods.length > 0) rule.LockPeriods = selectedLockPeriods
+    if (selectedBorrowerFilters.length > 0) rule.BorrowerFilters = selectedBorrowerFilters
+    if (selectedPointGroups.length > 0) rule.PointGroups = selectedPointGroups
+    if (selectedStates.length > 0) rule.States = selectedStates
+
+    // Program filters
+    if (selectedLenders.length > 0) rule.Lenders = selectedLenders
+    if (selectedProductFamilies.length > 0) rule.ProductFamilies = selectedProductFamilies
+    if (selectedProductClasses.length > 0) rule.ProductClasses = selectedProductClasses
+    if (selectedProductTypes.length > 0) rule.ProductTypes = selectedProductTypes
+    if (selectedProductTerms.length > 0) rule.ProductTerms = selectedProductTerms
+
+    // Schedule
+    if (startDate) rule.StartDate = startDate
+    if (endDate) rule.EndDate = endDate
+    if (startTime) rule.StartTime = startTime
+    if (endTime) rule.EndTime = endTime
+
+    // Visibility
+    rule.HideInQuoteAdjustments = hideInQuoteAdjustments
+
+    return rule
+  }, [
+    lockPeriod, feeSet, miCompany, price, rate, fees, marginType, compFlatFee, finalPriceMin, finalPriceMax,
+    hasSecondMortgage, ignoreNonEighthRates, includeUFMIP, maxCashBack, financeUFMIP,
+    selectedPropertyTypes, selectedPropertyUsage, selectedLoanTypes, selectedQuotingChannels, selectedLockPeriods,
+    selectedBorrowerFilters, selectedPointGroups, selectedStates, selectedLenders, selectedProductFamilies,
+    selectedProductClasses, selectedProductTypes, selectedProductTerms, startDate, endDate, startTime, endTime,
+    hideInQuoteAdjustments
+  ])
+
   // Generate preview rules
   const previewRules = useMemo(() => {
     const rules: Array<{
@@ -966,8 +1082,6 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
         const rule = createBlankRule(tempId--)
         rule.RuleDescription = description
         rule.Disallow = disallow || (cellValueType === 'disallow' && cellValue.toLowerCase() === 'yes')
-        rule.Lenders = selectedLenders
-        rule.ProductFamilies = selectedProductFamily ? [selectedProductFamily] : []
 
         // Set dimension values based on list dimension
         if (listDimension === 'loanAmount') {
@@ -991,6 +1105,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
           rule.CompPercent = numValue
         }
 
+        // Apply all options
+        applyOptionsToRule(rule)
+
         rules.push({
           description,
           listRange: range,
@@ -1011,8 +1128,6 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
           const rule = createBlankRule(tempId--)
           rule.RuleDescription = description
           rule.Disallow = disallow || (cellValueType === 'disallow' && cellValue.toLowerCase() === 'yes')
-          rule.Lenders = selectedLenders
-          rule.ProductFamilies = selectedProductFamily ? [selectedProductFamily] : []
 
           // Set dimension values
           if (xDimension === 'loanAmount') {
@@ -1047,6 +1162,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
             rule.CompPercent = numValue
           }
 
+          // Apply all options
+          applyOptionsToRule(rule)
+
           rules.push({
             description,
             xRange,
@@ -1059,7 +1177,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
     }
 
     return rules
-  }, [builderMode, listRanges, listDimension, xRanges, yRanges, xDimension, yDimension, cellValues, cellValueType, descriptionPrefix, disallow, selectedLenders, selectedProductFamily])
+  }, [builderMode, listRanges, listDimension, xRanges, yRanges, xDimension, yDimension, cellValues, cellValueType, descriptionPrefix, disallow, applyOptionsToRule])
 
   const handleStageAll = () => {
     previewRules.forEach(({ rule }) => {
@@ -1079,12 +1197,35 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
     }
   }
 
+  // Generic toggle helper
+  const createToggle = <T,>(setter: React.Dispatch<React.SetStateAction<T[]>>) => (item: T) => {
+    setter(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item])
+  }
+
+  const togglePropertyType = createToggle(setSelectedPropertyTypes)
+  const togglePropertyUsage = createToggle(setSelectedPropertyUsage)
+  const toggleLoanType = createToggle(setSelectedLoanTypes)
+  const toggleQuotingChannel = createToggle(setSelectedQuotingChannels)
+  const toggleLockPeriod = createToggle(setSelectedLockPeriods)
+  const toggleBorrowerFilter = createToggle(setSelectedBorrowerFilters)
+  const togglePointGroup = createToggle(setSelectedPointGroups)
+  const toggleState = createToggle(setSelectedStates)
+  const toggleProductFamily = createToggle(setSelectedProductFamilies)
+  const toggleProductClass = createToggle(setSelectedProductClasses)
+  const toggleProductType = createToggle(setSelectedProductTypes)
+  const toggleProductTerm = createToggle(setSelectedProductTerms)
+  const toggleDay = createToggle(setSelectedDays)
+
+  const filteredStates = STATES.filter(state => 
+    state.toLowerCase().includes(statesSearchTerm.toLowerCase())
+  )
+
   // Get steps based on builder mode
   const getSteps = () => {
     if (builderMode === 'list') {
-      return ['dimensions', 'values', 'review']
+      return ['dimensions', 'values', 'options', 'review']
     }
-    return ['dimensions', 'ranges', 'matrix', 'review']
+    return ['dimensions', 'ranges', 'matrix', 'options', 'review']
   }
 
   return (
@@ -1121,17 +1262,19 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
         <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-4 pt-4 shrink-0">
             {builderMode === 'matrix' ? (
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
                 <TabsTrigger value="ranges">2. Ranges</TabsTrigger>
                 <TabsTrigger value="matrix">3. Matrix</TabsTrigger>
-                <TabsTrigger value="review">4. Review</TabsTrigger>
+                <TabsTrigger value="options">4. Options</TabsTrigger>
+                <TabsTrigger value="review">5. Review</TabsTrigger>
               </TabsList>
             ) : (
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="dimensions">1. Setup</TabsTrigger>
                 <TabsTrigger value="values">2. Ranges & Values</TabsTrigger>
-                <TabsTrigger value="review">3. Review</TabsTrigger>
+                <TabsTrigger value="options">3. Options</TabsTrigger>
+                <TabsTrigger value="review">4. Review</TabsTrigger>
               </TabsList>
             )}
           </div>
@@ -1243,66 +1386,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                       <Label htmlFor="base-disallow">Disallow (applies to all generated rules)</Label>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Product Family</Label>
-                      <Select value={selectedProductFamily} onValueChange={setSelectedProductFamily}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select product family" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PRODUCT_FAMILIES.map((family) => (
-                            <SelectItem key={family} value={family}>
-                              {family}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label>Lenders</Label>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedLenders([...LENDERS])}
-                            className="h-7 text-xs"
-                          >
-                            Select All
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedLenders([])}
-                            className="h-7 text-xs"
-                          >
-                            Deselect All
-                          </Button>
-                          {selectedLenders.length > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              {selectedLenders.length} selected
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 p-3 border rounded-md bg-white max-h-40 overflow-y-auto">
-                        {LENDERS.map((lender) => (
-                          <div key={lender} className="flex items-center gap-2">
-                            <Checkbox
-                              id={`lender-${lender}`}
-                              checked={selectedLenders.includes(lender)}
-                              onCheckedChange={() => toggleLender(lender)}
-                            />
-                            <Label htmlFor={`lender-${lender}`} className="text-sm cursor-pointer">
-                              {lender}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <p className="text-sm text-gray-500 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                      Configure additional options like Lenders, Product Families, Property Types, and Schedule in the <strong>Options</strong> step.
+                    </p>
                   </div>
                 </div>
               </TabsContent>
@@ -1369,6 +1455,451 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                   />
                 </TabsContent>
               )}
+
+              {/* Options Step - All additional criteria */}
+              <TabsContent value="options" className="mt-0 space-y-6">
+                {/* Section 1: Rule Settings */}
+                <Collapsible defaultOpen>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-slate-100 rounded-lg hover:bg-slate-200">
+                    <h3 className="font-semibold text-slate-800">Rule Settings</h3>
+                    <ChevronDown className="h-4 w-4" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="p-4 border border-t-0 rounded-b-lg space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Lock Period</Label>
+                        <Select value={lockPeriod?.toString() || ''} onValueChange={(v) => setLockPeriod(v ? parseInt(v) : null)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LOCK_PERIODS.map((period) => (
+                              <SelectItem key={period} value={period.toString()}>
+                                {period} Days
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Fee Set</Label>
+                        <Select value={feeSet} onValueChange={setFeeSet}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FEE_SETS.map((fs) => (
+                              <SelectItem key={fs} value={fs}>{fs}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>MI Company</Label>
+                        <Select value={miCompany} onValueChange={setMiCompany}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MI_COMPANIES.map((mi) => (
+                              <SelectItem key={mi} value={mi}>{mi}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Price</Label>
+                        <Input type="number" step="0.001" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Rate</Label>
+                        <Input type="text" placeholder="Rate" value={rate} onChange={(e) => setRate(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Fees</Label>
+                        <Input type="number" step="0.01" placeholder="Fees" value={fees} onChange={(e) => setFees(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Margin Type</Label>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <input type="radio" id="margin-pct" checked={marginType === 'percentage'} onChange={() => setMarginType('percentage')} />
+                          <Label htmlFor="margin-pct" className="cursor-pointer">Percentage margin</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="radio" id="margin-flat" checked={marginType === 'flat'} onChange={() => setMarginType('flat')} />
+                          <Label htmlFor="margin-flat" className="cursor-pointer">Flat fee margin</Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Comp Flat Fee</Label>
+                        <Input type="number" step="0.01" placeholder="Comp flat fee" value={compFlatFee} onChange={(e) => setCompFlatFee(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Final Price Min</Label>
+                        <Input type="number" step="0.001" placeholder="Min" value={finalPriceMin} onChange={(e) => setFinalPriceMin(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Final Price Max</Label>
+                        <Input type="number" step="0.001" placeholder="Max" value={finalPriceMax} onChange={(e) => setFinalPriceMax(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Max Cash Back to Borrower</Label>
+                        <Input type="number" step="0.01" placeholder="Max cash back" value={maxCashBack} onChange={(e) => setMaxCashBack(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-4">
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="has-second" checked={hasSecondMortgage} onCheckedChange={(c) => setHasSecondMortgage(c === true)} />
+                        <Label htmlFor="has-second" className="cursor-pointer text-sm">Has second mortgage?</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="ignore-eighth" checked={ignoreNonEighthRates} onCheckedChange={(c) => setIgnoreNonEighthRates(c === true)} />
+                        <Label htmlFor="ignore-eighth" className="cursor-pointer text-sm">Ignore Non Eighth Rates</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="include-ufmip" checked={includeUFMIP} onCheckedChange={(c) => setIncludeUFMIP(c === true)} />
+                        <Label htmlFor="include-ufmip" className="cursor-pointer text-sm">Include UFMIP on FHA/VA</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="finance-ufmip" checked={financeUFMIP} onCheckedChange={(c) => setFinanceUFMIP(c === true)} />
+                        <Label htmlFor="finance-ufmip" className="cursor-pointer text-sm">Finance UFMIP on FHA/VA?</Label>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Section 2: Optional Criteria */}
+                <Collapsible defaultOpen>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-slate-100 rounded-lg hover:bg-slate-200">
+                    <h3 className="font-semibold text-slate-800">Optional Criteria</h3>
+                    <ChevronDown className="h-4 w-4" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="p-4 border border-t-0 rounded-b-lg space-y-4">
+                    <div className="grid grid-cols-5 gap-4">
+                      {/* Property Types */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Property Types</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedPropertyTypes(selectedPropertyTypes.length === PROPERTY_TYPES.length ? [] : [...PROPERTY_TYPES])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-32 overflow-y-auto space-y-1">
+                          {PROPERTY_TYPES.map((type) => (
+                            <div key={type} className="flex items-center gap-2">
+                              <Checkbox id={`pt-${type}`} checked={selectedPropertyTypes.includes(type)} onCheckedChange={() => togglePropertyType(type)} />
+                              <Label htmlFor={`pt-${type}`} className="text-xs cursor-pointer">{type}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Property Usage */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Property Usage</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedPropertyUsage(selectedPropertyUsage.length === PROPERTY_USAGE.length ? [] : [...PROPERTY_USAGE])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-32 overflow-y-auto space-y-1">
+                          {PROPERTY_USAGE.map((usage) => (
+                            <div key={usage} className="flex items-center gap-2">
+                              <Checkbox id={`pu-${usage}`} checked={selectedPropertyUsage.includes(usage)} onCheckedChange={() => togglePropertyUsage(usage)} />
+                              <Label htmlFor={`pu-${usage}`} className="text-xs cursor-pointer">{usage}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Loan Types */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Loan Types</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedLoanTypes(selectedLoanTypes.length === LOAN_TYPES.length ? [] : [...LOAN_TYPES])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-32 overflow-y-auto space-y-1">
+                          {LOAN_TYPES.map((type) => (
+                            <div key={type} className="flex items-center gap-2">
+                              <Checkbox id={`lt-${type}`} checked={selectedLoanTypes.includes(type)} onCheckedChange={() => toggleLoanType(type)} />
+                              <Label htmlFor={`lt-${type}`} className="text-xs cursor-pointer">{type}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Quoting Channels */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Quoting Channels</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedQuotingChannels(selectedQuotingChannels.length === QUOTING_CHANNELS.length ? [] : [...QUOTING_CHANNELS])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-32 overflow-y-auto space-y-1">
+                          {QUOTING_CHANNELS.map((channel) => (
+                            <div key={channel} className="flex items-center gap-2">
+                              <Checkbox id={`qc-${channel}`} checked={selectedQuotingChannels.includes(channel)} onCheckedChange={() => toggleQuotingChannel(channel)} />
+                              <Label htmlFor={`qc-${channel}`} className="text-xs cursor-pointer">{channel}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Lock Periods */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Lock Periods</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedLockPeriods(selectedLockPeriods.length === LOCK_PERIODS.length ? [] : [...LOCK_PERIODS])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-32 overflow-y-auto space-y-1">
+                          {LOCK_PERIODS.map((period) => (
+                            <div key={period} className="flex items-center gap-2">
+                              <Checkbox id={`lp-${period}`} checked={selectedLockPeriods.includes(period)} onCheckedChange={() => toggleLockPeriod(period)} />
+                              <Label htmlFor={`lp-${period}`} className="text-xs cursor-pointer">{period} Days</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-4">
+                      {/* Borrower Filters */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Borrower Filters</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedBorrowerFilters(selectedBorrowerFilters.length === BORROWER_FILTERS.length ? [] : [...BORROWER_FILTERS])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-32 overflow-y-auto space-y-1">
+                          {BORROWER_FILTERS.map((filter) => (
+                            <div key={filter} className="flex items-center gap-2">
+                              <Checkbox id={`bf-${filter}`} checked={selectedBorrowerFilters.includes(filter)} onCheckedChange={() => toggleBorrowerFilter(filter)} />
+                              <Label htmlFor={`bf-${filter}`} className="text-xs cursor-pointer">{filter}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Point Groups */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Point Groups</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedPointGroups(selectedPointGroups.length === POINT_GROUPS.length ? [] : [...POINT_GROUPS])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-32 overflow-y-auto space-y-1">
+                          {POINT_GROUPS.map((group) => (
+                            <div key={group} className="flex items-center gap-2">
+                              <Checkbox id={`pg-${group}`} checked={selectedPointGroups.includes(group)} onCheckedChange={() => togglePointGroup(group)} />
+                              <Label htmlFor={`pg-${group}`} className="text-xs cursor-pointer">{group}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* States */}
+                      <div className="space-y-2 col-span-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">States {selectedStates.length > 0 && <Badge variant="secondary" className="ml-2 text-xs">{selectedStates.length} selected</Badge>}</Label>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedStates([...STATES])}>Select All</Button>
+                            <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedStates([])}>Deselect</Button>
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                          <Input 
+                            placeholder="Search states..." 
+                            value={statesSearchTerm} 
+                            onChange={(e) => setStatesSearchTerm(e.target.value)}
+                            className="pl-8 h-9"
+                          />
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-32 overflow-y-auto grid grid-cols-6 gap-1">
+                          {filteredStates.map((state) => (
+                            <div key={state} className="flex items-center gap-1">
+                              <Checkbox id={`st-${state}`} checked={selectedStates.includes(state)} onCheckedChange={() => toggleState(state)} />
+                              <Label htmlFor={`st-${state}`} className="text-xs cursor-pointer">{state}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Section 3: Program Filters */}
+                <Collapsible defaultOpen>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-slate-100 rounded-lg hover:bg-slate-200">
+                    <h3 className="font-semibold text-slate-800">Program Filters</h3>
+                    <ChevronDown className="h-4 w-4" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="p-4 border border-t-0 rounded-b-lg space-y-4">
+                    <div className="grid grid-cols-5 gap-4">
+                      {/* Lenders */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Lenders</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedLenders(selectedLenders.length === LENDERS.length ? [] : [...LENDERS])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-40 overflow-y-auto space-y-1">
+                          {LENDERS.map((lender) => (
+                            <div key={lender} className="flex items-center gap-2">
+                              <Checkbox id={`ln-${lender}`} checked={selectedLenders.includes(lender)} onCheckedChange={() => toggleLender(lender)} />
+                              <Label htmlFor={`ln-${lender}`} className="text-xs cursor-pointer">{lender}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Product Families */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Product Families</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedProductFamilies(selectedProductFamilies.length === PRODUCT_FAMILIES.length ? [] : [...PRODUCT_FAMILIES])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-40 overflow-y-auto space-y-1">
+                          {PRODUCT_FAMILIES.map((family) => (
+                            <div key={family} className="flex items-center gap-2">
+                              <Checkbox id={`pf-${family}`} checked={selectedProductFamilies.includes(family)} onCheckedChange={() => toggleProductFamily(family)} />
+                              <Label htmlFor={`pf-${family}`} className="text-xs cursor-pointer">{family}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Product Classes */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Product Classes</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedProductClasses(selectedProductClasses.length === PRODUCT_CLASSES.length ? [] : [...PRODUCT_CLASSES])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-40 overflow-y-auto space-y-1">
+                          {PRODUCT_CLASSES.map((cls) => (
+                            <div key={cls} className="flex items-center gap-2">
+                              <Checkbox id={`pc-${cls}`} checked={selectedProductClasses.includes(cls)} onCheckedChange={() => toggleProductClass(cls)} />
+                              <Label htmlFor={`pc-${cls}`} className="text-xs cursor-pointer">{cls}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Product Types */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Product Types</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedProductTypes(selectedProductTypes.length === PRODUCT_TYPES.length ? [] : [...PRODUCT_TYPES])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-40 overflow-y-auto space-y-1">
+                          {PRODUCT_TYPES.map((type) => (
+                            <div key={type} className="flex items-center gap-2">
+                              <Checkbox id={`pty-${type}`} checked={selectedProductTypes.includes(type)} onCheckedChange={() => toggleProductType(type)} />
+                              <Label htmlFor={`pty-${type}`} className="text-xs cursor-pointer">{type}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Product Terms */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Product Terms</Label>
+                          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setSelectedProductTerms(selectedProductTerms.length === PRODUCT_TERMS.length ? [] : [...PRODUCT_TERMS])}>
+                            Toggle All
+                          </Button>
+                        </div>
+                        <div className="border rounded-md p-2 bg-white max-h-40 overflow-y-auto space-y-1">
+                          {PRODUCT_TERMS.map((term) => (
+                            <div key={term} className="flex items-center gap-2">
+                              <Checkbox id={`pterm-${term}`} checked={selectedProductTerms.includes(term)} onCheckedChange={() => toggleProductTerm(term)} />
+                              <Label htmlFor={`pterm-${term}`} className="text-xs cursor-pointer">{term}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Section 4: Schedule */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-slate-100 rounded-lg hover:bg-slate-200">
+                    <h3 className="font-semibold text-slate-800">Schedule (Optional)</h3>
+                    <ChevronDown className="h-4 w-4" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="p-4 border border-t-0 rounded-b-lg space-y-4">
+                    <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing.</p>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label>Start Date</Label>
+                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Date</Label>
+                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Start Time (ET)</Label>
+                        <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Time (ET)</Label>
+                        <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Days of Week</Label>
+                      <div className="flex gap-2">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                          <div key={day} className="flex items-center gap-1">
+                            <Checkbox id={`day-${day}`} checked={selectedDays.includes(day)} onCheckedChange={() => toggleDay(day)} />
+                            <Label htmlFor={`day-${day}`} className="text-sm cursor-pointer">{day}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Visibility */}
+                <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="hide-visibility" checked={hideInQuoteAdjustments} onCheckedChange={(c) => setHideInQuoteAdjustments(c === true)} />
+                    <div>
+                      <Label htmlFor="hide-visibility" className="cursor-pointer text-red-700 font-medium">Visibility Notice</Label>
+                      <p className="text-xs text-red-600">Do NOT show this rule details in quote adjustments. If you select this option, only you will be able to see the adjustments.</p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
 
               {/* Review Step */}
               <TabsContent value="review" className="mt-0 space-y-4">
