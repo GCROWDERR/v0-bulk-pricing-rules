@@ -201,11 +201,11 @@ function DraftItem({ draft }: DraftItemProps) {
             )}
             {icon}
             <div>
-              <p className="font-medium text-sm">
-                {draft.ruleId > 0 ? `Rule #${draft.ruleId}` : '(New Rule)'}
-              </p>
-              <p className="text-xs text-gray-500 truncate max-w-[300px]">
+              <p className="font-medium text-sm truncate max-w-[350px]">
                 {draft.updatedRule.RuleDescription || '(No description)'}
+              </p>
+              <p className="text-xs text-gray-400">
+                {draft.ruleId > 0 ? `Rule ID: ${draft.ruleId}` : 'New Rule'}
               </p>
             </div>
           </div>
