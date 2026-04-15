@@ -221,13 +221,13 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
                 {/* Lock Period / Fee Set / MI Company */}
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Lock period</Label>
                     <Select
                       value={formData.LockPeriod?.toString() || ''}
                       onValueChange={v => update('LockPeriod', parseInt(v))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -237,25 +237,25 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex flex-col">
                     <div className="flex items-center gap-1">
                       <Label className="text-xs font-semibold text-gray-700">Fee Set</Label>
                       <Info className="h-3.5 w-3.5 text-blue-500" />
                     </div>
                     <Select value={formData.FeeSet} onValueChange={v => update('FeeSet', v)}>
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         {FEE_SETS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">MI Company</Label>
                     <Select
                       value={formData.MICompany || 'none'}
                       onValueChange={v => update('MICompany', v === 'none' ? '' : v)}
                     >
-                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
                         {MI_COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -266,30 +266,33 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
                 {/* Price / Rate / Fees */}
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Price</Label>
                     <Input
                       type="number" step="0.001"
                       value={formData.Price}
                       onChange={e => update('Price', parseFloat(e.target.value) || 0)}
                       placeholder="Price"
+                      className="w-full"
                     />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Rate</Label>
                     <Input
                       value={formData.Rate}
                       onChange={e => update('Rate', e.target.value)}
                       placeholder="Rate"
+                      className="w-full"
                     />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Fees</Label>
                     <Input
                       type="number" step="0.01"
                       value={formData.Fee}
                       onChange={e => update('Fee', parseFloat(e.target.value) || 0)}
                       placeholder="Fees"
+                      className="w-full"
                     />
                   </div>
                 </div>
