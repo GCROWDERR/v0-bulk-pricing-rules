@@ -644,7 +644,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 update('SelectedPrograms', current.includes(id) ? current.filter(i => i !== id) : [...current, id])
               }
               return (
-                <CollapsibleStep n={5} label="VERIFY the programs this rule will run against" defaultOpen={false}>
+                <CollapsibleStep n={5} label="Verify the programs this rule will run against" defaultOpen={false}>
                   <div className="space-y-4">
                     <p className="text-sm text-gray-500">
                       Review which lender programs this rule will apply to. Select or deselect programs as needed.
