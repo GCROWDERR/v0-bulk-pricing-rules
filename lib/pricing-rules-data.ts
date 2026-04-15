@@ -51,6 +51,8 @@ export interface PricingRule {
   EndDate: string | null
   StartTime: string | null
   EndTime: string | null
+  // Step 5 fields
+  SelectedPrograms?: number[]
   // Visibility
   HideInQuoteAdjustments: boolean
 }

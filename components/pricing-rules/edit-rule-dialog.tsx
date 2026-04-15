@@ -628,56 +628,77 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
             <hr className="border-gray-200" />
 
             {/* ── STEP 5 ──────────────────────────────────────────────── */}
-            <CollapsibleStep n={5} label="VERIFY the programs this rule will run against" defaultOpen={false}>
-              <div className="space-y-4">
-                <p className="text-sm text-gray-500">
-                  Review which lender programs this rule will apply to. Select or deselect programs as needed.
-                </p>
-                <div className="border border-input rounded-md overflow-hidden bg-white">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-gray-100 border-b border-input">
-                          <th className="px-4 py-3 text-left w-10">
-                            <Checkbox />
-                          </th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Program Name</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Family</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Class</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Type</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Term</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-input">
-                        {[
-                          { lender: 'Achieve', program: 'Home Equity Loan - Fixed 20 Year', family: 'HOMEEQUITY', class: 'EQUITY', type: 'FIXED', term: '20' },
-                          { lender: 'Ally2 - Conforming', program: 'FNMA 15 Year Fixed - High Balance', family: 'CONVENTIONAL', class: 'HIGH BALANCE', type: 'FIXED', term: '15' },
-                          { lender: 'Ally2 - Conforming', program: 'FNMA 20 Year Fixed - High Balance', family: 'CONVENTIONAL', class: 'HIGH BALANCE', type: 'FIXED', term: '20' },
-                          { lender: 'Ally2 - Conforming', program: 'FNMA 30 Year Fixed - High Balance', family: 'CONVENTIONAL', class: 'HIGH BALANCE', type: 'FIXED', term: '30' },
-                          { lender: 'Ally2 - Conforming', program: 'FNMA 10/6 ARM', family: 'CONVENTIONAL', class: 'STANDARD', type: 'ARM', term: '10/6' },
-                        ].map((row, idx) => (
-                          <tr key={idx} className="hover:bg-gray-50">
-                            <td className="px-4 py-3">
-                              <Checkbox />
-                            </td>
-                            <td className="px-4 py-3 text-gray-800">{row.lender}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.program}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.family}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.class}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.type}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.term}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+            {(() => {
+              const programs = [
+                { id: 0, lender: 'Achieve', program: 'Home Equity Loan - Fixed 20 Year', family: 'HOMEEQUITY', cls: 'EQUITY', type: 'FIXED', term: '20' },
+                { id: 1, lender: 'Ally2 - Conforming', program: 'FNMA 15 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '15' },
+                { id: 2, lender: 'Ally2 - Conforming', program: 'FNMA 20 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '20' },
+                { id: 3, lender: 'Ally2 - Conforming', program: 'FNMA 30 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '30' },
+                { id: 4, lender: 'Ally2 - Conforming', program: 'FNMA 10/6 ARM', family: 'CONVENTIONAL', cls: 'STANDARD', type: 'ARM', term: '10/6' },
+              ]
+              const allSelected = formData.SelectedPrograms?.length === programs.length
+              const someSelected = (formData.SelectedPrograms?.length ?? 0) > 0 && !allSelected
+              const toggleAll = () => update('SelectedPrograms', allSelected ? [] : programs.map(p => p.id))
+              const toggleRow = (id: number) => {
+                const current: number[] = formData.SelectedPrograms ?? []
+                update('SelectedPrograms', current.includes(id) ? current.filter(i => i !== id) : [...current, id])
+              }
+              return (
+                <CollapsibleStep n={5} label="VERIFY the programs this rule will run against" defaultOpen={false}>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-500">
+                      Review which lender programs this rule will apply to. Select or deselect programs as needed.
+                    </p>
+                    <div className="border border-input rounded-md overflow-hidden bg-white">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-gray-100 border-b border-input">
+                              <th className="px-4 py-3 text-left w-10">
+                                <Checkbox
+                                  checked={allSelected}
+                                  onCheckedChange={toggleAll}
+                                  aria-label="Select all programs"
+                                  data-state={someSelected ? 'indeterminate' : undefined}
+                                />
+                              </th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Program Name</th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Family</th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Class</th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Type</th>
+                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Term</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-input">
+                            {programs.map(row => (
+                              <tr key={row.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-3">
+                                  <Checkbox
+                                    checked={formData.SelectedPrograms?.includes(row.id) ?? false}
+                                    onCheckedChange={() => toggleRow(row.id)}
+                                    aria-label={`Select ${row.program}`}
+                                  />
+                                </td>
+                                <td className="px-4 py-3 text-gray-800">{row.lender}</td>
+                                <td className="px-4 py-3 text-gray-800">{row.program}</td>
+                                <td className="px-4 py-3 text-gray-800">{row.family}</td>
+                                <td className="px-4 py-3 text-gray-800">{row.cls}</td>
+                                <td className="px-4 py-3 text-gray-800">{row.type}</td>
+                                <td className="px-4 py-3 text-gray-800">{row.term}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 text-right">
+                      Showing 5 of 1,593 programs
+                    </div>
                   </div>
-                </div>
-                <div className="text-xs text-gray-500 text-right">
-                  Showing 5 of 1,593 programs
-                </div>
-              </div>
-            </CollapsibleStep>
+                </CollapsibleStep>
+              )
+            })()}
 
             <hr className="border-gray-200" />
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
