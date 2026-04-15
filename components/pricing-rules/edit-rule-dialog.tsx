@@ -247,7 +247,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 {/* Lock Period / Fee Set / MI Company */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
-                    <div className="flex">
+                    <div className="flex items-center gap-1">
                       <Label className="text-xs font-semibold text-gray-700">Lock period</Label>
                       <Info className="h-3.5 w-3.5 text-blue-500" />
                     </div>
