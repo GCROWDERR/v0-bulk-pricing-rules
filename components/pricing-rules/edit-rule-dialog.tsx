@@ -220,22 +220,17 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               <div className="mt-4 space-y-4">
 
                 {/* Description + Disallow */}
-                <label className="flex">
-                  <div>
-                    <Label className="text-xs font-semibold text-gray-700 mb-1 block">
-                      Enter a brief description to identify the rule in your pricing adjustments
-                    </Label>
-                    <Info className="h-3.5 w-3.5 text-blue-500" />
-
-                    <div className="flex items-center gap-3">
-                      <Input
-                        value={formData.RuleDescription}
-                        onChange={e => update('RuleDescription', e.target.value)}
-                        placeholder="Describe this rule"
-                        className="flex-1"
-                      />
-
-                    </label>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-700">
+                    Enter a brief description to identify the rule in your pricing adjustments
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      value={formData.RuleDescription}
+                      onChange={e => update('RuleDescription', e.target.value)}
+                      placeholder="Describe this rule"
+                      className="flex-1"
+                    />
                     <label className="flex items-center gap-1.5 shrink-0 cursor-pointer text-sm text-gray-700">
                       <Checkbox
                         checked={formData.Disallow}
@@ -245,7 +240,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     </label>
                     <Info className="h-4 w-4 text-blue-500 shrink-0" />
                   </div>
-              </div>
+                </div>
 
               {/* Lock Period / Fee Set / MI Company */}
               <div className="grid grid-cols-3 gap-4">
