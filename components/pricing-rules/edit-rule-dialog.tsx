@@ -26,7 +26,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { ChevronDown, Info } from 'lucide-react'
+import { Check, ChevronDown, Info, Search } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import {
@@ -94,47 +94,68 @@ interface ToggleListProps {
   options: string[]
   selected: string[]
   onChange: (v: string[]) => void
-  columns?: number
+  searchable?: boolean
+  info?: boolean
 }
 
-function ToggleList({ label, options, selected, onChange, columns = 1 }: ToggleListProps) {
+function ToggleList({ label, options, selected, onChange, searchable = false, info = false }: ToggleListProps) {
+  const [query, setQuery] = useState('')
   const toggle = (opt: string) =>
     selected.includes(opt) ? onChange(selected.filter(s => s !== opt)) : onChange([...selected, opt])
-  const allSelected = selected.length === options.length
+
+  const filtered = searchable && query.trim()
+    ? options.filter(o => o.toLowerCase().includes(query.toLowerCase()))
+    : options
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">{label}</span>
-        <button
-          type="button"
-          onClick={() => onChange(allSelected ? [] : [...options])}
-          className="text-xs text-blue-600 hover:underline"
-        >
-          {allSelected ? 'Deselect All' : 'Toggle All'}
-        </button>
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-1">
+        <span className="text-sm font-bold text-gray-900">{label}</span>
+        {info && <Info className="h-4 w-4 text-blue-500" />}
       </div>
-      <div className="border rounded p-2 bg-white space-y-0.5 max-h-44 overflow-y-auto">
-        {options.map(opt => (
-          <label
-            key={opt}
-            className={cn(
-              'flex items-center gap-2 px-2 py-1 rounded cursor-pointer text-sm hover:bg-gray-50',
-              selected.includes(opt) && 'bg-blue-50'
-            )}
-          >
-            <Checkbox
-              checked={selected.includes(opt)}
-              onCheckedChange={() => toggle(opt)}
-              className="shrink-0"
+      <div className="border border-gray-300 rounded-lg bg-white overflow-hidden flex flex-col" style={{ minHeight: '180px', maxHeight: '240px' }}>
+        {searchable && (
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200">
+            <Search className="h-4 w-4 text-gray-400 shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search"
+              className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder:text-gray-400"
             />
-            <span className={selected.includes(opt) ? 'text-blue-800 font-medium' : 'text-gray-700'}>{opt}</span>
-          </label>
-        ))}
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto">
+          {searchable && !query && (
+            <button
+              type="button"
+              onClick={() => onChange(selected.length === options.length ? [] : [...options])}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-800 hover:bg-gray-50 border-b border-gray-100"
+            >
+              <span>Select all</span>
+              {selected.length === options.length && <Check className="h-4 w-4 text-[#0157FF]" />}
+            </button>
+          )}
+          {filtered.map((opt, i) => {
+            const isSelected = selected.includes(opt)
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => toggle(opt)}
+                className={cn(
+                  'w-full flex items-center justify-between px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors',
+                  i < filtered.length - 1 && 'border-b border-gray-100'
+                )}
+              >
+                <span className="text-gray-800">{opt}</span>
+                {isSelected && <Check className="h-4 w-4 text-[#0157FF] shrink-0" />}
+              </button>
+            )
+          })}
+        </div>
       </div>
-      {selected.length > 0 && (
-        <p className="text-xs text-gray-400">{selected.length} of {options.length} selected</p>
-      )}
     </div>
   )
 }
@@ -450,10 +471,11 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     onChange={v => update('QuotingChannels', v)}
                   />
                   <ToggleList
-                    label="Lock Periods"
+                    label="Lock Period"
                     options={LOCK_PERIODS.map(p => `${p} Days`)}
                     selected={formData.LockPeriods.map(p => `${p} Days`)}
                     onChange={v => update('LockPeriods', v.map(s => parseInt(s)))}
+                    info
                   />
                 </div>
 
@@ -470,13 +492,19 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     selected={formData.PointGroups}
                     onChange={v => update('PointGroups', v)}
                   />
-                  <div className="col-span-2">
+                  <div className="col-span-2 grid grid-cols-2 gap-4">
                     <ToggleList
                       label="States"
                       options={STATES}
                       selected={formData.States}
                       onChange={v => update('States', v)}
-                      columns={4}
+                      searchable
+                    />
+                    <ToggleList
+                      label="Selected States"
+                      options={formData.States}
+                      selected={formData.States}
+                      onChange={v => update('States', v)}
                     />
                   </div>
                 </div>
