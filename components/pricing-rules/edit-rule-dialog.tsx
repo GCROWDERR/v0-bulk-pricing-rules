@@ -113,7 +113,7 @@ function ToggleList({ label, options, selected, onChange, searchable = false, in
         <span className="text-sm font-bold text-gray-900">{label}</span>
         {info && <Info className="h-4 w-4 text-blue-500" />}
       </div>
-      <div className="border border-gray-300 rounded-lg bg-white overflow-hidden flex flex-col" style={{ minHeight: '180px', maxHeight: '240px' }}>
+      <div className="border border-input rounded-md bg-white overflow-hidden flex flex-col" style={{ minHeight: '180px', maxHeight: '240px' }}>
         {searchable && (
           <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200">
             <Search className="h-4 w-4 text-gray-400 shrink-0" />
@@ -212,7 +212,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
         <div className="flex-1 overflow-y-auto">
           <div className="px-8 py-6 space-y-8">
 
-            {/* ── STEP 1 ──────────────────────────────────────────────── */}
+            {/* ��─ STEP 1 ──────────────────────────────────────────────── */}
             <section>
               <StepLabel n={1} label="Apply these rules" />
               <div className="mt-4 space-y-4">
