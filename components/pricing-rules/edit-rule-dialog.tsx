@@ -627,7 +627,59 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
             <hr className="border-gray-200" />
 
-            {/* Visibility */}
+            {/* ── STEP 5 ──────────────────────────────────────────────── */}
+            <CollapsibleStep n={5} label="VERIFY the programs this rule will run against" defaultOpen={false}>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">
+                  Review which lender programs this rule will apply to. Select or deselect programs as needed.
+                </p>
+                <div className="border border-input rounded-md overflow-hidden bg-white">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-100 border-b border-input">
+                          <th className="px-4 py-3 text-left w-10">
+                            <Checkbox />
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Program Name</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Family</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Class</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Type</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Term</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-input">
+                        {[
+                          { lender: 'Achieve', program: 'Home Equity Loan - Fixed 20 Year', family: 'HOMEEQUITY', class: 'EQUITY', type: 'FIXED', term: '20' },
+                          { lender: 'Ally2 - Conforming', program: 'FNMA 15 Year Fixed - High Balance', family: 'CONVENTIONAL', class: 'HIGH BALANCE', type: 'FIXED', term: '15' },
+                          { lender: 'Ally2 - Conforming', program: 'FNMA 20 Year Fixed - High Balance', family: 'CONVENTIONAL', class: 'HIGH BALANCE', type: 'FIXED', term: '20' },
+                          { lender: 'Ally2 - Conforming', program: 'FNMA 30 Year Fixed - High Balance', family: 'CONVENTIONAL', class: 'HIGH BALANCE', type: 'FIXED', term: '30' },
+                          { lender: 'Ally2 - Conforming', program: 'FNMA 10/6 ARM', family: 'CONVENTIONAL', class: 'STANDARD', type: 'ARM', term: '10/6' },
+                        ].map((row, idx) => (
+                          <tr key={idx} className="hover:bg-gray-50">
+                            <td className="px-4 py-3">
+                              <Checkbox />
+                            </td>
+                            <td className="px-4 py-3 text-gray-800">{row.lender}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.program}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.family}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.class}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.type}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.term}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500 text-right">
+                  Showing 5 of 1,593 programs
+                </div>
+              </div>
+            </CollapsibleStep>
+
+            <hr className="border-gray-200" />
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <label className="flex items-start gap-3 cursor-pointer">
                 <Checkbox
