@@ -287,18 +287,8 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   </div>
                 </div>
 
-                {/* Comp Flat Fee / Price / Rate / Fees */}
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="space-y-1 flex flex-col">
-                    <Label className="text-xs font-semibold text-gray-700">Comp Flat Fee</Label>
-                    <Input
-                      type="number" step="0.01"
-                      value={formData.CompFlatFee || ''}
-                      onChange={e => update('CompFlatFee', parseFloat(e.target.value) || 0)}
-                      placeholder="Comp Flat Fee"
-                      className="w-full"
-                    />
-                  </div>
+                {/* Price / Rate / Fees */}
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Price</Label>
                     <Input
@@ -346,25 +336,39 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   </label>
                 </RadioGroup>
 
-                {/* Final Price Min / Max */}
-                <div className="flex items-end gap-3">
-                  <div className="space-y-1">
+                {/* Comp Flat Fee / Final Price Min / Final Price Max */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1 flex flex-col">
+                    <Label className="text-xs font-semibold text-gray-700">Comp Flat Fee</Label>
+                    <Input
+                      type="number" step="0.01"
+                      value={formData.CompFlatFee || ''}
+                      onChange={e => update('CompFlatFee', parseFloat(e.target.value) || 0)}
+                      placeholder="Comp Flat Fee"
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Final Price MIN</Label>
                     <Input
-                      type="number" step="0.001" className="w-28"
+                      type="number" step="0.001"
                       value={formData.FinalPriceMin}
                       onChange={e => update('FinalPriceMin', parseFloat(e.target.value) || 0)}
+                      className="w-full"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-semibold text-gray-700">Final Price MAX</Label>
+                  <div className="space-y-1 flex flex-col">
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs font-semibold text-gray-700">Final Price MAX</Label>
+                      <Info className="h-3.5 w-3.5 text-blue-500" />
+                    </div>
                     <Input
-                      type="number" step="0.001" className="w-28"
+                      type="number" step="0.001"
                       value={formData.FinalPriceMax}
                       onChange={e => update('FinalPriceMax', parseFloat(e.target.value) || 0)}
+                      className="w-full"
                     />
                   </div>
-                  <Info className="h-4 w-4 text-blue-500 mb-2.5" />
                 </div>
 
                 {/* Checkboxes row 1 */}
