@@ -321,20 +321,24 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
 
                 {/* Margin Type */}
-                <RadioGroup
-                  value={formData.MarginType}
-                  onValueChange={v => update('MarginType', v as 'percentage' | 'flat')}
-                  className="flex gap-6"
-                >
-                  <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                    <RadioGroupItem value="percentage" />
-                    Percentage margin
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                    <RadioGroupItem value="flat" />
-                    Flat fee margin
-                  </label>
-                </RadioGroup>
+                {/* Margin Type */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-gray-700">Margin Type</Label>
+                  <RadioGroup
+                    value={formData.MarginType}
+                    onValueChange={v => update('MarginType', v as 'percentage' | 'flat')}
+                    className="flex gap-6"
+                  >
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                      <RadioGroupItem value="percentage" />
+                      Percentage margin
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                      <RadioGroupItem value="flat" />
+                      Flat fee margin
+                    </label>
+                  </RadioGroup>
+                </div>
 
                 {/* Comp Flat Fee / Final Price Min / Final Price Max */}
                 <div className="grid grid-cols-3 gap-4">
