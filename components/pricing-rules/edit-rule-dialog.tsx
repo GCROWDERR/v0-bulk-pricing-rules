@@ -221,9 +221,12 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
                 {/* Description + Disallow */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-700">
-                    Enter a brief description to identify the rule in your pricing adjustments
-                  </Label>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs font-semibold text-gray-700">
+                      Enter a brief description to identify the rule in your pricing adjustments
+                    </Label>
+                    <Info className="h-3.5 w-3.5 text-blue-500" />
+                  </div>
                   <div className="flex items-center gap-3">
                     <Input
                       value={formData.RuleDescription}
@@ -238,7 +241,6 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       />
                       Disallow
                     </label>
-                    <Info className="h-4 w-4 text-blue-500 shrink-0" />
                   </div>
                 </div>
 
