@@ -287,8 +287,18 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   </div>
                 </div>
 
-                {/* Price / Rate / Fees */}
-                <div className="grid grid-cols-3 gap-4">
+                {/* Comp Flat Fee / Price / Rate / Fees */}
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="space-y-1 flex flex-col">
+                    <Label className="text-xs font-semibold text-gray-700">Comp Flat Fee</Label>
+                    <Input
+                      type="number" step="0.01"
+                      value={formData.CompFlatFee || ''}
+                      onChange={e => update('CompFlatFee', parseFloat(e.target.value) || 0)}
+                      placeholder="Comp Flat Fee"
+                      className="w-full"
+                    />
+                  </div>
                   <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Price</Label>
                     <Input
