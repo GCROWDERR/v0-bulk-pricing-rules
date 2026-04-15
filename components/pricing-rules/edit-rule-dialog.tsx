@@ -77,12 +77,14 @@ function CollapsibleStep({ n, label, defaultOpen = false, children }: Collapsibl
   const [open, setOpen] = useState(defaultOpen)
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="flex items-center gap-2 w-full text-left group">
-        <p className="text-[11px] font-semibold tracking-widest text-gray-500 uppercase">Step {n}</p>
-        <h2 className="text-2xl font-bold text-gray-900 flex-1">{label}</h2>
-        <ChevronDown className={cn('h-5 w-5 text-gray-500 transition-transform', open && 'rotate-180')} />
+      <CollapsibleTrigger className="flex flex-col items-start gap-1 w-full text-left group">
+        <p className="text-xs font-semibold tracking-widest text-gray-500 uppercase">Step {n}</p>
+        <div className="flex items-baseline gap-3 w-full">
+          <h2 className="text-3xl font-black text-gray-900 flex-1">{label}</h2>
+          <ChevronDown className={cn('h-6 w-6 text-gray-400 transition-transform shrink-0', open && 'rotate-180')} />
+        </div>
       </CollapsibleTrigger>
-      <CollapsibleContent className="pt-4">
+      <CollapsibleContent className="pt-6">
         {children}
       </CollapsibleContent>
     </Collapsible>
