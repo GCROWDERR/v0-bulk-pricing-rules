@@ -174,7 +174,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="!max-w-[780px] !w-[780px] max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden"
+        className="!max-w-[1000px] !w-[1000px] max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden"
         showCloseButton={false}
       >
         {/* Header */}
