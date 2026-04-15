@@ -233,11 +233,14 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       onChange={e => update('RuleDescription', e.target.value)}
                       placeholder="Describe this rule"
                       className="flex-1"
+                      aria-label="Rule description"
+                      aria-describedby="rule-description-help"
                     />
                     <label className="flex items-center gap-1.5 shrink-0 cursor-pointer text-sm text-gray-700">
                       <Checkbox
                         checked={formData.Disallow}
                         onCheckedChange={c => update('Disallow', c === true)}
+                        aria-label="Disallow rule from being shown"
                       />
                       Disallow
                     </label>
@@ -255,7 +258,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       value={formData.LockPeriod?.toString() || ''}
                       onValueChange={v => update('LockPeriod', parseInt(v))}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full" aria-label="Select lock period">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -271,7 +274,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       <Info className="h-3.5 w-3.5 text-blue-500" />
                     </div>
                     <Select value={formData.FeeSet} onValueChange={v => update('FeeSet', v)}>
-                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="w-full" aria-label="Select fee set"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         {FEE_SETS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                       </SelectContent>
@@ -283,7 +286,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       value={formData.MICompany || 'none'}
                       onValueChange={v => update('MICompany', v === 'none' ? '' : v)}
                     >
-                      <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className="w-full" aria-label="Select MI company"><SelectValue placeholder="Select" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
                         {MI_COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -302,6 +305,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       onChange={e => update('Price', parseFloat(e.target.value) || 0)}
                       placeholder="Price"
                       className="w-full"
+                      aria-label="Price"
                     />
                   </div>
                   <div className="space-y-1 flex flex-col">
@@ -311,6 +315,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       onChange={e => update('Rate', e.target.value)}
                       placeholder="Rate"
                       className="w-full"
+                      aria-label="Rate"
                     />
                   </div>
                   <div className="space-y-1 flex flex-col">
@@ -321,6 +326,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       onChange={e => update('Fee', parseFloat(e.target.value) || 0)}
                       placeholder="Fees"
                       className="w-full"
+                      aria-label="Fees"
                     />
                   </div>
                 </div>
@@ -333,13 +339,14 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     value={formData.MarginType}
                     onValueChange={v => update('MarginType', v as 'percentage' | 'flat')}
                     className="flex gap-6"
+                    aria-label="Select margin type"
                   >
                     <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                      <RadioGroupItem value="percentage" />
+                      <RadioGroupItem value="percentage" aria-label="Percentage margin" />
                       Percentage margin
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                      <RadioGroupItem value="flat" />
+                      <RadioGroupItem value="flat" aria-label="Flat fee margin" />
                       Flat fee margin
                     </label>
                   </RadioGroup>
@@ -355,6 +362,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       onChange={e => update('CompFlatFee', parseFloat(e.target.value) || 0)}
                       placeholder="Comp Flat Fee"
                       className="w-full"
+                      aria-label="Comp flat fee"
                     />
                   </div>
                   <div className="space-y-1 flex flex-col">
@@ -364,6 +372,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       value={formData.FinalPriceMin}
                       onChange={e => update('FinalPriceMin', parseFloat(e.target.value) || 0)}
                       className="w-full"
+                      aria-label="Final price minimum"
                     />
                   </div>
                   <div className="space-y-1 flex flex-col">
@@ -376,6 +385,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       value={formData.FinalPriceMax}
                       onChange={e => update('FinalPriceMax', parseFloat(e.target.value) || 0)}
                       className="w-full"
+                      aria-label="Final price maximum"
                     />
                   </div>
                 </div>
@@ -386,6 +396,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     <Checkbox
                       checked={formData.HasSecondMortgage}
                       onCheckedChange={c => update('HasSecondMortgage', c === true)}
+                      aria-label="Has second mortgage"
                     />
                     Has second mortgage?
                   </label>
@@ -393,6 +404,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     <Checkbox
                       checked={formData.IgnoreNonEighthRates}
                       onCheckedChange={c => update('IgnoreNonEighthRates', c === true)}
+                      aria-label="Ignore non eighth rates, for example 3.490"
                     />
                     Ignore Non Eighth Rates (e.g. 3.490)?
                   </label>
@@ -404,6 +416,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     <Checkbox
                       checked={formData.IncludeUFMIP}
                       onCheckedChange={c => update('IncludeUFMIP', c === true)}
+                      aria-label="Include UFMIP on FHA/VA in cash to borrower"
                     />
                     Include UFMIP on FHA/VA in cash to borrower?
                   </label>
@@ -419,6 +432,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                         value={formData.MaxCashBack}
                         onChange={e => update('MaxCashBack', parseFloat(e.target.value) || 0)}
                         placeholder="Max cash back"
+                        aria-label="Max cash back to borrower"
                       />
                       <Info className="h-4 w-4 text-blue-500" />
                     </div>
@@ -427,6 +441,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     <Checkbox
                       checked={formData.FinanceUFMIP}
                       onCheckedChange={c => update('FinanceUFMIP', c === true)}
+                      aria-label="Finance UFMIP on FHA/VA"
                     />
                     Finance UFMIP on FHA/VA?
                   </label>
@@ -589,6 +604,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       type="date"
                       value={formData.StartDate || ''}
                       onChange={e => update('StartDate', e.target.value || null)}
+                      aria-label="Start date"
                     />
                   </div>
                   <div className="space-y-1">
@@ -597,6 +613,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       type="date"
                       value={formData.EndDate || ''}
                       onChange={e => update('EndDate', e.target.value || null)}
+                      aria-label="End date"
                     />
                   </div>
                   <div className="space-y-1">
@@ -605,6 +622,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       type="time"
                       value={formData.StartTime || ''}
                       onChange={e => update('StartTime', e.target.value || null)}
+                      aria-label="Start time in Eastern Time"
                     />
                   </div>
                   <div className="space-y-1">
@@ -613,6 +631,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       type="time"
                       value={formData.EndTime || ''}
                       onChange={e => update('EndTime', e.target.value || null)}
+                      aria-label="End time in Eastern Time"
                     />
                   </div>
                 </div>
@@ -621,7 +640,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   <div className="flex items-center gap-5">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
                       <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
-                        <Checkbox />
+                        <Checkbox aria-label={`${day} - rule applies`} />
                         {day}
                       </label>
                     ))}
@@ -712,6 +731,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   checked={formData.HideInQuoteAdjustments}
                   onCheckedChange={c => update('HideInQuoteAdjustments', c === true)}
                   className="mt-0.5"
+                  aria-label="Hide this rule details in quote adjustments"
                 />
                 <span className="text-sm text-red-800">
                   Do NOT show this rule details in quote adjustments. If you select this option, only you will be able to see the adjustments in LoanPricer.
@@ -721,12 +741,13 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
             {/* Save */}
             <div className="flex items-center justify-between pb-2">
-              <Button variant="outline" onClick={handleClose} className="border-gray-300">
+              <Button variant="outline" onClick={handleClose} className="border-gray-300" aria-label="Close dialog and return to rules">
                 Return to Rules
               </Button>
               <Button
                 onClick={handleSave}
                 className="bg-[#0157FF] hover:bg-blue-700 text-white font-semibold px-8"
+                aria-label="Save and stage changes to rule"
               >
                 Stage Change
               </Button>
