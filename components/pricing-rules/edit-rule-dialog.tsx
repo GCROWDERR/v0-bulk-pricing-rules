@@ -205,7 +205,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
           <DialogTitle className="text-xl font-bold text-gray-900">
             {isNew ? 'Pricing Rules: New' : `Pricing Rules: Edit #${formData.RuleId}`}
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-500">
+          <DialogDescription className="text-sm text-gray-700">
             Configure rule details, criteria, and schedule.
           </DialogDescription>
         </DialogHeader>
