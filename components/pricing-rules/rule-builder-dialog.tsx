@@ -1632,39 +1632,35 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
 
               {/* Options Step - All additional criteria */}
               <TabsContent value="options" className="mt-0 space-y-8">
-                {/* STEP 1: Required Actions - Emphasized Section */}
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-25 border-2 border-blue-200 rounded-lg">
+                {/* ==================== STEP 1: REQUIRED ACTION ==================== */}
+                <div className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-blue-25 rounded-lg p-6">
                   <div className="mb-4 flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-gray-900">
-                      Step 1: Select Action
-                    </h2>
-                    <span className="text-xl font-bold text-red-600">*</span>
+                    <h2 className="text-lg font-bold text-gray-900">Step 1: Select Action</h2>
+                    <span className="text-2xl font-bold text-red-600">*</span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-4">Define what this rule will do. You must select at least one action.</p>
-                  
-                  {/* Rule Settings */}
+                  <p className="text-sm text-gray-600 mb-6">Choose what this rule will do. You must select at least one action to continue.</p>
+
+                  {/* Action Inputs Grid */}
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label>Lock Period</Label>
+                        <Label className="font-semibold">Lock Period</Label>
                         <Select value={lockPeriod?.toString() || ''} onValueChange={(v) => setLockPeriod(v ? parseInt(v) : null)}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select" />
+                            <SelectValue placeholder="Select period" />
                           </SelectTrigger>
                           <SelectContent>
                             {LOCK_PERIODS.map((period) => (
-                              <SelectItem key={period} value={period.toString()}>
-                                {period} Days
-                              </SelectItem>
+                              <SelectItem key={period} value={period.toString()}>{period} Days</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Fee Set</Label>
+                        <Label className="font-semibold">Fee Set</Label>
                         <Select value={feeSet} onValueChange={setFeeSet}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select" />
+                            <SelectValue placeholder="Select fee set" />
                           </SelectTrigger>
                           <SelectContent>
                             {FEE_SETS.map((fs) => (
@@ -1674,10 +1670,10 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>MI Company</Label>
+                        <Label className="font-semibold">MI Company</Label>
                         <Select value={miCompany} onValueChange={setMiCompany}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select" />
+                            <SelectValue placeholder="Select MI" />
                           </SelectTrigger>
                           <SelectContent>
                             {MI_COMPANIES.map((mi) => (
@@ -1690,213 +1686,216 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
 
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label>Price</Label>
-                        <Input type="number" step="0.001" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} />
+                        <Label className="font-semibold">Price</Label>
+                        <Input type="number" step="0.001" placeholder="0.000" value={price} onChange={(e) => setPrice(e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <Label>Rate</Label>
-                        <Input type="text" placeholder="Rate" value={rate} onChange={(e) => setRate(e.target.value)} />
+                        <Label className="font-semibold">Rate</Label>
+                        <Input type="text" placeholder="0.00%" value={rate} onChange={(e) => setRate(e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <Label>Fees</Label>
-                        <Input type="number" step="0.01" placeholder="Fees" value={fees} onChange={(e) => setFees(e.target.value)} />
+                        <Label className="font-semibold">Fees</Label>
+                        <Input type="number" step="0.01" placeholder="0.00" value={fees} onChange={(e) => setFees(e.target.value)} />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Margin Type</Label>
-                      <div className="flex items-center gap-4">
+                      <Label className="font-semibold">Margin Type</Label>
+                      <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2">
                           <input type="radio" id="margin-pct" checked={marginType === 'percentage'} onChange={() => setMarginType('percentage')} />
-                          <Label htmlFor="margin-pct" className="cursor-pointer">Percentage margin</Label>
+                          <Label htmlFor="margin-pct" className="cursor-pointer font-normal">Percentage margin</Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <input type="radio" id="margin-flat" checked={marginType === 'flat'} onChange={() => setMarginType('flat')} />
-                          <Label htmlFor="margin-flat" className="cursor-pointer">Flat fee margin</Label>
+                          <Label htmlFor="margin-flat" className="cursor-pointer font-normal">Flat fee margin</Label>
                         </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label>Comp Flat Fee</Label>
-                        <Input type="number" step="0.01" placeholder="Comp flat fee" value={compFlatFee} onChange={(e) => setCompFlatFee(e.target.value)} />
+                        <Label className="font-semibold">Comp Flat Fee</Label>
+                        <Input type="number" step="0.01" placeholder="0.00" value={compFlatFee} onChange={(e) => setCompFlatFee(e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <Label>Final Price Min</Label>
-                        <Input type="number" step="0.001" placeholder="Min" value={finalPriceMin} onChange={(e) => setFinalPriceMin(e.target.value)} />
+                        <Label className="font-semibold">Final Price Min</Label>
+                        <Input type="number" step="0.001" placeholder="0.000" value={finalPriceMin} onChange={(e) => setFinalPriceMin(e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                        <Label>Final Price Max</Label>
-                        <Input type="number" step="0.001" placeholder="Max" value={finalPriceMax} onChange={(e) => setFinalPriceMax(e.target.value)} />
+                        <Label className="font-semibold">Final Price Max</Label>
+                        <Input type="number" step="0.001" placeholder="0.000" value={finalPriceMax} onChange={(e) => setFinalPriceMax(e.target.value)} />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Max Cash Back to Borrower</Label>
-                        <Input type="number" step="0.01" placeholder="Max cash back" value={maxCashBack} onChange={(e) => setMaxCashBack(e.target.value)} />
+                        <Label className="font-semibold">Max Cash Back to Borrower</Label>
+                        <Input type="number" step="0.01" placeholder="0.00" value={maxCashBack} onChange={(e) => setMaxCashBack(e.target.value)} />
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-4">
                       <div className="flex items-center gap-2">
                         <Checkbox id="has-second" checked={hasSecondMortgage} onCheckedChange={(c) => setHasSecondMortgage(c === true)} />
-                        <Label htmlFor="has-second" className="cursor-pointer text-sm">Has second mortgage?</Label>
+                        <Label htmlFor="has-second" className="cursor-pointer font-normal">Has second mortgage?</Label>
                       </div>
                       <div className="flex items-center gap-2">
                         <Checkbox id="ignore-eighth" checked={ignoreNonEighthRates} onCheckedChange={(c) => setIgnoreNonEighthRates(c === true)} />
-                        <Label htmlFor="ignore-eighth" className="cursor-pointer text-sm">Ignore Non Eighth Rates</Label>
+                        <Label htmlFor="ignore-eighth" className="cursor-pointer font-normal">Ignore Non Eighth Rates</Label>
                       </div>
                       <div className="flex items-center gap-2">
                         <Checkbox id="include-ufmip" checked={includeUFMIP} onCheckedChange={(c) => setIncludeUFMIP(c === true)} />
-                        <Label htmlFor="include-ufmip" className="cursor-pointer text-sm">Include UFMIP on FHA/VA</Label>
+                        <Label htmlFor="include-ufmip" className="cursor-pointer font-normal">Include UFMIP on FHA/VA</Label>
                       </div>
                       <div className="flex items-center gap-2">
                         <Checkbox id="finance-ufmip" checked={financeUFMIP} onCheckedChange={(c) => setFinanceUFMIP(c === true)} />
-                        <Label htmlFor="finance-ufmip" className="cursor-pointer text-sm">Finance UFMIP on FHA/VA?</Label>
+                        <Label htmlFor="finance-ufmip" className="cursor-pointer font-normal">Finance UFMIP on FHA/VA?</Label>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* STEP 2 & 3: Optional Filters Section */}
-                {!showOptionalFilters && (
+                {/* ==================== STEP 2 & 3: OPTIONAL FILTERS ==================== */}
+                {!showOptionalFilters ? (
                   <Button
                     onClick={() => setShowOptionalFilters(true)}
                     variant="outline"
-                    className="w-full border-dashed border-2 border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50"
+                    className="w-full h-10 border-2 border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50 font-normal"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add additional filters
                   </Button>
-                )}
-
-                {showOptionalFilters && (
-                  <div className="space-y-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-base font-semibold text-gray-700">
-                        Optional Filters
-                      </h2>
-                      <p className="text-xs text-gray-500">
-                        {showOptionalFilters && selectedPropertyTypes.length + selectedPropertyUsage.length + selectedLoanTypes.length + selectedQuotingChannels.length > 0 ? 'Configured' : 'None configured'}
-                      </p>
-                    </div>
-
-                    {/* Collapsible Optional Criteria */}
+                ) : (
+                  <div className="space-y-6">
+                    {/* Borrower & Property Criteria Section */}
                     <Collapsible defaultOpen={false}>
-                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-medium text-gray-700">Borrower & Property Criteria</h3>
-                          <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                            LTV, FICO, Loan Amount, Property Type, Property Usage, Loan Type, Quoting Channel
+                      <CollapsibleTrigger className="flex w-full items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold text-gray-700 text-sm">Borrower & Property Criteria</h3>
+                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
+                            LTV, FICO, Loan Amount, Property Type, Usage, Loan Type, Channel, States
                           </span>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-gray-500" />
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
                       </CollapsibleTrigger>
-                      <CollapsibleContent className="p-4 space-y-4">
-                        <div className="grid grid-cols-5 gap-4">
-                          {/* Property Types */}
+                      <CollapsibleContent className="p-4 border border-t-0 border-gray-200 bg-white rounded-b-lg space-y-4">
+                        <div className="grid grid-cols-2 gap-6">
+                          {/* LTV Range */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Property Types</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">LTV Range</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedPropertyTypes(selectedPropertyTypes.length === PROPERTY_TYPES.length ? [] : [...PROPERTY_TYPES])}>
-                                  Toggle All
-                                </Button>
+                            <CollapsibleContent className="p-2 space-y-2 mt-1">
+                              <div className="grid grid-cols-2 gap-2">
+                                <Input type="number" placeholder="Min" />
+                                <Input type="number" placeholder="Max" />
                               </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {PROPERTY_TYPES.map((type) => (
-                                  <div key={type} className="flex items-center gap-2">
-                                    <Checkbox id={`pt-${type}`} checked={selectedPropertyTypes.includes(type)} onCheckedChange={() => togglePropertyType(type)} />
-                                    <Label htmlFor={`pt-${type}`} className="text-xs cursor-pointer text-gray-600">{type}</Label>
-                                  </div>
-                                ))}
+                            </CollapsibleContent>
+                          </Collapsible>
+
+                          {/* FICO Range */}
+                          <Collapsible>
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">FICO Range</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="p-2 space-y-2 mt-1">
+                              <div className="grid grid-cols-2 gap-2">
+                                <Input type="number" placeholder="Min" />
+                                <Input type="number" placeholder="Max" />
                               </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+
+                          {/* Loan Amount Range */}
+                          <Collapsible>
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Loan Amount Range</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="p-2 space-y-2 mt-1">
+                              <div className="grid grid-cols-2 gap-2">
+                                <Input type="number" placeholder="Min" />
+                                <Input type="number" placeholder="Max" />
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+
+                          {/* Property Type */}
+                          <Collapsible>
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Property Type</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {PROPERTY_TYPES.map((type) => (
+                                <div key={type} className="flex items-center gap-2">
+                                  <Checkbox id={`pt-${type}`} checked={selectedPropertyTypes.includes(type)} onCheckedChange={() => togglePropertyType(type)} />
+                                  <Label htmlFor={`pt-${type}`} className="text-xs cursor-pointer text-gray-600">{type}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
 
                           {/* Property Usage */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Property Usage</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Property Usage</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedPropertyUsage(selectedPropertyUsage.length === PROPERTY_USAGE.length ? [] : [...PROPERTY_USAGE])}>
-                                  Toggle All
-                                </Button>
-                              </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {PROPERTY_USAGE.map((usage) => (
-                                  <div key={usage} className="flex items-center gap-2">
-                                    <Checkbox id={`pu-${usage}`} checked={selectedPropertyUsage.includes(usage)} onCheckedChange={() => togglePropertyUsage(usage)} />
-                                    <Label htmlFor={`pu-${usage}`} className="text-xs cursor-pointer text-gray-600">{usage}</Label>
-                                  </div>
-                                ))}
-                              </div>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {PROPERTY_USAGE.map((usage) => (
+                                <div key={usage} className="flex items-center gap-2">
+                                  <Checkbox id={`pu-${usage}`} checked={selectedPropertyUsage.includes(usage)} onCheckedChange={() => togglePropertyUsage(usage)} />
+                                  <Label htmlFor={`pu-${usage}`} className="text-xs cursor-pointer text-gray-600">{usage}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
 
-                          {/* Loan Types */}
+                          {/* Loan Type */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Loan Types</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Loan Type</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedLoanTypes(selectedLoanTypes.length === LOAN_TYPES.length ? [] : [...LOAN_TYPES])}>
-                                  Toggle All
-                                </Button>
-                              </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {LOAN_TYPES.map((type) => (
-                                  <div key={type} className="flex items-center gap-2">
-                                    <Checkbox id={`lt-${type}`} checked={selectedLoanTypes.includes(type)} onCheckedChange={() => toggleLoanType(type)} />
-                                    <Label htmlFor={`lt-${type}`} className="text-xs cursor-pointer text-gray-600">{type}</Label>
-                                  </div>
-                                ))}
-                              </div>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {LOAN_TYPES.map((type) => (
+                                <div key={type} className="flex items-center gap-2">
+                                  <Checkbox id={`lt-${type}`} checked={selectedLoanTypes.includes(type)} onCheckedChange={() => toggleLoanType(type)} />
+                                  <Label htmlFor={`lt-${type}`} className="text-xs cursor-pointer text-gray-600">{type}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
 
-                          {/* Quoting Channels */}
+                          {/* Quoting Channel */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Quoting Channels</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Quoting Channel</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedQuotingChannels(selectedQuotingChannels.length === QUOTING_CHANNELS.length ? [] : [...QUOTING_CHANNELS])}>
-                                  Toggle All
-                                </Button>
-                              </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {QUOTING_CHANNELS.map((channel) => (
-                                  <div key={channel} className="flex items-center gap-2">
-                                    <Checkbox id={`qc-${channel}`} checked={selectedQuotingChannels.includes(channel)} onCheckedChange={() => toggleQuotingChannel(channel)} />
-                                    <Label htmlFor={`qc-${channel}`} className="text-xs cursor-pointer text-gray-600">{channel}</Label>
-                                  </div>
-                                ))}
-                              </div>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {QUOTING_CHANNELS.map((channel) => (
+                                <div key={channel} className="flex items-center gap-2">
+                                  <Checkbox id={`qc-${channel}`} checked={selectedQuotingChannels.includes(channel)} onCheckedChange={() => toggleQuotingChannel(channel)} />
+                                  <Label htmlFor={`qc-${channel}`} className="text-xs cursor-pointer text-gray-600">{channel}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
 
                           {/* States */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">States</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">States</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <Input placeholder="Search states..." type="text" value={statesSearchTerm} onChange={(e) => setStatesSearchTerm(e.target.value)} className="text-xs mb-2" />
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
+                            <CollapsibleContent className="p-2 space-y-1 mt-1">
+                              <Input placeholder="Search states..." value={statesSearchTerm} onChange={(e) => setStatesSearchTerm(e.target.value)} className="text-xs mb-2" />
+                              <div className="space-y-1 max-h-48 overflow-y-auto">
                                 {STATES.filter(s => s.toLowerCase().includes(statesSearchTerm.toLowerCase())).map((state) => (
                                   <div key={state} className="flex items-center gap-2">
                                     <Checkbox id={`s-${state}`} checked={selectedStates.includes(state)} onCheckedChange={() => toggleState(state)} />
@@ -1910,131 +1909,96 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                       </CollapsibleContent>
                     </Collapsible>
 
-                    {/* Collapsible Program Filters */}
+                    {/* Program Filters Section */}
                     <Collapsible defaultOpen={false}>
-                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-medium text-gray-700">Program Filters</h3>
-                          <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
-                            Lenders, Products
+                      <CollapsibleTrigger className="flex w-full items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold text-gray-700 text-sm">Program Filters</h3>
+                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
+                            Lenders, Families, Classes, Types, Terms
                           </span>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-gray-500" />
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
                       </CollapsibleTrigger>
-                      <CollapsibleContent className="p-4 space-y-4">
-                        <div className="grid grid-cols-5 gap-4">
+                      <CollapsibleContent className="p-4 border border-t-0 border-gray-200 bg-white rounded-b-lg space-y-4">
+                        <div className="grid grid-cols-2 gap-6">
                           {/* Lenders */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Lenders</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Lenders</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedLenders(selectedLenders.length === LENDERS.length ? [] : [...LENDERS])}>
-                                  Toggle All
-                                </Button>
-                              </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {LENDERS.map((lender) => (
-                                  <div key={lender} className="flex items-center gap-2">
-                                    <Checkbox id={`ln-${lender}`} checked={selectedLenders.includes(lender)} onCheckedChange={() => toggleLender(lender)} />
-                                    <Label htmlFor={`ln-${lender}`} className="text-xs cursor-pointer text-gray-600">{lender}</Label>
-                                  </div>
-                                ))}
-                              </div>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {LENDERS.map((lender) => (
+                                <div key={lender} className="flex items-center gap-2">
+                                  <Checkbox id={`ln-${lender}`} checked={selectedLenders.includes(lender)} onCheckedChange={() => toggleLender(lender)} />
+                                  <Label htmlFor={`ln-${lender}`} className="text-xs cursor-pointer text-gray-600">{lender}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
 
-                          {/* Product Families */}
+                          {/* Families */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Families</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Families</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedProductFamilies(selectedProductFamilies.length === PRODUCT_FAMILIES.length ? [] : [...PRODUCT_FAMILIES])}>
-                                  Toggle All
-                                </Button>
-                              </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {PRODUCT_FAMILIES.map((family) => (
-                                  <div key={family} className="flex items-center gap-2">
-                                    <Checkbox id={`pf-${family}`} checked={selectedProductFamilies.includes(family)} onCheckedChange={() => toggleProductFamily(family)} />
-                                    <Label htmlFor={`pf-${family}`} className="text-xs cursor-pointer text-gray-600">{family}</Label>
-                                  </div>
-                                ))}
-                              </div>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {PRODUCT_FAMILIES.map((family) => (
+                                <div key={family} className="flex items-center gap-2">
+                                  <Checkbox id={`pf-${family}`} checked={selectedProductFamilies.includes(family)} onCheckedChange={() => toggleProductFamily(family)} />
+                                  <Label htmlFor={`pf-${family}`} className="text-xs cursor-pointer text-gray-600">{family}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
 
-                          {/* Product Classes */}
+                          {/* Classes */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Classes</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Classes</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedProductClasses(selectedProductClasses.length === PRODUCT_CLASSES.length ? [] : [...PRODUCT_CLASSES])}>
-                                  Toggle All
-                                </Button>
-                              </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {PRODUCT_CLASSES.map((cls) => (
-                                  <div key={cls} className="flex items-center gap-2">
-                                    <Checkbox id={`pc-${cls}`} checked={selectedProductClasses.includes(cls)} onCheckedChange={() => toggleProductClass(cls)} />
-                                    <Label htmlFor={`pc-${cls}`} className="text-xs cursor-pointer text-gray-600">{cls}</Label>
-                                  </div>
-                                ))}
-                              </div>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {PRODUCT_CLASSES.map((cls) => (
+                                <div key={cls} className="flex items-center gap-2">
+                                  <Checkbox id={`pc-${cls}`} checked={selectedProductClasses.includes(cls)} onCheckedChange={() => toggleProductClass(cls)} />
+                                  <Label htmlFor={`pc-${cls}`} className="text-xs cursor-pointer text-gray-600">{cls}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
 
-                          {/* Product Types */}
+                          {/* Types */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Types</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Types</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedProductTypes(selectedProductTypes.length === PRODUCT_TYPES.length ? [] : [...PRODUCT_TYPES])}>
-                                  Toggle All
-                                </Button>
-                              </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {PRODUCT_TYPES.map((type) => (
-                                  <div key={type} className="flex items-center gap-2">
-                                    <Checkbox id={`pty-${type}`} checked={selectedProductTypes.includes(type)} onCheckedChange={() => toggleProductType(type)} />
-                                    <Label htmlFor={`pty-${type}`} className="text-xs cursor-pointer text-gray-600">{type}</Label>
-                                  </div>
-                                ))}
-                              </div>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {PRODUCT_TYPES.map((type) => (
+                                <div key={type} className="flex items-center gap-2">
+                                  <Checkbox id={`pty-${type}`} checked={selectedProductTypes.includes(type)} onCheckedChange={() => toggleProductType(type)} />
+                                  <Label htmlFor={`pty-${type}`} className="text-xs cursor-pointer text-gray-600">{type}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
 
-                          {/* Product Terms */}
+                          {/* Terms */}
                           <Collapsible>
-                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                              <Label className="text-xs font-medium text-gray-600">Terms</Label>
-                              <ChevronRight className="h-3 w-3 text-gray-400" />
+                            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
+                              <span className="text-sm font-medium text-gray-600">Terms</span>
+                              <ChevronRight className="h-4 w-4 text-gray-400" />
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="p-2 mt-1 space-y-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5 text-gray-500" onClick={() => setSelectedProductTerms(selectedProductTerms.length === PRODUCT_TERMS.length ? [] : [...PRODUCT_TERMS])}>
-                                  Toggle All
-                                </Button>
-                              </div>
-                              <div className="space-y-1 max-h-40 overflow-y-auto">
-                                {PRODUCT_TERMS.map((term) => (
-                                  <div key={term} className="flex items-center gap-2">
-                                    <Checkbox id={`pterm-${term}`} checked={selectedProductTerms.includes(term)} onCheckedChange={() => toggleProductTerm(term)} />
-                                    <Label htmlFor={`pterm-${term}`} className="text-xs cursor-pointer text-gray-600">{term}</Label>
-                                  </div>
-                                ))}
-                              </div>
+                            <CollapsibleContent className="p-2 space-y-1 mt-1 max-h-48 overflow-y-auto">
+                              {PRODUCT_TERMS.map((term) => (
+                                <div key={term} className="flex items-center gap-2">
+                                  <Checkbox id={`pterm-${term}`} checked={selectedProductTerms.includes(term)} onCheckedChange={() => toggleProductTerm(term)} />
+                                  <Label htmlFor={`pterm-${term}`} className="text-xs cursor-pointer text-gray-600">{term}</Label>
+                                </div>
+                              ))}
                             </CollapsibleContent>
                           </Collapsible>
                         </div>
@@ -2043,15 +2007,15 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                   </div>
                 )}
 
-                {/* Schedule section */}
+                {/* ==================== OPTIONAL: SCHEDULE ==================== */}
                 <Collapsible defaultOpen={false}>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
-                    <h3 className="font-medium text-gray-700 text-sm">Schedule (Optional)</h3>
+                  <CollapsibleTrigger className="flex w-full items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <h3 className="font-semibold text-gray-700 text-sm">Schedule (Optional)</h3>
                     <ChevronDown className="h-4 w-4 text-gray-500" />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="p-4 border border-t-0 rounded-b-lg space-y-4 bg-gray-50">
-                    <p className="text-xs text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing.</p>
-                    <div className="grid grid-cols-4 gap-4">
+                  <CollapsibleContent className="p-4 border border-t-0 border-gray-200 bg-white rounded-b-lg space-y-4">
+                    <p className="text-xs text-gray-500">For time-sensitive pricing only. Leave blank if not needed.</p>
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm">Start Date</Label>
                         <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -2083,11 +2047,14 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                   </CollapsibleContent>
                 </Collapsible>
 
-                {/* Visibility Option */}
-                <div className="p-3 rounded-lg border border-gray-200 bg-white">
-                  <div className="flex items-center gap-2">
+                {/* ==================== VISIBILITY ==================== */}
+                <div className="p-3 rounded-lg border border-gray-200 bg-gray-50">
+                  <div className="flex items-center gap-3">
                     <Checkbox id="hide-quote-adj" checked={hideInQuoteAdjustments} onCheckedChange={(c) => setHideInQuoteAdjustments(c === true)} />
-                    <Label htmlFor="hide-quote-adj" className="text-sm cursor-pointer">Hide in quote adjustments</Label>
+                    <div>
+                      <Label htmlFor="hide-quote-adj" className="text-sm font-medium cursor-pointer text-gray-700">Hide in quote adjustments</Label>
+                      <p className="text-xs text-gray-500 mt-0.5">Only you will see this rule&apos;s adjustments</p>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
