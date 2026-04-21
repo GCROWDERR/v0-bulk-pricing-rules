@@ -192,176 +192,182 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
         )}
       </div>
       
-      <div className="grid grid-cols-8 gap-3">
-        {/* Margin Type Toggle */}
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-600">Margin Type</Label>
-          <div className="flex rounded-md border border-gray-300 overflow-hidden h-8">
-            <button
-              type="button"
-              onClick={() => setMarginType('percentage')}
-              className={cn(
-                'px-2 text-xs font-medium transition-colors flex-1 whitespace-nowrap',
-                marginType === 'percentage'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+      <div className="flex items-start gap-6">
+        {/* Margin Type Group - visually grouped */}
+        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          {/* Margin Type Toggle */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-gray-600 font-medium">Margin Type</Label>
+            <div className="flex rounded-md border border-gray-300 overflow-hidden h-8">
+              <button
+                type="button"
+                onClick={() => setMarginType('percentage')}
+                className={cn(
+                  'px-2 text-xs font-medium transition-colors flex-1 whitespace-nowrap',
+                  marginType === 'percentage'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                Percentage
+              </button>
+              <button
+                type="button"
+                onClick={() => setMarginType('flat')}
+                className={cn(
+                  'px-2 text-xs font-medium transition-colors flex-1 whitespace-nowrap border-l border-gray-300',
+                  marginType === 'flat'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                Flat Fee
+              </button>
+            </div>
+          </div>
+
+          {/* Comp % / Comp Flat Fee */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`comp-${rule.RuleId}`} className="text-xs text-gray-600">
+                {marginType === 'percentage' ? 'Comp %' : 'Comp Flat Fee'}
+              </Label>
+              {modifiedFields.has('compPercent') && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
+                  Staged
+                </Badge>
               )}
-            >
-              Percentage
-            </button>
-            <button
-              type="button"
-              onClick={() => setMarginType('flat')}
+            </div>
+            <Input
+              id={`comp-${rule.RuleId}`}
+              type="number"
+              step="0.001"
+              value={fields.compPercent}
+              onChange={(e) => handleFieldChange('compPercent', e.target.value)}
+              onBlur={() => handleBlur('compPercent')}
+              tabIndex={1}
+              aria-label="Compensation percentage"
               className={cn(
-                'px-2 text-xs font-medium transition-colors flex-1 whitespace-nowrap border-l border-gray-300',
-                marginType === 'flat'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                'h-8 text-sm font-mono w-[90px]',
+                modifiedFields.has('compPercent') && 'border-teal-400 bg-teal-50/50'
               )}
-            >
-              Flat Fee
-            </button>
+            />
+          </div>
+
+          {/* Comp Min $ / Final Price Min */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`comp-min-${rule.RuleId}`} className="text-xs text-gray-600">
+                {marginType === 'percentage' ? 'Comp Min $' : 'Final Price Min'}
+              </Label>
+              {modifiedFields.has('compMin') && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
+                  Staged
+                </Badge>
+              )}
+            </div>
+            <Input
+              id={`comp-min-${rule.RuleId}`}
+              type="number"
+              step="0.01"
+              value={fields.compMin}
+              onChange={(e) => handleFieldChange('compMin', e.target.value)}
+              onBlur={() => handleBlur('compMin')}
+              tabIndex={2}
+              aria-label="Compensation minimum in dollars"
+              className={cn(
+                'h-8 text-sm font-mono w-[90px]',
+                modifiedFields.has('compMin') && 'border-teal-400 bg-teal-50/50'
+              )}
+            />
+          </div>
+
+          {/* Comp Max $ / Final Price Max */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`comp-max-${rule.RuleId}`} className="text-xs text-gray-600">
+                {marginType === 'percentage' ? 'Comp Max $' : 'Final Price Max'}
+              </Label>
+              {modifiedFields.has('compMax') && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
+                  Staged
+                </Badge>
+              )}
+            </div>
+            <Input
+              id={`comp-max-${rule.RuleId}`}
+              type="number"
+              step="0.01"
+              value={fields.compMax}
+              onChange={(e) => handleFieldChange('compMax', e.target.value)}
+              onBlur={() => handleBlur('compMax')}
+              tabIndex={3}
+              aria-label="Compensation maximum in dollars"
+              className={cn(
+                'h-8 text-sm font-mono w-[90px]',
+                modifiedFields.has('compMax') && 'border-teal-400 bg-teal-50/50'
+              )}
+            />
           </div>
         </div>
 
-        {/* Comp % / Comp Flat Fee */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`comp-${rule.RuleId}`} className="text-xs text-gray-600">
-              {marginType === 'percentage' ? 'Comp %' : 'Comp Flat Fee'}
-            </Label>
-            {modifiedFields.has('compPercent') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
-                Staged
-              </Badge>
-            )}
+        {/* Price & Fee Group */}
+        <div className="flex items-start gap-3">
+          {/* Price */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`price-${rule.RuleId}`} className="text-xs text-gray-600">
+                Price
+              </Label>
+              {modifiedFields.has('price') && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
+                  Staged
+                </Badge>
+              )}
+            </div>
+            <Input
+              id={`price-${rule.RuleId}`}
+              type="number"
+              step="0.001"
+              value={fields.price}
+              onChange={(e) => handleFieldChange('price', e.target.value)}
+              onBlur={() => handleBlur('price')}
+              tabIndex={4}
+              aria-label="Price"
+              className={cn(
+                'h-8 text-sm font-mono w-[90px]',
+                modifiedFields.has('price') && 'border-teal-400 bg-teal-50/50'
+              )}
+            />
           </div>
-          <Input
-            id={`comp-${rule.RuleId}`}
-            type="number"
-            step="0.001"
-            value={fields.compPercent}
-            onChange={(e) => handleFieldChange('compPercent', e.target.value)}
-            onBlur={() => handleBlur('compPercent')}
-            tabIndex={1}
-            aria-label="Compensation percentage"
-            className={cn(
-              'h-8 text-sm font-mono w-[90px]',
-              modifiedFields.has('compPercent') && 'border-teal-400 bg-teal-50/50'
-            )}
-          />
-        </div>
 
-        {/* Comp Min $ / Final Price Min */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`comp-min-${rule.RuleId}`} className="text-xs text-gray-600">
-              {marginType === 'percentage' ? 'Comp Min $' : 'Final Price Min'}
-            </Label>
-            {modifiedFields.has('compMin') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
-                Staged
-              </Badge>
-            )}
+          {/* Fee */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`fee-${rule.RuleId}`} className="text-xs text-gray-600">
+                Fee ($)
+              </Label>
+              {modifiedFields.has('fee') && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
+                  Staged
+                </Badge>
+              )}
+            </div>
+            <Input
+              id={`fee-${rule.RuleId}`}
+              type="number"
+              step="0.01"
+              value={fields.fee}
+              onChange={(e) => handleFieldChange('fee', e.target.value)}
+              onBlur={() => handleBlur('fee')}
+              tabIndex={5}
+              aria-label="Fee in dollars"
+              className={cn(
+                'h-8 text-sm font-mono w-[90px]',
+                modifiedFields.has('fee') && 'border-teal-400 bg-teal-50/50'
+              )}
+            />
           </div>
-          <Input
-            id={`comp-min-${rule.RuleId}`}
-            type="number"
-            step="0.01"
-            value={fields.compMin}
-            onChange={(e) => handleFieldChange('compMin', e.target.value)}
-            onBlur={() => handleBlur('compMin')}
-            tabIndex={2}
-            aria-label="Compensation minimum in dollars"
-            className={cn(
-              'h-8 text-sm font-mono w-[90px]',
-              modifiedFields.has('compMin') && 'border-teal-400 bg-teal-50/50'
-            )}
-          />
-        </div>
-
-        {/* Comp Max $ / Final Price Max */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`comp-max-${rule.RuleId}`} className="text-xs text-gray-600">
-              {marginType === 'percentage' ? 'Comp Max $' : 'Final Price Max'}
-            </Label>
-            {modifiedFields.has('compMax') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
-                Staged
-              </Badge>
-            )}
-          </div>
-          <Input
-            id={`comp-max-${rule.RuleId}`}
-            type="number"
-            step="0.01"
-            value={fields.compMax}
-            onChange={(e) => handleFieldChange('compMax', e.target.value)}
-            onBlur={() => handleBlur('compMax')}
-            tabIndex={3}
-            aria-label="Compensation maximum in dollars"
-            className={cn(
-              'h-8 text-sm font-mono w-[90px]',
-              modifiedFields.has('compMax') && 'border-teal-400 bg-teal-50/50'
-            )}
-          />
-        </div>
-
-        {/* Price */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`price-${rule.RuleId}`} className="text-xs text-gray-600">
-              Price
-            </Label>
-            {modifiedFields.has('price') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
-                Staged
-              </Badge>
-            )}
-          </div>
-          <Input
-            id={`price-${rule.RuleId}`}
-            type="number"
-            step="0.001"
-            value={fields.price}
-            onChange={(e) => handleFieldChange('price', e.target.value)}
-            onBlur={() => handleBlur('price')}
-            tabIndex={4}
-            aria-label="Price"
-            className={cn(
-              'h-8 text-sm font-mono w-[90px]',
-              modifiedFields.has('price') && 'border-teal-400 bg-teal-50/50'
-            )}
-          />
-        </div>
-
-        {/* Fee */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`fee-${rule.RuleId}`} className="text-xs text-gray-600">
-              Fee ($)
-            </Label>
-            {modifiedFields.has('fee') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
-                Staged
-              </Badge>
-            )}
-          </div>
-          <Input
-            id={`fee-${rule.RuleId}`}
-            type="number"
-            step="0.01"
-            value={fields.fee}
-            onChange={(e) => handleFieldChange('fee', e.target.value)}
-            onBlur={() => handleBlur('fee')}
-            tabIndex={5}
-            aria-label="Fee in dollars"
-            className={cn(
-              'h-8 text-sm font-mono w-[90px]',
-              modifiedFields.has('fee') && 'border-teal-400 bg-teal-50/50'
-            )}
-          />
         </div>
 
         {/* FICO Range */}
@@ -406,6 +412,9 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             />
           </div>
         </div>
+
+        {/* Vertical Divider */}
+        <div className="w-px h-14 bg-gray-300 self-center" />
 
         {/* Loan Amount Range */}
         <div className="space-y-1.5">
