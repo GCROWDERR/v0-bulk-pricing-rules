@@ -34,6 +34,9 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
   // Get the original rule (before any drafts)
   const originalRule = draft?.originalRule || rule
 
+  // Margin type toggle state
+  const [marginType, setMarginType] = useState<'percentage' | 'flat'>('percentage')
+
   // Local state for form fields
   const [fields, setFields] = useState<FieldState>({
     compPercent: currentRule.CompPercent.toString(),
@@ -189,12 +192,43 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
         )}
       </div>
       
-      <div className="grid grid-cols-7 gap-3">
-        {/* Comp % */}
+      <div className="grid grid-cols-8 gap-3">
+        {/* Margin Type Toggle */}
+        <div className="space-y-1.5">
+          <Label className="text-xs text-gray-600">Margin Type</Label>
+          <div className="flex rounded-md border border-gray-300 overflow-hidden h-8">
+            <button
+              type="button"
+              onClick={() => setMarginType('percentage')}
+              className={cn(
+                'px-2 text-xs font-medium transition-colors flex-1 whitespace-nowrap',
+                marginType === 'percentage'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              )}
+            >
+              Percentage
+            </button>
+            <button
+              type="button"
+              onClick={() => setMarginType('flat')}
+              className={cn(
+                'px-2 text-xs font-medium transition-colors flex-1 whitespace-nowrap border-l border-gray-300',
+                marginType === 'flat'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              )}
+            >
+              Flat Fee
+            </button>
+          </div>
+        </div>
+
+        {/* Comp % / Comp Flat Fee */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <Label htmlFor={`comp-${rule.RuleId}`} className="text-xs text-gray-600">
-              Comp %
+              {marginType === 'percentage' ? 'Comp %' : 'Comp Flat Fee'}
             </Label>
             {modifiedFields.has('compPercent') && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
@@ -218,11 +252,11 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
           />
         </div>
 
-        {/* Comp Min $ */}
+        {/* Comp Min $ / Final Price Min */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <Label htmlFor={`comp-min-${rule.RuleId}`} className="text-xs text-gray-600">
-              Comp Min $
+              {marginType === 'percentage' ? 'Comp Min $' : 'Final Price Min'}
             </Label>
             {modifiedFields.has('compMin') && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
@@ -246,11 +280,11 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
           />
         </div>
 
-        {/* Comp Max $ */}
+        {/* Comp Max $ / Final Price Max */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <Label htmlFor={`comp-max-${rule.RuleId}`} className="text-xs text-gray-600">
-              Comp Max $
+              {marginType === 'percentage' ? 'Comp Max $' : 'Final Price Max'}
             </Label>
             {modifiedFields.has('compMax') && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
