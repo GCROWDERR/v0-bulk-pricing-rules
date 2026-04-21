@@ -285,6 +285,17 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                   />
                 </TableHead>
               )}
+              {visibleColumns.has('CompPercent') && (
+                <TableHead className="w-[8%] min-w-[70px] bg-blue-50 text-gray-900 font-medium">
+                  <SortableHeader
+                    field="CompPercent"
+                    label="Margin"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
+                </TableHead>
+              )}
               {visibleColumns.has('Fee') && (
                 <TableHead className="w-[7%] min-w-[60px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
@@ -301,17 +312,6 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                   <SortableHeader
                     field="Price"
                     label="Price"
-                    sortField={state.sortField}
-                    sortDirection={state.sortDirection}
-                    onSort={toggleSort}
-                  />
-                </TableHead>
-              )}
-              {visibleColumns.has('CompPercent') && (
-                <TableHead className="w-[8%] min-w-[70px] bg-blue-50 text-gray-900 font-medium">
-                  <SortableHeader
-                    field="CompPercent"
-                    label="Margin %"
                     sortField={state.sortField}
                     sortDirection={state.sortDirection}
                     onSort={toggleSort}
@@ -412,6 +412,12 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                       </TableCell>
                     )}
 
+                    {visibleColumns.has('CompPercent') && (
+                      <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
+                        {formatPercent(displayRule.CompPercent)}
+                      </TableCell>
+                    )}
+
                     {visibleColumns.has('Fee') && (
                       <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
                         {formatCurrency(displayRule.Fee)}
@@ -421,12 +427,6 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                     {visibleColumns.has('Price') && (
                       <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
                         {formatPrice(displayRule.Price)}
-                      </TableCell>
-                    )}
-
-                    {visibleColumns.has('CompPercent') && (
-                      <TableCell className={cn('font-sans text-sm', isDeleted && 'line-through text-muted-foreground')}>
-                        {formatPercent(displayRule.CompPercent)}
                       </TableCell>
                     )}
 
