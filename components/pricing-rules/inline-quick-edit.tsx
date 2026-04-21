@@ -192,7 +192,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
         )}
       </div>
       
-      <div className="flex items-start gap-6">
+      <div className="flex items-start justify-between gap-4">
         {/* Margin Type Group - visually grouped */}
         <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
           {/* Margin Type Toggle */}
@@ -311,63 +311,66 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
           </div>
         </div>
 
-        {/* Price & Fee Group */}
-        <div className="flex items-start gap-3">
-          {/* Price */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <Label htmlFor={`price-${rule.RuleId}`} className="text-xs text-gray-600">
-                Price
-              </Label>
-              {modifiedFields.has('price') && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
-                  Staged
-                </Badge>
-              )}
-            </div>
-            <Input
-              id={`price-${rule.RuleId}`}
-              type="number"
-              step="0.001"
-              value={fields.price}
-              onChange={(e) => handleFieldChange('price', e.target.value)}
-              onBlur={() => handleBlur('price')}
-              tabIndex={4}
-              aria-label="Price"
-              className={cn(
-                'h-8 text-sm font-mono w-[90px]',
-                modifiedFields.has('price') && 'border-teal-400 bg-teal-50/50'
-              )}
-            />
-          </div>
+        {/* Vertical Divider */}
+        <div className="w-px h-14 bg-gray-300 self-center" />
 
-          {/* Fee */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <Label htmlFor={`fee-${rule.RuleId}`} className="text-xs text-gray-600">
-                Fee ($)
-              </Label>
-              {modifiedFields.has('fee') && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
-                  Staged
-                </Badge>
-              )}
-            </div>
-            <Input
-              id={`fee-${rule.RuleId}`}
-              type="number"
-              step="0.01"
-              value={fields.fee}
-              onChange={(e) => handleFieldChange('fee', e.target.value)}
-              onBlur={() => handleBlur('fee')}
-              tabIndex={5}
-              aria-label="Fee in dollars"
-              className={cn(
-                'h-8 text-sm font-mono w-[90px]',
-                modifiedFields.has('fee') && 'border-teal-400 bg-teal-50/50'
-              )}
-            />
+        {/* Price */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Label htmlFor={`price-${rule.RuleId}`} className="text-xs text-gray-600">
+              Price
+            </Label>
+            {modifiedFields.has('price') && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
+                Staged
+              </Badge>
+            )}
           </div>
+          <Input
+            id={`price-${rule.RuleId}`}
+            type="number"
+            step="0.001"
+            value={fields.price}
+            onChange={(e) => handleFieldChange('price', e.target.value)}
+            onBlur={() => handleBlur('price')}
+            tabIndex={4}
+            aria-label="Price"
+            className={cn(
+              'h-8 text-sm font-mono w-[90px]',
+              modifiedFields.has('price') && 'border-teal-400 bg-teal-50/50'
+            )}
+          />
+        </div>
+
+        {/* Vertical Divider */}
+        <div className="w-px h-14 bg-gray-300 self-center" />
+
+        {/* Fee */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Label htmlFor={`fee-${rule.RuleId}`} className="text-xs text-gray-600">
+              Fee ($)
+            </Label>
+            {modifiedFields.has('fee') && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
+                Staged
+              </Badge>
+            )}
+          </div>
+          <Input
+            id={`fee-${rule.RuleId}`}
+            type="number"
+            step="0.01"
+            value={fields.fee}
+            onChange={(e) => handleFieldChange('fee', e.target.value)}
+            onBlur={() => handleBlur('fee')}
+            tabIndex={5}
+            aria-label="Fee in dollars"
+            className={cn(
+              'h-8 text-sm font-mono w-[90px]',
+              modifiedFields.has('fee') && 'border-teal-400 bg-teal-50/50'
+            )}
+          />
         </div>
 
         {/* Vertical Divider */}
