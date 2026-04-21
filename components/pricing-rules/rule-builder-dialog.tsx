@@ -2095,6 +2095,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                 </div>
               </div>
             </div>
+          </div>
 
               {/* Review Step */}
               <TabsContent value="review" className="mt-0 space-y-4">
