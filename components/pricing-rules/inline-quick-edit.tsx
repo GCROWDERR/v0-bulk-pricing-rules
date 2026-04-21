@@ -370,6 +370,9 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
           </div>
         </div>
 
+        {/* Vertical Divider */}
+        <div className="w-px h-14 bg-gray-300 self-center" />
+
         {/* FICO Range */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
