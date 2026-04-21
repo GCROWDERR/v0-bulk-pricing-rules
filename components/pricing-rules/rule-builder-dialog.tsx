@@ -2045,57 +2045,55 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                     </Collapsible>
                   </div>
                 )}
-              </TabsContent>
 
-              {/* Schedule section (kept optional but outside main filters) */}
-              <Collapsible defaultOpen={false}>
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
-                  <h3 className="font-medium text-gray-700 text-sm">Schedule (Optional)</h3>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="p-4 border border-t-0 rounded-b-lg space-y-4 bg-gray-50">
-                  <p className="text-xs text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing.</p>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm">Start Date</Label>
-                      <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                {/* Schedule section */}
+                <Collapsible defaultOpen={false}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
+                    <h3 className="font-medium text-gray-700 text-sm">Schedule (Optional)</h3>
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="p-4 border border-t-0 rounded-b-lg space-y-4 bg-gray-50">
+                    <p className="text-xs text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing.</p>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm">Start Date</Label>
+                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">End Date</Label>
+                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">Start Time (ET)</Label>
+                        <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">End Time (ET)</Label>
+                        <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm">End Date</Label>
-                      <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                      <Label className="text-sm">Days of Week</Label>
+                      <div className="flex gap-2">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                          <div key={day} className="flex items-center gap-1">
+                            <Checkbox id={`day-${day}`} checked={selectedDays.includes(day)} onCheckedChange={() => toggleDay(day)} />
+                            <Label htmlFor={`day-${day}`} className="text-xs cursor-pointer">{day}</Label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm">Start Time (ET)</Label>
-                      <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm">End Time (ET)</Label>
-                      <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm">Days of Week</Label>
-                    <div className="flex gap-2">
-                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                        <div key={day} className="flex items-center gap-1">
-                          <Checkbox id={`day-${day}`} checked={selectedDays.includes(day)} onCheckedChange={() => toggleDay(day)} />
-                          <Label htmlFor={`day-${day}`} className="text-xs cursor-pointer">{day}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                  </CollapsibleContent>
+                </Collapsible>
 
-              {/* Visibility Option */}
-              <div className="p-3 rounded-lg border border-gray-200 bg-white">
-                <div className="flex items-center gap-2">
-                  <Checkbox id="hide-quote-adj" checked={hideInQuoteAdjustments} onCheckedChange={(c) => setHideInQuoteAdjustments(c === true)} />
-                  <Label htmlFor="hide-quote-adj" className="text-sm cursor-pointer">Hide in quote adjustments</Label>
+                {/* Visibility Option */}
+                <div className="p-3 rounded-lg border border-gray-200 bg-white">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="hide-quote-adj" checked={hideInQuoteAdjustments} onCheckedChange={(c) => setHideInQuoteAdjustments(c === true)} />
+                    <Label htmlFor="hide-quote-adj" className="text-sm cursor-pointer">Hide in quote adjustments</Label>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
+              </TabsContent>
 
               {/* Review Step */}
               <TabsContent value="review" className="mt-0 space-y-4">
