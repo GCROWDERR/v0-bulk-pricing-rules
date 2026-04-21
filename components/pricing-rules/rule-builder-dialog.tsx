@@ -669,6 +669,7 @@ function MatrixGrid({
   const [isSelecting, setIsSelecting] = useState(false)
   const [selectionStart, setSelectionStart] = useState<{ xIdx: number; yIdx: number } | null>(null)
   const [editingCell, setEditingCell] = useState<string | null>(null)
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false)
 
   const allCellKeys = useMemo(() => {
     const keys: string[] = []
@@ -693,6 +694,13 @@ function MatrixGrid({
 
   const handleClearSelection = () => {
     setSelectedCells(new Set())
+  }
+
+  const handleClearAllValues = () => {
+    allCellKeys.forEach(key => {
+      onCellChange(key, '')
+    })
+    setShowClearAllConfirm(false)
   }
 
   const toggleCellSelection = (key: string, event: React.MouseEvent) => {
@@ -822,6 +830,14 @@ function MatrixGrid({
             <Button size="sm" variant="outline" onClick={handleSelectAll} className="h-9">
               Select All
             </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => setShowClearAllConfirm(true)} 
+              className="h-9 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+            >
+              Clear All Values
+            </Button>
             {selectedCells.size > 0 && (
               <Button size="sm" variant="ghost" onClick={handleClearSelection} className="h-9">
                 Clear Selection ({selectedCells.size})
@@ -830,7 +846,7 @@ function MatrixGrid({
           </div>
         </div>
         <p className="text-xs text-slate-500">
-          Double-click or click a cell to edit its value directly. Use Tab to move between cells. Click to select, Ctrl/Cmd+click to multi-select, drag to select a range.
+          Click a cell to edit its value directly. Use Tab to move between cells. Ctrl/Cmd+click to multi-select, drag to select a range.
         </p>
       </div>
 
@@ -876,7 +892,17 @@ function MatrixGrid({
                         if (isEditing) return
                         handleMouseEnter(key, xIdx, yIdx)
                       }}
-                      onDoubleClick={() => setEditingCell(key)}
+                      onClick={() => {
+                        if (!isSelecting) {
+                          setEditingCell(key)
+                          // Focus the input after setting editing cell
+                          setTimeout(() => {
+                            const input = document.querySelector(`input[data-cell-key="${key}"]`) as HTMLInputElement
+                            input?.focus()
+                            input?.select()
+                          }, 0)
+                        }
+                      }}
                     >
                       <Input
                         type={cellValueType === 'disallow' ? 'text' : 'number'}
@@ -900,16 +926,20 @@ function MatrixGrid({
                             ;(e.target as HTMLInputElement).blur()
                           }
                           if (e.key === 'Tab') {
-                            // Allow tab to move to next cell
+                            // Tab moves to next cell in reading order (left-to-right, top-to-bottom)
                             e.preventDefault()
-                            const allKeys = xRanges.flatMap((x, xi) => 
-                              yRanges.map((y, yi) => ({ key: `${x.id}-${y.id}`, xi, yi }))
-                            )
-                            const currentIdx = allKeys.findIndex(k => k.key === key)
+                            // Build ordered array: row by row, column by column
+                            const orderedKeys: string[] = []
+                            xRanges.forEach((xRange) => {
+                              yRanges.forEach((yRange) => {
+                                orderedKeys.push(`${xRange.id}-${yRange.id}`)
+                              })
+                            })
+                            const currentIdx = orderedKeys.indexOf(key)
                             const nextIdx = e.shiftKey 
-                              ? (currentIdx - 1 + allKeys.length) % allKeys.length
-                              : (currentIdx + 1) % allKeys.length
-                            const nextKey = allKeys[nextIdx].key
+                              ? (currentIdx - 1 + orderedKeys.length) % orderedKeys.length
+                              : (currentIdx + 1) % orderedKeys.length
+                            const nextKey = orderedKeys[nextIdx]
                             setEditingCell(nextKey)
                             // Focus the next input after state update
                             setTimeout(() => {
@@ -938,6 +968,27 @@ function MatrixGrid({
           </tbody>
         </table>
       </div>
+
+      {/* Clear All Values Confirmation Dialog */}
+      <AlertDialog open={showClearAllConfirm} onOpenChange={setShowClearAllConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Values?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all values from every cell in the matrix. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleClearAllValues} 
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Clear All Values
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
