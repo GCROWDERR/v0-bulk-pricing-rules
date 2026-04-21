@@ -1923,9 +1923,6 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                       </CollapsibleTrigger>
                       <CollapsibleContent className="p-4 space-y-4">
                         <div className="grid grid-cols-5 gap-4">
-
-                      <CollapsibleContent className="p-4 space-y-4">
-                        <div className="grid grid-cols-5 gap-4">
                           {/* Lenders */}
                           <Collapsible>
                             <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
@@ -2044,38 +2041,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                       </CollapsibleContent>
                     </Collapsible>
                   </div>
-                </div>
-
-                {/* STEP 2 & 3: Optional Filters Section */}
-                {!showOptionalFilters && (
-                  <Button
-                    onClick={() => setShowOptionalFilters(true)}
-                    variant="outline"
-                    className="w-full border-dashed border-2 border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add additional filters
-                  </Button>
                 )}
 
-                {showOptionalFilters && (
-                  <div className="space-y-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-base font-semibold text-gray-700">
-                        Optional Filters
-                      </h2>
-                    </div>
-
-                    {/* Collapsible Optional Criteria */}
-                    <Collapsible defaultOpen={false}>
-                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-100 rounded">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-medium text-gray-700">Borrower & Property Criteria</h3>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-gray-500" />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="p-4 space-y-4">
-                        {/* Property Types, Usage, Loan Types, Quoting Channels, States */}
+                {/* Schedule section */}
                 <Collapsible defaultOpen={false}>
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-gray-200 bg-white hover:bg-gray-50">
                     <h3 className="font-medium text-gray-700 text-sm">Schedule (Optional)</h3>
