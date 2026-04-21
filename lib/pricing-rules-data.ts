@@ -7,6 +7,8 @@ export interface PricingRule {
   Fee: number
   Price: number
   CompPercent: number
+  MarginMin?: number
+  MarginMax?: number
   Active: boolean
   Disallow: boolean
   RuleIsDeleted: boolean

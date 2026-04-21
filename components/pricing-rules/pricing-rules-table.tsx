@@ -197,23 +197,41 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
 
   const renderLenders = (lenders: string[]) => {
     if (lenders.length === 0) return '—'
-    if (lenders.length <= 5) return lenders.join(', ')
     
-    const visible = lenders.slice(0, 5).join(', ')
+    // Show truncated text with hover-to-expand for ALL lender lists
+    const displayText = lenders.length <= 2 
+      ? lenders.join(', ') 
+      : `${lenders.slice(0, 2).join(', ')}...`
+    
     return (
-      <span>
-        {visible}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button className="ml-1 text-blue-600 hover:underline text-xs">
-              +{lenders.length - 5} more
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-xs">
-            <p className="text-xs">{lenders.slice(5).join(', ')}</p>
-          </TooltipContent>
-        </Tooltip>
-      </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-help hover:text-blue-600 transition-colors truncate block">
+            {displayText}
+            {lenders.length > 2 && (
+              <span className="ml-1 text-blue-600 text-xs font-medium">
+                +{lenders.length - 2}
+              </span>
+            )}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent 
+          side="bottom" 
+          align="start"
+          className="max-w-sm p-3 bg-white border border-gray-200 shadow-lg"
+        >
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-gray-700 border-b border-gray-100 pb-1">
+              Included Lenders ({lenders.length})
+            </p>
+            <ul className="text-xs text-gray-600 space-y-0.5 max-h-48 overflow-y-auto">
+              {lenders.map((lender, idx) => (
+                <li key={idx} className="truncate">{lender}</li>
+              ))}
+            </ul>
+          </div>
+        </TooltipContent>
+      </Tooltip>
     )
   }
 

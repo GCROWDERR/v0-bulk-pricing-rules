@@ -15,9 +15,10 @@ interface InlineQuickEditProps {
 }
 
 interface FieldState {
+  marginMin: string
+  marginMax: string
   price: string
   fee: string
-  compPercent: string
   ficoMin: string
   ficoMax: string
   loanAmountMin: string
@@ -34,9 +35,10 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
 
   // Local state for form fields
   const [fields, setFields] = useState<FieldState>({
+    marginMin: (currentRule.MarginMin ?? currentRule.CompPercent).toString(),
+    marginMax: (currentRule.MarginMax ?? currentRule.CompPercent).toString(),
     price: currentRule.Price.toString(),
     fee: currentRule.Fee.toString(),
-    compPercent: currentRule.CompPercent.toString(),
     ficoMin: currentRule.FICOMin.toString(),
     ficoMax: currentRule.FICOMax.toString(),
     loanAmountMin: currentRule.LoanAmountMin.toString(),
@@ -49,9 +51,10 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
   // Update local state when rule changes
   useEffect(() => {
     setFields({
+      marginMin: (currentRule.MarginMin ?? currentRule.CompPercent).toString(),
+      marginMax: (currentRule.MarginMax ?? currentRule.CompPercent).toString(),
       price: currentRule.Price.toString(),
       fee: currentRule.Fee.toString(),
-      compPercent: currentRule.CompPercent.toString(),
       ficoMin: currentRule.FICOMin.toString(),
       ficoMax: currentRule.FICOMax.toString(),
       loanAmountMin: currentRule.LoanAmountMin.toString(),
@@ -60,9 +63,10 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
     
     // Calculate modified fields
     const modified = new Set<string>()
+    if ((currentRule.MarginMin ?? currentRule.CompPercent) !== (originalRule.MarginMin ?? originalRule.CompPercent)) modified.add('marginMin')
+    if ((currentRule.MarginMax ?? currentRule.CompPercent) !== (originalRule.MarginMax ?? originalRule.CompPercent)) modified.add('marginMax')
     if (currentRule.Price !== originalRule.Price) modified.add('price')
     if (currentRule.Fee !== originalRule.Fee) modified.add('fee')
-    if (currentRule.CompPercent !== originalRule.CompPercent) modified.add('compPercent')
     if (currentRule.FICOMin !== originalRule.FICOMin) modified.add('ficoMin')
     if (currentRule.FICOMax !== originalRule.FICOMax) modified.add('ficoMax')
     if (currentRule.LoanAmountMin !== originalRule.LoanAmountMin) modified.add('loanAmountMin')
@@ -93,10 +97,17 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
           updates.Fee = fee
         }
         break
-      case 'compPercent':
-        const compPercent = parseFloat(value) || 0
-        if (compPercent !== currentRule.CompPercent) {
-          updates.CompPercent = compPercent
+      case 'marginMin':
+        const marginMin = parseFloat(value) || 0
+        if (marginMin !== (currentRule.MarginMin ?? currentRule.CompPercent)) {
+          updates.MarginMin = marginMin
+          updates.CompPercent = marginMin // Keep CompPercent in sync for backward compatibility
+        }
+        break
+      case 'marginMax':
+        const marginMax = parseFloat(value) || 0
+        if (marginMax !== (currentRule.MarginMax ?? currentRule.CompPercent)) {
+          updates.MarginMax = marginMax
         }
         break
       case 'ficoMin':
@@ -133,9 +144,10 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
   const handleReset = () => {
     discardDraft(rule.RuleId)
     setFields({
+      marginMin: (originalRule.MarginMin ?? originalRule.CompPercent).toString(),
+      marginMax: (originalRule.MarginMax ?? originalRule.CompPercent).toString(),
       price: originalRule.Price.toString(),
       fee: originalRule.Fee.toString(),
-      compPercent: originalRule.CompPercent.toString(),
       ficoMin: originalRule.FICOMin.toString(),
       ficoMax: originalRule.FICOMax.toString(),
       loanAmountMin: originalRule.LoanAmountMin.toString(),
@@ -167,7 +179,52 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
         )}
       </div>
       
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-5 gap-3">
+        {/* Margin Range (Min/Max) */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-gray-600">Margin %</Label>
+            {(modifiedFields.has('marginMin') || modifiedFields.has('marginMax')) && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
+                Staged
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <Input
+              id={`margin-min-${rule.RuleId}`}
+              type="number"
+              step="0.001"
+              placeholder="Min"
+              value={fields.marginMin}
+              onChange={(e) => handleFieldChange('marginMin', e.target.value)}
+              onBlur={() => handleBlur('marginMin')}
+              tabIndex={1}
+              aria-label="Margin minimum percentage"
+              className={cn(
+                'h-8 text-sm font-mono w-16',
+                modifiedFields.has('marginMin') && 'border-teal-400 bg-teal-50/50'
+              )}
+            />
+            <span className="text-gray-400 text-xs">-</span>
+            <Input
+              id={`margin-max-${rule.RuleId}`}
+              type="number"
+              step="0.001"
+              placeholder="Max"
+              value={fields.marginMax}
+              onChange={(e) => handleFieldChange('marginMax', e.target.value)}
+              onBlur={() => handleBlur('marginMax')}
+              tabIndex={2}
+              aria-label="Margin maximum percentage"
+              className={cn(
+                'h-8 text-sm font-mono w-16',
+                modifiedFields.has('marginMax') && 'border-teal-400 bg-teal-50/50'
+              )}
+            />
+          </div>
+        </div>
+
         {/* Price */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
@@ -187,8 +244,10 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             value={fields.price}
             onChange={(e) => handleFieldChange('price', e.target.value)}
             onBlur={() => handleBlur('price')}
+            tabIndex={3}
+            aria-label="Price"
             className={cn(
-              'h-8 text-sm font-mono',
+              'h-8 text-sm font-mono w-20',
               modifiedFields.has('price') && 'border-teal-400 bg-teal-50/50'
             )}
           />
@@ -213,35 +272,11 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             value={fields.fee}
             onChange={(e) => handleFieldChange('fee', e.target.value)}
             onBlur={() => handleBlur('fee')}
+            tabIndex={4}
+            aria-label="Fee in dollars"
             className={cn(
-              'h-8 text-sm font-mono',
+              'h-8 text-sm font-mono w-20',
               modifiedFields.has('fee') && 'border-teal-400 bg-teal-50/50'
-            )}
-          />
-        </div>
-
-        {/* Margin % */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`comp-${rule.RuleId}`} className="text-xs text-gray-600">
-              Margin %
-            </Label>
-            {modifiedFields.has('compPercent') && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-teal-50 text-teal-600 border-teal-300">
-                Staged
-              </Badge>
-            )}
-          </div>
-          <Input
-            id={`comp-${rule.RuleId}`}
-            type="number"
-            step="0.001"
-            value={fields.compPercent}
-            onChange={(e) => handleFieldChange('compPercent', e.target.value)}
-            onBlur={() => handleBlur('compPercent')}
-            className={cn(
-              'h-8 text-sm font-mono',
-              modifiedFields.has('compPercent') && 'border-teal-400 bg-teal-50/50'
             )}
           />
         </div>
@@ -264,12 +299,14 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               value={fields.ficoMin}
               onChange={(e) => handleFieldChange('ficoMin', e.target.value)}
               onBlur={() => handleBlur('ficoMin')}
+              tabIndex={5}
+              aria-label="FICO minimum score"
               className={cn(
-                'h-8 text-sm font-mono w-20',
+                'h-8 text-sm font-mono w-14',
                 modifiedFields.has('ficoMin') && 'border-teal-400 bg-teal-50/50'
               )}
             />
-            <span className="text-gray-400">-</span>
+            <span className="text-gray-400 text-xs">-</span>
             <Input
               id={`fico-max-${rule.RuleId}`}
               type="number"
@@ -277,8 +314,10 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               value={fields.ficoMax}
               onChange={(e) => handleFieldChange('ficoMax', e.target.value)}
               onBlur={() => handleBlur('ficoMax')}
+              tabIndex={6}
+              aria-label="FICO maximum score"
               className={cn(
-                'h-8 text-sm font-mono w-20',
+                'h-8 text-sm font-mono w-14',
                 modifiedFields.has('ficoMax') && 'border-teal-400 bg-teal-50/50'
               )}
             />
@@ -303,12 +342,14 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               value={formatLoanAmount(fields.loanAmountMin)}
               onChange={(e) => handleFieldChange('loanAmountMin', e.target.value.replace(/[,$]/g, ''))}
               onBlur={() => handleBlur('loanAmountMin')}
+              tabIndex={7}
+              aria-label="Loan amount minimum"
               className={cn(
-                'h-8 text-sm font-mono',
+                'h-8 text-sm font-mono w-20',
                 modifiedFields.has('loanAmountMin') && 'border-teal-400 bg-teal-50/50'
               )}
             />
-            <span className="text-gray-400">-</span>
+            <span className="text-gray-400 text-xs">-</span>
             <Input
               id={`loan-max-${rule.RuleId}`}
               type="text"
@@ -316,8 +357,10 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               value={formatLoanAmount(fields.loanAmountMax)}
               onChange={(e) => handleFieldChange('loanAmountMax', e.target.value.replace(/[,$]/g, ''))}
               onBlur={() => handleBlur('loanAmountMax')}
+              tabIndex={8}
+              aria-label="Loan amount maximum"
               className={cn(
-                'h-8 text-sm font-mono',
+                'h-8 text-sm font-mono w-20',
                 modifiedFields.has('loanAmountMax') && 'border-teal-400 bg-teal-50/50'
               )}
             />

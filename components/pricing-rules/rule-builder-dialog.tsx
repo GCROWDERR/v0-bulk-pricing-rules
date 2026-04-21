@@ -653,6 +653,9 @@ interface MatrixGridProps {
   cellValues: Record<string, string>
   onCellChange: (key: string, value: string) => void
   cellValueType: CellValueType
+  rowMargins?: Record<string, string>
+  onRowMarginChange?: (rowId: string, value: string) => void
+  enableRowMargins?: boolean
 }
 
 function MatrixGrid({
@@ -663,6 +666,9 @@ function MatrixGrid({
   cellValues,
   onCellChange,
   cellValueType,
+  rowMargins = {},
+  onRowMarginChange,
+  enableRowMargins = false,
 }: MatrixGridProps) {
   const [fillValue, setFillValue] = useState('')
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set())
@@ -789,6 +795,91 @@ function MatrixGrid({
     }
   }, [])
 
+  // Handle paste from Excel (tab-separated values)
+  const handlePaste = useCallback((event: React.ClipboardEvent) => {
+    const clipboardData = event.clipboardData.getData('text')
+    if (!clipboardData) return
+
+    // Parse tab-separated and newline-separated values from Excel
+    const rows = clipboardData.trim().split(/\r?\n/).map(row => row.split('\t'))
+    
+    if (rows.length === 0 || rows[0].length === 0) return
+    
+    // Find starting position - use first selected cell or top-left
+    let startXIdx = 0
+    let startYIdx = 0
+    
+    if (selectedCells.size > 0) {
+      // Find the top-left cell of selection
+      const selectedKeys = Array.from(selectedCells)
+      const positions = selectedKeys.map(key => {
+        const [xId, yId] = key.split('-')
+        return {
+          xIdx: xRanges.findIndex(x => x.id === xId),
+          yIdx: yRanges.findIndex(y => y.id === yId)
+        }
+      }).filter(p => p.xIdx !== -1 && p.yIdx !== -1)
+      
+      if (positions.length > 0) {
+        startXIdx = Math.min(...positions.map(p => p.xIdx))
+        startYIdx = Math.min(...positions.map(p => p.yIdx))
+      }
+    }
+    
+    // Apply pasted values to the grid starting from the determined position
+    rows.forEach((row, rowIdx) => {
+      row.forEach((value, colIdx) => {
+        const xIdx = startXIdx + rowIdx
+        const yIdx = startYIdx + colIdx
+        
+        if (xIdx < xRanges.length && yIdx < yRanges.length) {
+          const key = `${xRanges[xIdx].id}-${yRanges[yIdx].id}`
+          const cleanValue = value.trim()
+          if (cleanValue !== '') {
+            onCellChange(key, cleanValue)
+          }
+        }
+      })
+    })
+    
+    event.preventDefault()
+  }, [selectedCells, xRanges, yRanges, onCellChange])
+
+  // Handle copy selection to clipboard
+  const handleCopy = useCallback(() => {
+    if (selectedCells.size === 0) return
+    
+    // Find bounds of selection
+    const positions = Array.from(selectedCells).map(key => {
+      const [xId, yId] = key.split('-')
+      return {
+        key,
+        xIdx: xRanges.findIndex(x => x.id === xId),
+        yIdx: yRanges.findIndex(y => y.id === yId)
+      }
+    }).filter(p => p.xIdx !== -1 && p.yIdx !== -1)
+    
+    if (positions.length === 0) return
+    
+    const minX = Math.min(...positions.map(p => p.xIdx))
+    const maxX = Math.max(...positions.map(p => p.xIdx))
+    const minY = Math.min(...positions.map(p => p.yIdx))
+    const maxY = Math.max(...positions.map(p => p.yIdx))
+    
+    // Build grid of values
+    const rows: string[] = []
+    for (let xIdx = minX; xIdx <= maxX; xIdx++) {
+      const row: string[] = []
+      for (let yIdx = minY; yIdx <= maxY; yIdx++) {
+        const key = `${xRanges[xIdx].id}-${yRanges[yIdx].id}`
+        row.push(cellValues[key] || '')
+      }
+      rows.push(row.join('\t'))
+    }
+    
+    navigator.clipboard.writeText(rows.join('\n'))
+  }, [selectedCells, xRanges, yRanges, cellValues])
+
   if (xRanges.length === 0 || yRanges.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-gray-500 border rounded-lg">
@@ -821,19 +912,35 @@ function MatrixGrid({
               Select All
             </Button>
             {selectedCells.size > 0 && (
-              <Button size="sm" variant="ghost" onClick={handleClearSelection} className="h-9">
-                Clear Selection ({selectedCells.size})
-              </Button>
+              <>
+                <Button size="sm" variant="outline" onClick={handleCopy} className="h-9">
+                  Copy Selection
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleClearSelection} className="h-9">
+                  Clear Selection ({selectedCells.size})
+                </Button>
+              </>
             )}
           </div>
         </div>
         <p className="text-xs text-slate-500">
           Double-click or click a cell to edit its value directly. Use Tab to move between cells. Click to select, Ctrl/Cmd+click to multi-select, drag to select a range.
+          <strong className="ml-1">Paste from Excel:</strong> Copy cells from Excel, select a starting cell here, and press Ctrl/Cmd+V.
         </p>
       </div>
 
       {/* Matrix table */}
-      <div className="overflow-auto border rounded-lg" onMouseUp={handleMouseUp}>
+      <div 
+        className="overflow-auto border rounded-lg" 
+        onMouseUp={handleMouseUp}
+        onPaste={handlePaste}
+        onKeyDown={(e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+            handleCopy()
+          }
+        }}
+        tabIndex={0}
+      >
         <table className="w-full border-collapse select-none">
           <thead>
             <tr className="bg-gray-100">
@@ -841,6 +948,11 @@ function MatrixGrid({
                 {DIMENSION_OPTIONS.find(d => d.value === xDimension)?.label} /
                 {DIMENSION_OPTIONS.find(d => d.value === yDimension)?.label}
               </th>
+              {enableRowMargins && (
+                <th className="border p-2 text-xs font-semibold text-teal-700 bg-teal-50 min-w-[90px]">
+                  Row Margin %
+                </th>
+              )}
               {yRanges.map((yRange) => (
                 <th key={yRange.id} className="border p-2 text-xs font-medium text-gray-600 min-w-[100px]">
                   {formatRangeLabel(yRange, yDimension)}
@@ -854,6 +966,19 @@ function MatrixGrid({
                 <td className="border p-2 text-xs font-medium text-gray-700 bg-gray-50">
                   {formatRangeLabel(xRange, xDimension)}
                 </td>
+                {enableRowMargins && onRowMarginChange && (
+                  <td className="border p-1 bg-teal-50/50">
+                    <Input
+                      type="number"
+                      step="0.001"
+                      value={rowMargins[xRange.id] || ''}
+                      onChange={(e) => onRowMarginChange(xRange.id, e.target.value)}
+                      className="h-8 text-center text-sm font-mono w-full border-teal-200 focus:border-teal-400 focus:ring-teal-400"
+                      placeholder="0.000"
+                      aria-label={`Margin for ${formatRangeLabel(xRange, xDimension)}`}
+                    />
+                  </td>
+                )}
                 {yRanges.map((yRange, yIdx) => {
                   const key = `${xRange.id}-${yRange.id}`
                   const isSelected = selectedCells.has(key)
@@ -1046,12 +1171,18 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   // Step 3: Matrix values (only for matrix mode)
   const [cellValueType, setCellValueType] = useState<CellValueType>('margin')
   const [cellValues, setCellValues] = useState<Record<string, string>>({})
+  const [rowMargins, setRowMargins] = useState<Record<string, string>>({})
+  const [enableRowMargins, setEnableRowMargins] = useState(false)
 
   // Preview state
   const [previewExpanded, setPreviewExpanded] = useState<string | null>(null)
 
   const handleCellChange = useCallback((key: string, value: string) => {
     setCellValues(prev => ({ ...prev, [key]: value }))
+  }, [])
+
+  const handleRowMarginChange = useCallback((rowId: string, value: string) => {
+    setRowMargins(prev => ({ ...prev, [rowId]: value }))
   }, [])
 
   // Apply all options to a rule
@@ -1595,20 +1726,33 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
               {/* Step 3: Matrix (Matrix mode only) */}
               {builderMode === 'matrix' && (
                 <TabsContent value="matrix" className="mt-0 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <Label>Cell value represents:</Label>
-                    <Select value={cellValueType} onValueChange={(v) => setCellValueType(v as CellValueType)}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CELL_VALUE_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Label>Cell value represents:</Label>
+                      <Select value={cellValueType} onValueChange={(v) => setCellValueType(v as CellValueType)}>
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CELL_VALUE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="enable-row-margins" 
+                        checked={enableRowMargins}
+                        onCheckedChange={(checked) => setEnableRowMargins(checked === true)}
+                      />
+                      <Label htmlFor="enable-row-margins" className="text-sm text-gray-600 cursor-pointer">
+                        Enable per-row margin editing
+                      </Label>
+                    </div>
                   </div>
 
                   <MatrixGrid
@@ -1619,6 +1763,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                     cellValues={cellValues}
                     onCellChange={handleCellChange}
                     cellValueType={cellValueType}
+                    rowMargins={rowMargins}
+                    onRowMarginChange={handleRowMarginChange}
+                    enableRowMargins={enableRowMargins}
                   />
                 </TabsContent>
               )}
