@@ -212,7 +212,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             tabIndex={1}
             aria-label="Compensation percentage"
             className={cn(
-              'h-8 text-sm font-mono w-[72px]',
+              'h-8 text-sm font-mono w-[90px]',
               modifiedFields.has('compPercent') && 'border-teal-400 bg-teal-50/50'
             )}
           />
@@ -240,7 +240,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             tabIndex={2}
             aria-label="Compensation minimum in dollars"
             className={cn(
-              'h-8 text-sm font-mono w-[72px]',
+              'h-8 text-sm font-mono w-[90px]',
               modifiedFields.has('compMin') && 'border-teal-400 bg-teal-50/50'
             )}
           />
@@ -268,7 +268,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             tabIndex={3}
             aria-label="Compensation maximum in dollars"
             className={cn(
-              'h-8 text-sm font-mono w-[72px]',
+              'h-8 text-sm font-mono w-[90px]',
               modifiedFields.has('compMax') && 'border-teal-400 bg-teal-50/50'
             )}
           />
@@ -296,7 +296,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             tabIndex={4}
             aria-label="Price"
             className={cn(
-              'h-8 text-sm font-mono w-[72px]',
+              'h-8 text-sm font-mono w-[90px]',
               modifiedFields.has('price') && 'border-teal-400 bg-teal-50/50'
             )}
           />
@@ -324,7 +324,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
             tabIndex={5}
             aria-label="Fee in dollars"
             className={cn(
-              'h-8 text-sm font-mono w-[72px]',
+              'h-8 text-sm font-mono w-[90px]',
               modifiedFields.has('fee') && 'border-teal-400 bg-teal-50/50'
             )}
           />
@@ -351,7 +351,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               tabIndex={6}
               aria-label="FICO minimum score"
               className={cn(
-                'h-8 text-sm font-mono w-[72px]',
+                'h-8 text-sm font-mono w-[90px]',
                 modifiedFields.has('ficoMin') && 'border-teal-400 bg-teal-50/50'
               )}
             />
@@ -366,7 +366,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               tabIndex={7}
               aria-label="FICO maximum score"
               className={cn(
-                'h-8 text-sm font-mono w-[72px]',
+                'h-8 text-sm font-mono w-[90px]',
                 modifiedFields.has('ficoMax') && 'border-teal-400 bg-teal-50/50'
               )}
             />
@@ -394,7 +394,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               tabIndex={8}
               aria-label="Loan amount minimum"
               className={cn(
-                'h-8 text-sm font-mono w-[88px]',
+                'h-8 text-sm font-mono w-[110px]',
                 modifiedFields.has('loanAmountMin') && 'border-teal-400 bg-teal-50/50'
               )}
             />
@@ -409,7 +409,7 @@ export function InlineQuickEdit({ rule }: InlineQuickEditProps) {
               tabIndex={9}
               aria-label="Loan amount maximum"
               className={cn(
-                'h-8 text-sm font-mono w-[88px]',
+                'h-8 text-sm font-mono w-[110px]',
                 modifiedFields.has('loanAmountMax') && 'border-teal-400 bg-teal-50/50'
               )}
             />
