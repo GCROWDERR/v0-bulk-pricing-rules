@@ -860,7 +860,7 @@ function MatrixGrid({
                 {DIMENSION_OPTIONS.find(d => d.value === yDimension)?.label}
               </th>
               {yRanges.map((yRange) => (
-                <th key={yRange.id} className="border p-2 text-xs font-medium text-gray-600 min-w-[100px]">
+                <th key={yRange.id} className="border p-2 text-xs font-medium text-gray-600 min-w-[125px]">
                   {formatRangeLabel(yRange, yDimension)}
                 </th>
               ))}
@@ -910,7 +910,7 @@ function MatrixGrid({
                         value={cellValues[key] || ''}
                         onChange={(e) => onCellChange(key, e.target.value)}
                         className={cn(
-                          'h-8 text-center text-sm font-mono',
+                          'h-8 w-full min-w-[115px] text-center text-sm font-mono',
                           isEditing 
                             ? 'ring-2 ring-blue-500 border-blue-500' 
                             : 'pointer-events-none',
