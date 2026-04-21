@@ -1631,7 +1631,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
               )}
 
               {/* Options Step - All additional criteria */}
-              <TabsContent value="options" className="mt-0 space-y-6">
+              <TabsContent value="options" className="mt-0 space-y-8">
                 {/* STEP 1: Required Actions - Emphasized Section */}
                 <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-25 border-2 border-blue-200 rounded-lg">
                   <div className="mb-4 flex items-center gap-2">
