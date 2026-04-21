@@ -26,7 +26,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Check, ChevronDown, Info, Search } from 'lucide-react'
+import { Check, ChevronDown, Info, Search, Plus } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import {
@@ -172,6 +172,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
   const originalRule = existingDraft?.originalRule || rule
 
   const [formData, setFormData] = useState<PricingRule | null>(null)
+  const [showOptionalFilters, setShowOptionalFilters] = useState(false)
 
   useEffect(() => {
     if (currentRule) setFormData({ ...currentRule })
@@ -215,8 +216,12 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
           <div className="px-8 py-6 space-y-8">
 
             {/* ��─ STEP 1 ──────────────────────────────────────────────── */}
-            <section>
-              <StepLabel n={1} label="Apply these rules" />
+            <section className="p-6 bg-blue-50 border-2 border-blue-300 rounded-lg">
+              <div className="flex items-start justify-between mb-4">
+                <StepLabel n={1} label="Apply these rules" />
+                <span className="text-3xl font-bold text-red-600 leading-none">*</span>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">This is a required step. Define what this rule will do.</p>
               <div className="mt-4 space-y-4">
 
                 {/* Description + Disallow */}
@@ -451,147 +456,161 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
             <hr className="border-gray-200" />
 
-            {/* ── STEP 2 ──────────────────────────────────────────────── */}
-            <CollapsibleStep n={2} label="Select from these optional criteria">
-              <div className="space-y-5">
-                <p className="text-sm text-gray-500">
-                  Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.
-                </p>
+            {/* ── STEPS 2 & 3: OPTIONAL FILTERS (PROGRESSIVE DISCLOSURE) ──────── */}
+            {!showOptionalFilters ? (
+              <Button
+                onClick={() => setShowOptionalFilters(true)}
+                variant="outline"
+                className="w-full h-12 border-2 border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50 font-normal text-base"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Add additional filters
+              </Button>
+            ) : (
+              <>
+                {/* ── STEP 2: Optional Borrower & Property Criteria ────────────── */}
+                <CollapsibleStep n={2} label="Select from these optional criteria">
+                  <div className="space-y-5">
+                    <p className="text-sm text-gray-500">
+                      Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.
+                    </p>
 
-                {/* Numeric ranges */}
-                <div className="grid grid-cols-3 gap-6">
-                  {[
-                    { label: 'LTV', minField: 'LTVMin' as const, maxField: 'LTVMax' as const },
-                    { label: 'FICO', minField: 'FICOMin' as const, maxField: 'FICOMax' as const },
-                    { label: 'Loan Amount', minField: 'LoanAmountMin' as const, maxField: 'LoanAmountMax' as const },
-                  ].map(({ label, minField, maxField }) => (
-                    <div key={label} className="space-y-1">
-                      <Label className="text-xs font-semibold text-gray-700">{label}</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number" placeholder="Min" className="flex-1"
-                          value={formData[minField]}
-                          onChange={e => update(minField, parseFloat(e.target.value) || 0)}
+                    {/* Numeric ranges */}
+                    <div className="grid grid-cols-3 gap-6">
+                      {[
+                        { label: 'LTV', minField: 'LTVMin' as const, maxField: 'LTVMax' as const },
+                        { label: 'FICO', minField: 'FICOMin' as const, maxField: 'FICOMax' as const },
+                        { label: 'Loan Amount', minField: 'LoanAmountMin' as const, maxField: 'LoanAmountMax' as const },
+                      ].map(({ label, minField, maxField }) => (
+                        <div key={label} className="space-y-1">
+                          <Label className="text-xs font-semibold text-gray-700">{label}</Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number" placeholder="Min" className="flex-1"
+                              value={formData[minField]}
+                              onChange={e => update(minField, parseFloat(e.target.value) || 0)}
+                            />
+                            <span className="text-gray-400 text-sm">to</span>
+                            <Input
+                              type="number" placeholder="Max" className="flex-1"
+                              value={formData[maxField]}
+                              onChange={e => update(maxField, parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Multi-select toggles */}
+                    <div className="grid grid-cols-5 gap-4">
+                      <ToggleList
+                        label="Property Types"
+                        options={PROPERTY_TYPES}
+                        selected={formData.PropertyTypes}
+                        onChange={v => update('PropertyTypes', v)}
+                      />
+                      <ToggleList
+                        label="Property Usage"
+                        options={PROPERTY_USAGE}
+                        selected={formData.PropertyUsage}
+                        onChange={v => update('PropertyUsage', v)}
+                      />
+                      <ToggleList
+                        label="Loan Types"
+                        options={LOAN_TYPES}
+                        selected={formData.LoanTypes}
+                        onChange={v => update('LoanTypes', v)}
+                      />
+                      <ToggleList
+                        label="Quoting Channels"
+                        options={QUOTING_CHANNELS}
+                        selected={formData.QuotingChannels}
+                        onChange={v => update('QuotingChannels', v)}
+                      />
+                      <ToggleList
+                        label="Lock Period"
+                        options={LOCK_PERIODS.map(p => `${p} Days`)}
+                        selected={formData.LockPeriods.map(p => `${p} Days`)}
+                        onChange={v => update('LockPeriods', v.map(s => parseInt(s)))}
+                        info
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-4">
+                      <ToggleList
+                        label="Borrower Filters"
+                        options={BORROWER_FILTERS}
+                        selected={formData.BorrowerFilters}
+                        onChange={v => update('BorrowerFilters', v)}
+                      />
+                      <ToggleList
+                        label="Point Groups"
+                        options={POINT_GROUPS}
+                        selected={formData.PointGroups}
+                        onChange={v => update('PointGroups', v)}
+                      />
+                      <div className="col-span-2 grid grid-cols-2 gap-4">
+                        <ToggleList
+                          label="States"
+                          options={STATES}
+                          selected={formData.States}
+                          onChange={v => update('States', v)}
+                          searchable
                         />
-                        <span className="text-gray-400 text-sm">to</span>
-                        <Input
-                          type="number" placeholder="Max" className="flex-1"
-                          value={formData[maxField]}
-                          onChange={e => update(maxField, parseFloat(e.target.value) || 0)}
+                        <ToggleList
+                          label="Selected States"
+                          options={formData.States}
+                          selected={formData.States}
+                          onChange={v => update('States', v)}
                         />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                </CollapsibleStep>
 
-                {/* Multi-select toggles */}
-                <div className="grid grid-cols-5 gap-4">
-                  <ToggleList
-                    label="Property Types"
-                    options={PROPERTY_TYPES}
-                    selected={formData.PropertyTypes}
-                    onChange={v => update('PropertyTypes', v)}
-                  />
-                  <ToggleList
-                    label="Property Usage"
-                    options={PROPERTY_USAGE}
-                    selected={formData.PropertyUsage}
-                    onChange={v => update('PropertyUsage', v)}
-                  />
-                  <ToggleList
-                    label="Loan Types"
-                    options={LOAN_TYPES}
-                    selected={formData.LoanTypes}
-                    onChange={v => update('LoanTypes', v)}
-                  />
-                  <ToggleList
-                    label="Quoting Channels"
-                    options={QUOTING_CHANNELS}
-                    selected={formData.QuotingChannels}
-                    onChange={v => update('QuotingChannels', v)}
-                  />
-                  <ToggleList
-                    label="Lock Period"
-                    options={LOCK_PERIODS.map(p => `${p} Days`)}
-                    selected={formData.LockPeriods.map(p => `${p} Days`)}
-                    onChange={v => update('LockPeriods', v.map(s => parseInt(s)))}
-                    info
-                  />
-                </div>
+                <hr className="border-gray-200" />
 
-                <div className="grid grid-cols-4 gap-4">
-                  <ToggleList
-                    label="Borrower Filters"
-                    options={BORROWER_FILTERS}
-                    selected={formData.BorrowerFilters}
-                    onChange={v => update('BorrowerFilters', v)}
-                  />
-                  <ToggleList
-                    label="Point Groups"
-                    options={POINT_GROUPS}
-                    selected={formData.PointGroups}
-                    onChange={v => update('PointGroups', v)}
-                  />
-                  <div className="col-span-2 grid grid-cols-2 gap-4">
+                {/* ── STEP 3: Program Filters ────────────────────────────────────── */}
+                <CollapsibleStep n={3} label="Filter the programs the rule runs against">
+                  <div className="grid grid-cols-5 gap-4">
                     <ToggleList
-                      label="States"
-                      options={STATES}
-                      selected={formData.States}
-                      onChange={v => update('States', v)}
-                      searchable
+                      label="Lenders"
+                      options={LENDERS}
+                      selected={formData.Lenders}
+                      onChange={v => update('Lenders', v)}
                     />
                     <ToggleList
-                      label="Selected States"
-                      options={formData.States}
-                      selected={formData.States}
-                      onChange={v => update('States', v)}
+                      label="Product Families"
+                      options={PRODUCT_FAMILIES}
+                      selected={formData.ProductFamilies}
+                      onChange={v => update('ProductFamilies', v)}
+                    />
+                    <ToggleList
+                      label="Product Classes"
+                      options={PRODUCT_CLASSES}
+                      selected={formData.ProductClasses}
+                      onChange={v => update('ProductClasses', v)}
+                    />
+                    <ToggleList
+                      label="Product Types"
+                      options={PRODUCT_TYPES}
+                      selected={formData.ProductTypes}
+                      onChange={v => update('ProductTypes', v)}
+                    />
+                    <ToggleList
+                      label="Product Terms"
+                      options={PRODUCT_TERMS}
+                      selected={formData.ProductTerms}
+                      onChange={v => update('ProductTerms', v)}
                     />
                   </div>
-                </div>
-              </div>
-            </CollapsibleStep>
+                </CollapsibleStep>
 
-            <hr className="border-gray-200" />
+                <hr className="border-gray-200" />
+              </>
+            )}
 
-            {/* ── STEP 3 ──────────────────────────────────────────────── */}
-            <CollapsibleStep n={3} label="Filter the programs the rule runs against">
-              <div className="grid grid-cols-5 gap-4">
-                <ToggleList
-                  label="Lenders"
-                  options={LENDERS}
-                  selected={formData.Lenders}
-                  onChange={v => update('Lenders', v)}
-                />
-                <ToggleList
-                  label="Product Families"
-                  options={PRODUCT_FAMILIES}
-                  selected={formData.ProductFamilies}
-                  onChange={v => update('ProductFamilies', v)}
-                />
-                <ToggleList
-                  label="Product Classes"
-                  options={PRODUCT_CLASSES}
-                  selected={formData.ProductClasses}
-                  onChange={v => update('ProductClasses', v)}
-                />
-                <ToggleList
-                  label="Product Types"
-                  options={PRODUCT_TYPES}
-                  selected={formData.ProductTypes}
-                  onChange={v => update('ProductTypes', v)}
-                />
-                <ToggleList
-                  label="Product Terms"
-                  options={PRODUCT_TERMS}
-                  selected={formData.ProductTerms}
-                  onChange={v => update('ProductTerms', v)}
-                />
-              </div>
-            </CollapsibleStep>
-
-            <hr className="border-gray-200" />
-
-            {/* ── STEP 4 ──────────────────────────────────────────────── */}
+            {/* ── STEP 4: Schedule when this rule applies ─────────────────────────── */}
             <CollapsibleStep n={4} label="Schedule when this rule applies">
               <div className="space-y-4">
                 <p className="text-sm text-gray-500">
@@ -651,7 +670,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
             <hr className="border-gray-200" />
 
-            {/* ── STEP 5 ──────────────────────────────────────────────── */}
+            {/* ── STEP 5: Verify the programs this rule will run against ─────────────────── */}
             {(() => {
               const programs = [
                 { id: 0, lender: 'Achieve', program: 'Home Equity Loan - Fixed 20 Year', family: 'HOMEEQUITY', cls: 'EQUITY', type: 'FIXED', term: '20' },
