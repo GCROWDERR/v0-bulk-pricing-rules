@@ -285,6 +285,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   <div className="flex items-center gap-1">
                     <Label className="text-xs font-semibold text-gray-700">
                       Enter a brief description to identify the rule in your pricing adjustments
+                      <span className="text-red-600 ml-1">*</span>
                     </Label>
                     <Info className="h-3.5 w-3.5 text-blue-500" />
                   </div>
@@ -318,7 +319,10 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
                     <div className="flex items-center gap-1">
-                      <Label className="text-xs font-semibold text-gray-700">Lock period</Label>
+                      <Label className="text-xs font-semibold text-gray-700">
+                        Lock period
+                        <span className="text-red-600 ml-1">*</span>
+                      </Label>
                       <Info className="h-3.5 w-3.5 text-blue-500" />
                     </div>
                     <Select
@@ -338,7 +342,10 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   </div>
                   <div className="space-y-1 flex flex-col">
                     <div className="flex items-center gap-1">
-                      <Label className="text-xs font-semibold text-gray-700">Fee Set</Label>
+                      <Label className="text-xs font-semibold text-gray-700">
+                        Fee Set
+                        <span className="text-red-600 ml-1">*</span>
+                      </Label>
                       <Info className="h-3.5 w-3.5 text-blue-500" />
                     </div>
                     <Select value={formData.FeeSet} onValueChange={v => update('FeeSet', v)}>
