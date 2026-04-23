@@ -26,7 +26,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Check, ChevronDown, Info, Search, Plus } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Check, ChevronDown, ChevronUp, Info, Search, Plus, Trash2 } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import {
@@ -172,7 +178,30 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
   const originalRule = existingDraft?.originalRule || rule
 
   const [formData, setFormData] = useState<PricingRule | null>(null)
-  const [showOptionalFilters, setShowOptionalFilters] = useState(false)
+  // Which optional sections the user has added
+  const [activeSections, setActiveSections] = useState<Set<'conditions' | 'programs' | 'schedule'>>(new Set())
+  // Which sections are expanded vs collapsed
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['conditions', 'programs', 'schedule']))
+
+  const toggleSection = (key: 'conditions' | 'programs' | 'schedule') => {
+    setActiveSections(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
+  const removeSection = (key: 'conditions' | 'programs' | 'schedule') => {
+    setActiveSections(prev => { const next = new Set(prev); next.delete(key); return next })
+  }
+
+  const toggleExpanded = (key: string) => {
+    setExpandedSections(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
 
   useEffect(() => {
     if (currentRule) setFormData({ ...currentRule })
@@ -454,296 +483,241 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               </div>
             </section>
 
-            <hr className="border-gray-200" />
+            {/* ── OPTIONAL CRITERIA ─────────────────────────────────────────────── */}
+            <div className="space-y-3">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Optional criteria</h2>
+                <p className="text-sm text-gray-500 mt-1">Add conditions to limit when this rule applies. If no criteria are added, this rule applies to all scenarios.</p>
+              </div>
 
-            {/* ── STEPS 2 & 3: OPTIONAL FILTERS (PROGRESSIVE DISCLOSURE) ──────── */}
-            {!showOptionalFilters ? (
-              <Button
-                onClick={() => setShowOptionalFilters(true)}
-                variant="outline"
-                className="w-full h-12 border-2 border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50 font-normal text-base"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Add additional filters
-              </Button>
-            ) : (
-              <>
-                {/* ── STEP 2: Optional Borrower & Property Criteria ────────────── */}
-                <CollapsibleStep n={2} label="Select from these optional criteria">
-                  <div className="space-y-5">
-                    <p className="text-sm text-gray-500">
-                      Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.
-                    </p>
+              {/* Conditions section */}
+              {activeSections.has('conditions') && (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-4 bg-white">
+                    <h3 className="text-lg font-bold text-gray-900">Optional criteria</h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => removeSection('conditions')}
+                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded"
+                        aria-label="Remove conditions section"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded('conditions')}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded"
+                        aria-label="Toggle conditions section"
+                      >
+                        {expandedSections.has('conditions') ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+                  {expandedSections.has('conditions') && (
+                    <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-5">
+                      <p className="text-sm text-gray-500">
+                        Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.
+                      </p>
+                      <div className="grid grid-cols-3 gap-6">
+                        {[
+                          { label: 'LTV', minField: 'LTVMin' as const, maxField: 'LTVMax' as const },
+                          { label: 'FICO', minField: 'FICOMin' as const, maxField: 'FICOMax' as const },
+                          { label: 'Loan Amount', minField: 'LoanAmountMin' as const, maxField: 'LoanAmountMax' as const },
+                        ].map(({ label, minField, maxField }) => (
+                          <div key={label} className="space-y-1">
+                            <Label className="text-xs font-semibold text-gray-700">{label}</Label>
+                            <div className="flex items-center gap-2">
+                              <Input type="number" placeholder="Min" className="flex-1"
+                                value={formData[minField]}
+                                onChange={e => update(minField, parseFloat(e.target.value) || 0)} />
+                              <span className="text-gray-400 text-sm">to</span>
+                              <Input type="number" placeholder="Max" className="flex-1"
+                                value={formData[maxField]}
+                                onChange={e => update(maxField, parseFloat(e.target.value) || 0)} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-5 gap-4">
+                        <ToggleList label="Property Types" options={PROPERTY_TYPES} selected={formData.PropertyTypes} onChange={v => update('PropertyTypes', v)} />
+                        <ToggleList label="Property Usage" options={PROPERTY_USAGE} selected={formData.PropertyUsage} onChange={v => update('PropertyUsage', v)} />
+                        <ToggleList label="Loan Types" options={LOAN_TYPES} selected={formData.LoanTypes} onChange={v => update('LoanTypes', v)} />
+                        <ToggleList label="Quoting Channels" options={QUOTING_CHANNELS} selected={formData.QuotingChannels} onChange={v => update('QuotingChannels', v)} />
+                        <ToggleList label="Lock Period" options={LOCK_PERIODS.map(p => `${p} Days`)} selected={formData.LockPeriods.map(p => `${p} Days`)} onChange={v => update('LockPeriods', v.map(s => parseInt(s)))} info />
+                      </div>
+                      <div className="grid grid-cols-4 gap-4">
+                        <ToggleList label="Borrower Filters" options={BORROWER_FILTERS} selected={formData.BorrowerFilters} onChange={v => update('BorrowerFilters', v)} />
+                        <ToggleList label="Point Groups" options={POINT_GROUPS} selected={formData.PointGroups} onChange={v => update('PointGroups', v)} />
+                        <div className="col-span-2 grid grid-cols-2 gap-4">
+                          <ToggleList label="States" options={STATES} selected={formData.States} onChange={v => update('States', v)} searchable />
+                          <ToggleList label="Selected States" options={formData.States} selected={formData.States} onChange={v => update('States', v)} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                    {/* Numeric ranges */}
-                    <div className="grid grid-cols-3 gap-6">
-                      {[
-                        { label: 'LTV', minField: 'LTVMin' as const, maxField: 'LTVMax' as const },
-                        { label: 'FICO', minField: 'FICOMin' as const, maxField: 'FICOMax' as const },
-                        { label: 'Loan Amount', minField: 'LoanAmountMin' as const, maxField: 'LoanAmountMax' as const },
-                      ].map(({ label, minField, maxField }) => (
-                        <div key={label} className="space-y-1">
-                          <Label className="text-xs font-semibold text-gray-700">{label}</Label>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number" placeholder="Min" className="flex-1"
-                              value={formData[minField]}
-                              onChange={e => update(minField, parseFloat(e.target.value) || 0)}
-                            />
-                            <span className="text-gray-400 text-sm">to</span>
-                            <Input
-                              type="number" placeholder="Max" className="flex-1"
-                              value={formData[maxField]}
-                              onChange={e => update(maxField, parseFloat(e.target.value) || 0)}
-                            />
+              {/* Programs section */}
+              {activeSections.has('programs') && (() => {
+                const programs = [
+                  { id: 0, lender: 'Achieve', program: 'Home Equity Loan - Fixed 20 Year', family: 'HOMEEQUITY', cls: 'EQUITY', type: 'FIXED', term: '20' },
+                  { id: 1, lender: 'Ally2 - Conforming', program: 'FNMA 15 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '15' },
+                  { id: 2, lender: 'Ally2 - Conforming', program: 'FNMA 20 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '20' },
+                  { id: 3, lender: 'Ally2 - Conforming', program: 'FNMA 30 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '30' },
+                  { id: 4, lender: 'Ally2 - Conforming', program: 'FNMA 10/6 ARM', family: 'CONVENTIONAL', cls: 'STANDARD', type: 'ARM', term: '10/6' },
+                ]
+                const allSelected = formData.SelectedPrograms?.length === programs.length
+                const someSelected = (formData.SelectedPrograms?.length ?? 0) > 0 && !allSelected
+                const toggleAll = () => update('SelectedPrograms', allSelected ? [] : programs.map(p => p.id))
+                const toggleRow = (id: number) => {
+                  const current: number[] = formData.SelectedPrograms ?? []
+                  update('SelectedPrograms', current.includes(id) ? current.filter(i => i !== id) : [...current, id])
+                }
+                return (
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between px-5 py-4 bg-white">
+                      <h3 className="text-lg font-bold text-gray-900">Filter and verify the programs this rule will run against</h3>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => removeSection('programs')} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded" aria-label="Remove programs section">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        <button type="button" onClick={() => toggleExpanded('programs')} className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded" aria-label="Toggle programs section">
+                          {expandedSections.has('programs') ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                        </button>
+                      </div>
+                    </div>
+                    {expandedSections.has('programs') && (
+                      <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-5">
+                        <div className="grid grid-cols-5 gap-4">
+                          <ToggleList label="Lenders" options={LENDERS} selected={formData.Lenders} onChange={v => update('Lenders', v)} />
+                          <ToggleList label="Product Families" options={PRODUCT_FAMILIES} selected={formData.ProductFamilies} onChange={v => update('ProductFamilies', v)} />
+                          <ToggleList label="Product Classes" options={PRODUCT_CLASSES} selected={formData.ProductClasses} onChange={v => update('ProductClasses', v)} />
+                          <ToggleList label="Product Types" options={PRODUCT_TYPES} selected={formData.ProductTypes} onChange={v => update('ProductTypes', v)} />
+                          <ToggleList label="Product Terms" options={PRODUCT_TERMS} selected={formData.ProductTerms} onChange={v => update('ProductTerms', v)} />
+                        </div>
+                        <p className="text-sm text-gray-500">Review which lender programs this rule will apply to. Select or deselect programs as needed.</p>
+                        <div className="border border-input rounded-md overflow-hidden bg-white">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="bg-gray-100 border-b border-input">
+                                  <th className="px-4 py-3 text-left w-10">
+                                    <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all programs" data-state={someSelected ? 'indeterminate' : undefined} />
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Program Name</th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Family</th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Class</th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Type</th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Term</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-input">
+                                {programs.map(row => (
+                                  <tr key={row.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3"><Checkbox checked={formData.SelectedPrograms?.includes(row.id) ?? false} onCheckedChange={() => toggleRow(row.id)} aria-label={`Select ${row.program}`} /></td>
+                                    <td className="px-4 py-3 text-gray-800">{row.lender}</td>
+                                    <td className="px-4 py-3 text-gray-800">{row.program}</td>
+                                    <td className="px-4 py-3 text-gray-800">{row.family}</td>
+                                    <td className="px-4 py-3 text-gray-800">{row.cls}</td>
+                                    <td className="px-4 py-3 text-gray-800">{row.type}</td>
+                                    <td className="px-4 py-3 text-gray-800">{row.term}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                        <div className="text-xs text-gray-500 text-right">Showing 5 of 1,593 programs</div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
-                    {/* Multi-select toggles */}
-                    <div className="grid grid-cols-5 gap-4">
-                      <ToggleList
-                        label="Property Types"
-                        options={PROPERTY_TYPES}
-                        selected={formData.PropertyTypes}
-                        onChange={v => update('PropertyTypes', v)}
-                      />
-                      <ToggleList
-                        label="Property Usage"
-                        options={PROPERTY_USAGE}
-                        selected={formData.PropertyUsage}
-                        onChange={v => update('PropertyUsage', v)}
-                      />
-                      <ToggleList
-                        label="Loan Types"
-                        options={LOAN_TYPES}
-                        selected={formData.LoanTypes}
-                        onChange={v => update('LoanTypes', v)}
-                      />
-                      <ToggleList
-                        label="Quoting Channels"
-                        options={QUOTING_CHANNELS}
-                        selected={formData.QuotingChannels}
-                        onChange={v => update('QuotingChannels', v)}
-                      />
-                      <ToggleList
-                        label="Lock Period"
-                        options={LOCK_PERIODS.map(p => `${p} Days`)}
-                        selected={formData.LockPeriods.map(p => `${p} Days`)}
-                        onChange={v => update('LockPeriods', v.map(s => parseInt(s)))}
-                        info
-                      />
+              {/* Schedule section */}
+              {activeSections.has('schedule') && (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-4 bg-white">
+                    <h3 className="text-lg font-bold text-gray-900">Schedule when this rule applies</h3>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => removeSection('schedule')} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded" aria-label="Remove schedule section">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <button type="button" onClick={() => toggleExpanded('schedule')} className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded" aria-label="Toggle schedule section">
+                        {expandedSections.has('schedule') ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                      </button>
                     </div>
-
-                    <div className="grid grid-cols-4 gap-4">
-                      <ToggleList
-                        label="Borrower Filters"
-                        options={BORROWER_FILTERS}
-                        selected={formData.BorrowerFilters}
-                        onChange={v => update('BorrowerFilters', v)}
-                      />
-                      <ToggleList
-                        label="Point Groups"
-                        options={POINT_GROUPS}
-                        selected={formData.PointGroups}
-                        onChange={v => update('PointGroups', v)}
-                      />
-                      <div className="col-span-2 grid grid-cols-2 gap-4">
-                        <ToggleList
-                          label="States"
-                          options={STATES}
-                          selected={formData.States}
-                          onChange={v => update('States', v)}
-                          searchable
-                        />
-                        <ToggleList
-                          label="Selected States"
-                          options={formData.States}
-                          selected={formData.States}
-                          onChange={v => update('States', v)}
-                        />
+                  </div>
+                  {expandedSections.has('schedule') && (
+                    <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
+                      <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
+                          <Input type="date" value={formData.StartDate || ''} onChange={e => update('StartDate', e.target.value || null)} aria-label="Start date" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-semibold text-gray-700">End Date</Label>
+                          <Input type="date" value={formData.EndDate || ''} onChange={e => update('EndDate', e.target.value || null)} aria-label="End date" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-semibold text-gray-700">Start Time (in ET)</Label>
+                          <Input type="time" value={formData.StartTime || ''} onChange={e => update('StartTime', e.target.value || null)} aria-label="Start time in Eastern Time" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-semibold text-gray-700">End Time (in ET)</Label>
+                          <Input type="time" value={formData.EndTime || ''} onChange={e => update('EndTime', e.target.value || null)} aria-label="End time in Eastern Time" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-500">Week days on which the rule should be active.</p>
+                        <div className="flex items-center gap-5">
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
+                            <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
+                              <Checkbox aria-label={`${day} - rule applies`} />
+                              {day}
+                            </label>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CollapsibleStep>
-
-                <hr className="border-gray-200" />
-
-                {/* ── STEP 3: Program Filters ────────────────────────────────────── */}
-                <CollapsibleStep n={3} label="Filter the programs the rule runs against">
-                  <div className="grid grid-cols-5 gap-4">
-                    <ToggleList
-                      label="Lenders"
-                      options={LENDERS}
-                      selected={formData.Lenders}
-                      onChange={v => update('Lenders', v)}
-                    />
-                    <ToggleList
-                      label="Product Families"
-                      options={PRODUCT_FAMILIES}
-                      selected={formData.ProductFamilies}
-                      onChange={v => update('ProductFamilies', v)}
-                    />
-                    <ToggleList
-                      label="Product Classes"
-                      options={PRODUCT_CLASSES}
-                      selected={formData.ProductClasses}
-                      onChange={v => update('ProductClasses', v)}
-                    />
-                    <ToggleList
-                      label="Product Types"
-                      options={PRODUCT_TYPES}
-                      selected={formData.ProductTypes}
-                      onChange={v => update('ProductTypes', v)}
-                    />
-                    <ToggleList
-                      label="Product Terms"
-                      options={PRODUCT_TERMS}
-                      selected={formData.ProductTerms}
-                      onChange={v => update('ProductTerms', v)}
-                    />
-                  </div>
-                </CollapsibleStep>
-
-                <hr className="border-gray-200" />
-              </>
-            )}
-
-            {/* ── STEP 4: Schedule when this rule applies ─────────────────────────── */}
-            <CollapsibleStep n={4} label="Schedule when this rule applies">
-              <div className="space-y-4">
-                <p className="text-sm text-gray-500">
-                  Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
-                    <Input
-                      type="date"
-                      value={formData.StartDate || ''}
-                      onChange={e => update('StartDate', e.target.value || null)}
-                      aria-label="Start date"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-semibold text-gray-700">End Date</Label>
-                    <Input
-                      type="date"
-                      value={formData.EndDate || ''}
-                      onChange={e => update('EndDate', e.target.value || null)}
-                      aria-label="End date"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-semibold text-gray-700">Start Time (in ET)</Label>
-                    <Input
-                      type="time"
-                      value={formData.StartTime || ''}
-                      onChange={e => update('StartTime', e.target.value || null)}
-                      aria-label="Start time in Eastern Time"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-semibold text-gray-700">End Time (in ET)</Label>
-                    <Input
-                      type="time"
-                      value={formData.EndTime || ''}
-                      onChange={e => update('EndTime', e.target.value || null)}
-                      aria-label="End time in Eastern Time"
-                    />
-                  </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500">Week days on which the rule should be active.</p>
-                  <div className="flex items-center gap-5">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
-                      <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
-                        <Checkbox aria-label={`${day} - rule applies`} />
-                        {day}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CollapsibleStep>
+              )}
 
-            <hr className="border-gray-200" />
+              {/* + Add Criteria dropdown button */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-full h-12 flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg text-[#0157FF] font-semibold text-sm hover:border-[#0157FF] hover:bg-blue-50 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Criteria
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-48">
+                  {([
+                    { key: 'conditions' as const, label: 'Conditions' },
+                    { key: 'programs' as const, label: 'Programs' },
+                    { key: 'schedule' as const, label: 'Schedule' },
+                  ]).map(({ key, label }) => (
+                    <DropdownMenuItem
+                      key={key}
+                      onSelect={e => { e.preventDefault(); toggleSection(key) }}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
+                      <span>{label}</span>
+                      {activeSections.has(key) && <Check className="h-4 w-4 text-[#0157FF]" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-            {/* ── STEP 5: Verify the programs this rule will run against ─────────────────── */}
-            {(() => {
-              const programs = [
-                { id: 0, lender: 'Achieve', program: 'Home Equity Loan - Fixed 20 Year', family: 'HOMEEQUITY', cls: 'EQUITY', type: 'FIXED', term: '20' },
-                { id: 1, lender: 'Ally2 - Conforming', program: 'FNMA 15 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '15' },
-                { id: 2, lender: 'Ally2 - Conforming', program: 'FNMA 20 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '20' },
-                { id: 3, lender: 'Ally2 - Conforming', program: 'FNMA 30 Year Fixed - High Balance', family: 'CONVENTIONAL', cls: 'HIGH BALANCE', type: 'FIXED', term: '30' },
-                { id: 4, lender: 'Ally2 - Conforming', program: 'FNMA 10/6 ARM', family: 'CONVENTIONAL', cls: 'STANDARD', type: 'ARM', term: '10/6' },
-              ]
-              const allSelected = formData.SelectedPrograms?.length === programs.length
-              const someSelected = (formData.SelectedPrograms?.length ?? 0) > 0 && !allSelected
-              const toggleAll = () => update('SelectedPrograms', allSelected ? [] : programs.map(p => p.id))
-              const toggleRow = (id: number) => {
-                const current: number[] = formData.SelectedPrograms ?? []
-                update('SelectedPrograms', current.includes(id) ? current.filter(i => i !== id) : [...current, id])
-              }
-              return (
-                <CollapsibleStep n={5} label="Verify the programs this rule will run against" defaultOpen={false}>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-500">
-                      Review which lender programs this rule will apply to. Select or deselect programs as needed.
-                    </p>
-                    <div className="border border-input rounded-md overflow-hidden bg-white">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="bg-gray-100 border-b border-input">
-                              <th className="px-4 py-3 text-left w-10">
-                                <Checkbox
-                                  checked={allSelected}
-                                  onCheckedChange={toggleAll}
-                                  aria-label="Select all programs"
-                                  data-state={someSelected ? 'indeterminate' : undefined}
-                                />
-                              </th>
-                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
-                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Program Name</th>
-                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Family</th>
-                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Class</th>
-                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Type</th>
-                              <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Term</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-input">
-                            {programs.map(row => (
-                              <tr key={row.id} className="hover:bg-gray-50">
-                                <td className="px-4 py-3">
-                                  <Checkbox
-                                    checked={formData.SelectedPrograms?.includes(row.id) ?? false}
-                                    onCheckedChange={() => toggleRow(row.id)}
-                                    aria-label={`Select ${row.program}`}
-                                  />
-                                </td>
-                                <td className="px-4 py-3 text-gray-800">{row.lender}</td>
-                                <td className="px-4 py-3 text-gray-800">{row.program}</td>
-                                <td className="px-4 py-3 text-gray-800">{row.family}</td>
-                                <td className="px-4 py-3 text-gray-800">{row.cls}</td>
-                                <td className="px-4 py-3 text-gray-800">{row.type}</td>
-                                <td className="px-4 py-3 text-gray-800">{row.term}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500 text-right">
-                      Showing 5 of 1,593 programs
-                    </div>
-                  </div>
-                </CollapsibleStep>
-              )
-            })()}
-
-            <hr className="border-gray-200" />
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <label className="flex items-start gap-3 cursor-pointer">
                 <Checkbox
