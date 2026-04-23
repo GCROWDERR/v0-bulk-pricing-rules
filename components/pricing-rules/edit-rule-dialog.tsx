@@ -248,9 +248,8 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
             {/* ��─ STEP 1 ──────────────────────────────────────────────── */}
             <section className="space-y-4">
-              <div className="flex items-start justify-between">
+              <div>
                 <h2 className="text-2xl font-bold text-gray-900">Apply these rules</h2>
-                <span className="text-3xl font-bold text-red-600 leading-none">*</span>
               </div>
               <p className="text-sm text-gray-600">This is a required step. Define what this rule will do.</p>
               <div className="space-y-4">
