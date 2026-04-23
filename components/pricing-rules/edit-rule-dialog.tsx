@@ -691,7 +691,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               )}
 
               {/* + Add Criteria dropdown button */}
-              <DropdownMenu open={criteriaDropdownOpen} onOpenChange={setCriteriaDropdownOpen}>
+              <DropdownMenu modal={false} open={criteriaDropdownOpen} onOpenChange={setCriteriaDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
