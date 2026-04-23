@@ -582,7 +582,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     <div className="flex items-center justify-between px-5 py-4 bg-white">
                       <h3 className="text-lg font-bold text-gray-900">Filter and verify the programs this rule will run against</h3>
                       <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => removeSection('programs')} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded" aria-label="Remove programs section">
+                        <button type="button" onClick={() => removeSection('programs')} className="p-1.5 text-red-600 hover:text-red-700 transition-colors rounded" aria-label="Remove programs section">
                           <Trash2 className="h-4 w-4" />
                         </button>
                         <button type="button" onClick={() => toggleExpanded('programs')} className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded" aria-label="Toggle programs section">
@@ -645,7 +645,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   <div className="flex items-center justify-between px-5 py-4 bg-white">
                     <h3 className="text-lg font-bold text-gray-900">Schedule when this rule applies</h3>
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => removeSection('schedule')} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded" aria-label="Remove schedule section">
+                      <button type="button" onClick={() => removeSection('schedule')} className="p-1.5 text-red-600 hover:text-red-700 transition-colors rounded" aria-label="Remove schedule section">
                         <Trash2 className="h-4 w-4" />
                       </button>
                       <button type="button" onClick={() => toggleExpanded('schedule')} className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded" aria-label="Toggle schedule section">
