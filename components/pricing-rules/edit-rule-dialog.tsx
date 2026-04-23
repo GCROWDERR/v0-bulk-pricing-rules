@@ -743,7 +743,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
         </div>
 
         {/* Footer — pinned outside the scroll container */}
-        <div className="shrink-0 flex items-center justify-between px-8 py-4 border-t border-gray-200 bg-white">
+        <div className="shrink-0 flex items-center justify-end gap-3 px-8 py-4 border-t border-gray-200 bg-white">
           <Button variant="outline" onClick={handleClose} className="border-gray-300" aria-label="Close dialog and return to rules">
             Return to Rules
           </Button>
