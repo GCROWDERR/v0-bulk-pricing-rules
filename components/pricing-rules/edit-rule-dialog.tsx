@@ -501,7 +501,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       <button
                         type="button"
                         onClick={() => removeSection('conditions')}
-                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded"
+                        className="p-1.5 text-red-600 hover:text-red-700 transition-colors rounded"
                         aria-label="Remove conditions section"
                       >
                         <Trash2 className="h-4 w-4" />
