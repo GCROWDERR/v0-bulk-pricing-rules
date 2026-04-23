@@ -203,6 +203,8 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
     })
   }
 
+  const [criteriaDropdownOpen, setCriteriaDropdownOpen] = useState(false)
+
   useEffect(() => {
     if (currentRule) setFormData({ ...currentRule })
   }, [currentRule])
@@ -689,7 +691,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               )}
 
               {/* + Add Criteria dropdown button */}
-              <DropdownMenu>
+              <DropdownMenu open={criteriaDropdownOpen} onOpenChange={setCriteriaDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
@@ -699,7 +701,12 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     Add Criteria
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="w-48">
+                <DropdownMenuContent
+                  align="center"
+                  className="w-48"
+                  onPointerDownOutside={() => setCriteriaDropdownOpen(false)}
+                  onEscapeKeyDown={() => setCriteriaDropdownOpen(false)}
+                >
                   {([
                     { key: 'conditions' as const, label: 'Conditions' },
                     { key: 'programs' as const, label: 'Programs' },
@@ -707,7 +714,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   ]).map(({ key, label }) => (
                     <DropdownMenuItem
                       key={key}
-                      onSelect={() => toggleSection(key)}
+                      onSelect={e => { e.preventDefault(); toggleSection(key) }}
                       className="flex items-center justify-between cursor-pointer"
                     >
                       <span>{label}</span>
