@@ -707,7 +707,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   ]).map(({ key, label }) => (
                     <DropdownMenuItem
                       key={key}
-                      onSelect={e => { e.preventDefault(); toggleSection(key) }}
+                      onSelect={() => toggleSection(key)}
                       className="flex items-center justify-between cursor-pointer"
                     >
                       <span>{label}</span>
