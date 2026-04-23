@@ -178,6 +178,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
   const originalRule = existingDraft?.originalRule || rule
 
   const [formData, setFormData] = useState<PricingRule | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   // Which optional sections the user has added
   const [activeSections, setActiveSections] = useState<Set<'conditions' | 'programs' | 'schedule'>>(new Set())
   // Which sections are expanded vs collapsed
@@ -211,11 +212,36 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
   if (!formData) return null
 
-  const update = <K extends keyof PricingRule>(field: K, value: PricingRule[K]) =>
+  const update = <K extends keyof PricingRule>(field: K, value: PricingRule[K]) => {
     setFormData(prev => prev ? { ...prev, [field]: value } : null)
+    // Clear error on change
+    if (errors[field as string]) {
+      setErrors(prev => { const next = { ...prev }; delete next[field as string]; return next })
+    }
+  }
+
+  const validate = (): Record<string, string> => {
+    const errs: Record<string, string> = {}
+    if (!formData) return errs
+    if (!formData.RuleDescription?.trim()) {
+      errs.RuleDescription = 'A rule description is required.'
+    }
+    if (!formData.LockPeriod) {
+      errs.LockPeriod = 'Please select a lock period.'
+    }
+    if (!formData.FeeSet?.trim()) {
+      errs.FeeSet = 'Please select a fee set.'
+    }
+    return errs
+  }
 
   const handleSave = () => {
     if (!formData || !originalRule) return
+    const errs = validate()
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs)
+      return
+    }
     isNew ? stageCreate(formData) : stageUpdate(originalRule, formData)
     setEditingRule(null)
     onOpenChange(false)
@@ -263,15 +289,21 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     <Info className="h-3.5 w-3.5 text-blue-500" />
                   </div>
                   <div className="flex items-center gap-3">
-                    <Input
-                      value={formData.RuleDescription}
-                      onChange={e => update('RuleDescription', e.target.value)}
-                      placeholder="Describe this rule"
-                      className="flex-1"
-                      aria-label="Rule description"
-                      aria-describedby="rule-description-help"
-                    />
-                    <label className="flex items-center gap-1.5 shrink-0 cursor-pointer text-sm text-gray-700">
+                    <div className="flex-1 space-y-1">
+                      <Input
+                        value={formData.RuleDescription}
+                        onChange={e => update('RuleDescription', e.target.value)}
+                        placeholder="Describe this rule"
+                        className={cn('w-full', errors.RuleDescription && 'border-red-500 focus-visible:ring-red-500')}
+                        aria-label="Rule description"
+                        aria-invalid={!!errors.RuleDescription}
+                        aria-describedby={errors.RuleDescription ? 'rule-description-error' : 'rule-description-help'}
+                      />
+                      {errors.RuleDescription && (
+                        <p id="rule-description-error" className="text-xs text-red-600">{errors.RuleDescription}</p>
+                      )}
+                    </div>
+                    <label className="flex items-center gap-1.5 shrink-0 self-start mt-1 cursor-pointer text-sm text-gray-700">
                       <Checkbox
                         checked={formData.Disallow}
                         onCheckedChange={c => update('Disallow', c === true)}
@@ -293,7 +325,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       value={formData.LockPeriod?.toString() || ''}
                       onValueChange={v => update('LockPeriod', parseInt(v))}
                     >
-                      <SelectTrigger className="w-full" aria-label="Select lock period">
+                      <SelectTrigger className={cn('w-full', errors.LockPeriod && 'border-red-500 focus:ring-red-500')} aria-label="Select lock period" aria-invalid={!!errors.LockPeriod}>
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -302,6 +334,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors.LockPeriod && <p className="text-xs text-red-600">{errors.LockPeriod}</p>}
                   </div>
                   <div className="space-y-1 flex flex-col">
                     <div className="flex items-center gap-1">
@@ -309,11 +342,14 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       <Info className="h-3.5 w-3.5 text-blue-500" />
                     </div>
                     <Select value={formData.FeeSet} onValueChange={v => update('FeeSet', v)}>
-                      <SelectTrigger className="w-full" aria-label="Select fee set"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectTrigger className={cn('w-full', errors.FeeSet && 'border-red-500 focus:ring-red-500')} aria-label="Select fee set" aria-invalid={!!errors.FeeSet}>
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
                       <SelectContent>
                         {FEE_SETS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {errors.FeeSet && <p className="text-xs text-red-600">{errors.FeeSet}</p>}
                   </div>
                   <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">MI Company</Label>
