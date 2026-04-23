@@ -528,8 +528,9 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 <p className="text-sm text-gray-500 mt-1">Add conditions to limit when this rule applies. If no criteria are added, this rule applies to all scenarios.</p>
               </div>
 
-              {/* Add Criteria pills */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Add Criteria pills — sticky */}
+              <div className="sticky top-0 z-10 bg-white pt-2 pb-3 -mx-8 px-8 border-b border-gray-100">
+                <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-gray-500 mr-1">Add criteria:</span>
                 {([
                   { key: 'conditions' as const, label: 'Conditions' },
@@ -555,6 +556,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     </button>
                   )
                 })}
+                </div>
               </div>
 
               {/* Conditions section */}
