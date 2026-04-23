@@ -528,6 +528,35 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 <p className="text-sm text-gray-500 mt-1">Add conditions to limit when this rule applies. If no criteria are added, this rule applies to all scenarios.</p>
               </div>
 
+              {/* Add Criteria pills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-gray-500 mr-1">Add criteria:</span>
+                {([
+                  { key: 'conditions' as const, label: 'Conditions' },
+                  { key: 'programs' as const, label: 'Programs' },
+                  { key: 'schedule' as const, label: 'Schedule' },
+                ]).map(({ key, label }) => {
+                  const active = activeSections.has(key)
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => toggleSection(key)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-sm font-medium transition-colors',
+                        active
+                          ? 'bg-[#0157FF] border-[#0157FF] text-white hover:bg-blue-700 hover:border-blue-700'
+                          : 'bg-white border-gray-300 text-gray-700 hover:border-[#0157FF] hover:text-[#0157FF] hover:bg-blue-50'
+                      )}
+                      aria-pressed={active}
+                    >
+                      {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+
               {/* Conditions section */}
               {activeSections.has('conditions') && (
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -726,34 +755,6 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
               )}
 
-              {/* Add Criteria pills */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-gray-500 mr-1">Add criteria:</span>
-                {([
-                  { key: 'conditions' as const, label: 'Conditions' },
-                  { key: 'programs' as const, label: 'Programs' },
-                  { key: 'schedule' as const, label: 'Schedule' },
-                ]).map(({ key, label }) => {
-                  const active = activeSections.has(key)
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => toggleSection(key)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-sm font-medium transition-colors',
-                        active
-                          ? 'bg-[#0157FF] border-[#0157FF] text-white hover:bg-blue-700 hover:border-blue-700'
-                          : 'bg-white border-gray-300 text-gray-700 hover:border-[#0157FF] hover:text-[#0157FF] hover:bg-blue-50'
-                      )}
-                      aria-pressed={active}
-                    >
-                      {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                      {label}
-                    </button>
-                  )
-                })}
-              </div>
             </div>
 
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
