@@ -247,13 +247,13 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
           <div className="px-8 py-6 space-y-8">
 
             {/* ��─ STEP 1 ──────────────────────────────────────────────── */}
-            <section className="p-6 bg-blue-50 border-2 border-blue-300 rounded-lg">
-              <div className="flex items-start justify-between mb-4">
-                <StepLabel n={1} label="Apply these rules" />
+            <section className="space-y-4">
+              <div className="flex items-start justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Apply these rules</h2>
                 <span className="text-3xl font-bold text-red-600 leading-none">*</span>
               </div>
-              <p className="text-sm text-gray-600 mb-4">This is a required step. Define what this rule will do.</p>
-              <div className="mt-4 space-y-4">
+              <p className="text-sm text-gray-600">This is a required step. Define what this rule will do.</p>
+              <div className="space-y-4">
 
                 {/* Description + Disallow */}
                 <div className="space-y-2">
