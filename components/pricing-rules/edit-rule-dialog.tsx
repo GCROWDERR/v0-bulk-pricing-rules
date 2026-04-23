@@ -227,7 +227,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="!max-w-[1000px] !w-[1000px] max-h-[92vh] p-0 gap-0 flex flex-col overflow-hidden"
+        className="!max-w-[1000px] !w-[1000px] h-[92vh] p-0 gap-0 flex flex-col overflow-hidden"
         showCloseButton={false}
       >
         {/* Header */}
@@ -732,23 +732,23 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               </label>
             </div>
 
-            {/* Save */}
-            <div className="flex items-center justify-between pb-2">
-              <Button variant="outline" onClick={handleClose} className="border-gray-300" aria-label="Close dialog and return to rules">
-                Return to Rules
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="bg-[#0157FF] hover:bg-blue-700 text-white font-semibold px-8"
-                aria-label="Save and stage changes to rule"
-              >
-                Stage Change
-              </Button>
-            </div>
-
           </div>
         </div>
-      </DialogContent >
+
+        {/* Footer — pinned outside the scroll container */}
+        <div className="shrink-0 flex items-center justify-between px-8 py-4 border-t border-gray-200 bg-white">
+          <Button variant="outline" onClick={handleClose} className="border-gray-300" aria-label="Close dialog and return to rules">
+            Return to Rules
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="bg-[#0157FF] hover:bg-blue-700 text-white font-semibold px-8"
+            aria-label="Save and stage changes to rule"
+          >
+            Stage Change
+          </Button>
+        </div>
+      </DialogContent>
     </Dialog >
   )
 }
