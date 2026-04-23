@@ -26,12 +26,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Check, ChevronDown, ChevronUp, Info, Search, Plus, Trash2 } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
@@ -204,7 +198,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
     })
   }
 
-  const [criteriaDropdownOpen, setCriteriaDropdownOpen] = useState(false)
+
 
   useEffect(() => {
     if (currentRule) setFormData({ ...currentRule })
@@ -732,39 +726,34 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
               )}
 
-              {/* + Add Criteria dropdown button */}
-              <DropdownMenu modal={false} open={criteriaDropdownOpen} onOpenChange={setCriteriaDropdownOpen}>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="w-full h-12 flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg text-[#0157FF] font-semibold text-sm hover:border-[#0157FF] hover:bg-blue-50 transition-colors"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Criteria
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="center"
-                  className="w-48"
-                  onPointerDownOutside={() => setCriteriaDropdownOpen(false)}
-                  onEscapeKeyDown={() => setCriteriaDropdownOpen(false)}
-                >
-                  {([
-                    { key: 'conditions' as const, label: 'Conditions' },
-                    { key: 'programs' as const, label: 'Programs' },
-                    { key: 'schedule' as const, label: 'Schedule' },
-                  ]).map(({ key, label }) => (
-                    <DropdownMenuItem
+              {/* Add Criteria pills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-gray-500 mr-1">Add criteria:</span>
+                {([
+                  { key: 'conditions' as const, label: 'Conditions' },
+                  { key: 'programs' as const, label: 'Programs' },
+                  { key: 'schedule' as const, label: 'Schedule' },
+                ]).map(({ key, label }) => {
+                  const active = activeSections.has(key)
+                  return (
+                    <button
                       key={key}
-                      onSelect={e => { e.preventDefault(); toggleSection(key) }}
-                      className="flex items-center justify-between cursor-pointer"
+                      type="button"
+                      onClick={() => toggleSection(key)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-sm font-medium transition-colors',
+                        active
+                          ? 'bg-[#0157FF] border-[#0157FF] text-white hover:bg-blue-700 hover:border-blue-700'
+                          : 'bg-white border-gray-300 text-gray-700 hover:border-[#0157FF] hover:text-[#0157FF] hover:bg-blue-50'
+                      )}
+                      aria-pressed={active}
                     >
-                      <span>{label}</span>
-                      {activeSections.has(key) && <Check className="h-4 w-4 text-[#0157FF]" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
