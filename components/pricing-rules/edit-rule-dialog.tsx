@@ -226,10 +226,10 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
     if (!formData.RuleDescription?.trim()) {
       errs.RuleDescription = 'A rule description is required.'
     }
-    if (!formData.LockPeriod) {
+    if (formData.LockPeriod === null || formData.LockPeriod === undefined || formData.LockPeriod === 0) {
       errs.LockPeriod = 'Please select a lock period.'
     }
-    if (!formData.FeeSet?.trim()) {
+    if (!formData.FeeSet || formData.FeeSet.trim() === '') {
       errs.FeeSet = 'Please select a fee set.'
     }
     return errs
