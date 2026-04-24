@@ -1,10 +1,10 @@
 'use client'
 
 import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react'
-import type { PricingRule, DraftEntry, DraftType } from './pricing-rules-data'
+import type { PricingRule, DraftEntry, DraftType, RuleSetSummary } from './pricing-rules-data'
 import { generateSampleRules, getChangedFields, createBlankRule } from './pricing-rules-data'
 
-export type SortField = 'RuleId' | 'RuleDescription' | 'Lenders' | 'Fee' | 'Price' | 'CompPercent' | 'Active' | 'Disallow' | 'RuleIsDeleted'
+export type SortField = 'RuleId' | 'RuleDescription' | 'Lenders' | 'Fee' | 'Price' | 'CompPercent' | 'Active' | 'Disallow' | 'RuleIsDeleted' | 'RuleSetId'
 export type SortDirection = 'asc' | 'desc'
 
 interface PricingRulesState {
@@ -18,6 +18,8 @@ interface PricingRulesState {
   nextTempId: number
   sortField: SortField | null
   sortDirection: SortDirection
+  ruleSetFilter: string | null
+  editingRuleSetId: string | null
 }
 
 type Action =
@@ -38,6 +40,8 @@ type Action =
   | { type: 'CLEAR_SELECTION' }
   | { type: 'SET_SORT'; payload: { field: SortField; direction: SortDirection } }
   | { type: 'CLEAR_SORT' }
+  | { type: 'SET_RULE_SET_FILTER'; payload: string | null }
+  | { type: 'SET_EDITING_RULE_SET_ID'; payload: string | null }
 
 function reducer(state: PricingRulesState, action: Action): PricingRulesState {
   switch (action.type) {
@@ -137,6 +141,12 @@ function reducer(state: PricingRulesState, action: Action): PricingRulesState {
     case 'CLEAR_SORT':
       return { ...state, sortField: null, sortDirection: 'asc' }
 
+    case 'SET_RULE_SET_FILTER':
+      return { ...state, ruleSetFilter: action.payload }
+
+    case 'SET_EDITING_RULE_SET_ID':
+      return { ...state, editingRuleSetId: action.payload }
+
     case 'SET_EDITING_RULE':
       return { ...state, editingRule: action.payload }
 
@@ -175,6 +185,8 @@ const initialState: PricingRulesState = {
   nextTempId: -1,
   sortField: null,
   sortDirection: 'asc',
+  ruleSetFilter: null,
+  editingRuleSetId: null,
 }
 
 interface PricingRulesContextType {
@@ -208,6 +220,15 @@ interface PricingRulesContextType {
   createNewRule: () => PricingRule
   getDisplayRules: () => PricingRule[]
   getDraftCounts: () => { created: number; updated: number; deleted: number; restored: number }
+  // Rule Set helpers
+  getRuleSets: () => RuleSetSummary[]
+  getRulesInSet: (ruleSetId: string) => PricingRule[]
+  setRuleSetFilter: (ruleSetId: string | null) => void
+  clearRuleSetFilter: () => void
+  setEditingRuleSetId: (ruleSetId: string | null) => void
+  getEditingRuleSetId: () => string | null
+  stageUpdateMany: (updates: Array<{ rule: PricingRule; updates: Partial<PricingRule> }>) => void
+  stageCreateMany: (rules: PricingRule[]) => void
 }
 
 const PricingRulesContext = createContext<PricingRulesContextType | null>(null)
@@ -390,6 +411,11 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
       displayRules = displayRules.filter(rule => !rule.RuleIsDeleted)
     }
 
+    // Filter by rule set if active
+    if (state.ruleSetFilter) {
+      displayRules = displayRules.filter(rule => rule.RuleSetId === state.ruleSetFilter)
+    }
+
     // Sort by selected field or default (drafts first, then by description)
     displayRules.sort((a, b) => {
       const aDraft = state.drafts.some(d => d.ruleId === a.RuleId)
@@ -444,6 +470,10 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
             aVal = a.RuleIsDeleted ? 1 : 0
             bVal = b.RuleIsDeleted ? 1 : 0
             break
+          case 'RuleSetId':
+            aVal = a.RuleSetId || ''
+            bVal = b.RuleSetId || ''
+            break
         }
         
         if (aVal < bVal) return -1 * direction
@@ -456,7 +486,7 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
     })
 
     return displayRules
-  }, [state.rules, state.drafts, state.searchTerm, state.showDeleted, state.sortField, state.sortDirection])
+  }, [state.rules, state.drafts, state.searchTerm, state.showDeleted, state.sortField, state.sortDirection, state.ruleSetFilter])
 
   const getDraftCounts = useCallback(() => {
     return {
@@ -466,6 +496,87 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
       restored: state.drafts.filter(d => d.type === 'restore').length,
     }
   }, [state.drafts])
+
+  // Rule Set helpers
+  const getRuleSets = useCallback((): RuleSetSummary[] => {
+    const allRules = state.rules.map(rule => {
+      const draft = state.drafts.find(d => d.ruleId === rule.RuleId)
+      return draft ? draft.updatedRule : rule
+    })
+    const createdRules = state.drafts.filter(d => d.type === 'create').map(d => d.updatedRule)
+    const combined = [...allRules, ...createdRules]
+
+    const setMap = new Map<string, RuleSetSummary>()
+    combined.forEach(rule => {
+      if (rule.RuleSetId) {
+        const existing = setMap.get(rule.RuleSetId)
+        if (existing) {
+          existing.ruleCount++
+          existing.ruleIds.push(rule.RuleId)
+        } else {
+          setMap.set(rule.RuleSetId, {
+            ruleSetId: rule.RuleSetId,
+            ruleSetName: rule.RuleSetName || rule.RuleSetId,
+            ruleCount: 1,
+            ruleIds: [rule.RuleId],
+          })
+        }
+      }
+    })
+    return Array.from(setMap.values())
+  }, [state.rules, state.drafts])
+
+  const getRulesInSet = useCallback((ruleSetId: string): PricingRule[] => {
+    const allRules = state.rules.map(rule => {
+      const draft = state.drafts.find(d => d.ruleId === rule.RuleId)
+      return draft ? draft.updatedRule : rule
+    })
+    const createdRules = state.drafts.filter(d => d.type === 'create').map(d => d.updatedRule)
+    return [...allRules, ...createdRules].filter(r => r.RuleSetId === ruleSetId)
+  }, [state.rules, state.drafts])
+
+  const setRuleSetFilter = useCallback((ruleSetId: string | null) => {
+    dispatch({ type: 'SET_RULE_SET_FILTER', payload: ruleSetId })
+  }, [])
+
+  const clearRuleSetFilter = useCallback(() => {
+    dispatch({ type: 'SET_RULE_SET_FILTER', payload: null })
+  }, [])
+
+  const setEditingRuleSetId = useCallback((ruleSetId: string | null) => {
+    dispatch({ type: 'SET_EDITING_RULE_SET_ID', payload: ruleSetId })
+  }, [])
+
+  const getEditingRuleSetId = useCallback((): string | null => {
+    return state.editingRuleSetId
+  }, [state.editingRuleSetId])
+
+  const stageUpdateMany = useCallback((updates: Array<{ rule: PricingRule; updates: Partial<PricingRule> }>) => {
+    updates.forEach(({ rule, updates: upd }) => {
+      const updatedRule = { ...rule, ...upd }
+      const changedFields = getChangedFields(rule, updatedRule)
+      if (changedFields.length === 0) return
+      const draft: DraftEntry = {
+        ruleId: rule.RuleId,
+        type: 'update',
+        originalRule: rule,
+        updatedRule,
+        changedFields,
+      }
+      dispatch({ type: 'ADD_DRAFT', payload: draft })
+    })
+  }, [])
+
+  const stageCreateMany = useCallback((rules: PricingRule[]) => {
+    rules.forEach(rule => {
+      const draft: DraftEntry = {
+        ruleId: rule.RuleId,
+        type: 'create',
+        updatedRule: rule,
+      }
+      dispatch({ type: 'ADD_DRAFT', payload: draft })
+    })
+  }, [])
 
   const value = useMemo(() => ({
     state,
@@ -495,6 +606,14 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
     createNewRule,
     getDisplayRules,
     getDraftCounts,
+    getRuleSets,
+    getRulesInSet,
+    setRuleSetFilter,
+    clearRuleSetFilter,
+    setEditingRuleSetId,
+    getEditingRuleSetId,
+    stageUpdateMany,
+    stageCreateMany,
   }), [
     state,
     stageUpdate,
@@ -523,6 +642,14 @@ export function PricingRulesProvider({ children }: { children: React.ReactNode }
     createNewRule,
     getDisplayRules,
     getDraftCounts,
+    getRuleSets,
+    getRulesInSet,
+    setRuleSetFilter,
+    clearRuleSetFilter,
+    setEditingRuleSetId,
+    getEditingRuleSetId,
+    stageUpdateMany,
+    stageCreateMany,
   ])
 
   return (

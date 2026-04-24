@@ -64,7 +64,9 @@ import {
   PRODUCT_TERMS,
   FEE_SETS,
   MI_COMPANIES,
-  createBlankRule 
+  createBlankRule,
+  generateRuleSetId,
+  getChangedFields,
 } from '@/lib/pricing-rules-data'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import { cn } from '@/lib/utils'
@@ -72,6 +74,8 @@ import { cn } from '@/lib/utils'
 interface RuleBuilderDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** When provided, the dialog opens in "Edit Rule Set" mode (Mode B) */
+  editingRuleSetId?: string | null
 }
 
 type DimensionType = 'loanAmount' | 'fico' | 'ltv' | 'price' | 'fee' | 'margin'
@@ -993,9 +997,10 @@ function MatrixGrid({
   )
 }
 
-export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps) {
-  const { stageCreate } = usePricingRules()
-  const [currentStep, setCurrentStep] = useState('mode')
+export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: RuleBuilderDialogProps) {
+  const { stageCreate, getRulesInSet, stageUpdateMany, stageCreateMany } = usePricingRules()
+  const isEditMode = Boolean(editingRuleSetId)
+  const [currentStep, setCurrentStep] = useState(isEditMode ? 'dimensions' : 'mode')
   
   // Builder mode: matrix (2D) or list (1D)
   const [builderMode, setBuilderMode] = useState<BuilderMode>('matrix')
@@ -1021,6 +1026,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
     setShowModeChangeWarning(false)
     setPendingMode(null)
   }
+
+  // Rule Set name (required for Mode A create, prefilled for Mode B edit)
+  const [ruleSetName, setRuleSetName] = useState('')
 
   // Step 1: Dimensions & Base Rule
   const [xDimension, setXDimension] = useState<DimensionType>('loanAmount')
@@ -1105,6 +1113,46 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
 
   // Preview state
   const [previewExpanded, setPreviewExpanded] = useState<string | null>(null)
+
+  // Mode B: pre-populate state from the rule set being edited
+  const existingRulesRef = React.useRef<PricingRule[]>([])
+  React.useEffect(() => {
+    if (editingRuleSetId && open) {
+      const existingRules = getRulesInSet(editingRuleSetId)
+      existingRulesRef.current = existingRules
+      if (existingRules.length > 0) {
+        const first = existingRules[0]
+        setRuleSetName(first.RuleSetName || editingRuleSetId)
+        setDescriptionPrefix(
+          first.RuleDescription.split('|')[0]?.trim() || first.RuleDescription
+        )
+        // Pre-populate options from first rule
+        if (first.FeeSet) setFeeSet(first.FeeSet)
+        if (first.MICompany) setMiCompany(first.MICompany)
+        if (first.Rate) setRate(first.Rate)
+        if (first.MarginType) setMarginType(first.MarginType)
+        setHasSecondMortgage(first.HasSecondMortgage)
+        setIgnoreNonEighthRates(first.IgnoreNonEighthRates)
+        setIncludeUFMIP(first.IncludeUFMIP)
+        setFinanceUFMIP(first.FinanceUFMIP)
+        setHideInQuoteAdjustments(first.HideInQuoteAdjustments)
+        if (first.Lenders.length > 0) setSelectedLenders(first.Lenders)
+        if (first.PropertyTypes.length > 0) setSelectedPropertyTypes(first.PropertyTypes)
+        if (first.PropertyUsage.length > 0) setSelectedPropertyUsage(first.PropertyUsage)
+        if (first.LoanTypes.length > 0) setSelectedLoanTypes(first.LoanTypes)
+        if (first.QuotingChannels.length > 0) setSelectedQuotingChannels(first.QuotingChannels)
+        if (first.States.length > 0) setSelectedStates(first.States)
+        if (first.ProductFamilies.length > 0) setSelectedProductFamilies(first.ProductFamilies)
+        if (first.ProductClasses.length > 0) setSelectedProductClasses(first.ProductClasses)
+        if (first.ProductTypes.length > 0) setSelectedProductTypes(first.ProductTypes)
+        if (first.ProductTerms.length > 0) setSelectedProductTerms(first.ProductTerms)
+        setCurrentStep('dimensions')
+      }
+    } else if (!open) {
+      existingRulesRef.current = []
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingRuleSetId, open])
 
   const handleCellChange = useCallback((key: string, value: string) => {
     setCellValues(prev => ({ ...prev, [key]: value }))
@@ -1286,9 +1334,45 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   }, [builderMode, listRanges, listDimension, xRanges, yRanges, xDimension, yDimension, cellValues, cellValueType, descriptionPrefix, disallow, applyOptionsToRule])
 
   const handleStageAll = () => {
-    previewRules.forEach(({ rule }) => {
-      stageCreate(rule)
-    })
+    if (isEditMode && editingRuleSetId) {
+      // Mode B: diff existing rules against preview; update matching, create new
+      const existingRules = existingRulesRef.current
+      const updates: Array<{ rule: PricingRule; updates: Partial<PricingRule> }> = []
+      const creates: PricingRule[] = []
+
+      previewRules.forEach(({ rule: previewRule }, idx) => {
+        // Stamp rule set info
+        const stamped: PricingRule = {
+          ...previewRule,
+          RuleSetId: editingRuleSetId,
+          RuleSetName: ruleSetName || editingRuleSetId,
+        }
+        const existing = existingRules[idx]
+        if (existing) {
+          // Compare and only update if changed
+          const changed = getChangedFields(existing, { ...existing, ...stamped })
+          if (changed.length > 0) {
+            updates.push({ rule: existing, updates: stamped })
+          }
+        } else {
+          // New rule in the set
+          creates.push(stamped)
+        }
+      })
+
+      if (updates.length > 0) stageUpdateMany(updates)
+      if (creates.length > 0) stageCreateMany(creates)
+    } else {
+      // Mode A: create all with rule set stamp
+      const setId = generateRuleSetId()
+      previewRules.forEach(({ rule }) => {
+        stageCreate({
+          ...rule,
+          RuleSetId: setId,
+          RuleSetName: ruleSetName || setId,
+        })
+      })
+    }
     onOpenChange(false)
     // Reset state
     setCurrentStep('dimensions')
@@ -1585,6 +1669,26 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                 <div className="border-t pt-6">
                   <h3 className="font-medium mb-4">Base Rule Template</h3>
                   <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>
+                        Rule Set Name
+                        {!isEditMode && (
+                          <span className="ml-1 text-red-600 font-bold">*</span>
+                        )}
+                      </Label>
+                      <Input
+                        value={ruleSetName}
+                        onChange={(e) => setRuleSetName(e.target.value)}
+                        placeholder="e.g., Conv 30yr Purchase Matrix"
+                        className={!ruleSetName && !isEditMode ? 'border-orange-300 focus:border-orange-500' : ''}
+                      />
+                      <p className="text-xs text-gray-500">
+                        {isEditMode
+                          ? 'Updating the rule set name will apply to all rules in this set.'
+                          : 'All generated rules will be grouped under this rule set name. Required.'}
+                      </p>
+                    </div>
+
                     <div className="space-y-2">
                       <Label>Rule Description Prefix</Label>
                       <Input

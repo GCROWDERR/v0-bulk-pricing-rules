@@ -10,8 +10,11 @@ import { PublishDialog } from './publish-dialog'
 import { createBlankRule } from '@/lib/pricing-rules-data'
 import { cn } from '@/lib/utils'
 
+// RuleSetEditor is rendered as a variant of RuleBuilderDialog with a pre-loaded rule set
+
 const DEFAULT_VISIBLE_COLUMNS = new Set([
   'RuleId',
+  'RuleSetId',
   'RuleDescription',
   'Lenders',
   'Fee',
@@ -30,8 +33,15 @@ function PricingRulesContent() {
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(DEFAULT_VISIBLE_COLUMNS)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showRuleBuilder, setShowRuleBuilder] = useState(false)
+  const [showRuleSetEditor, setShowRuleSetEditor] = useState(false)
+  const [editingRuleSetId, setEditingRuleSetIdLocal] = useState<string | null>(null)
   const [showPublishDialog, setShowPublishDialog] = useState(false)
   const [isNewRule, setIsNewRule] = useState(false)
+
+  const handleOpenRuleSetEditor = (ruleSetId: string) => {
+    setEditingRuleSetIdLocal(ruleSetId)
+    setShowRuleSetEditor(true)
+  }
 
   const handleNewRule = () => {
     const newRule = createBlankRule(-Date.now())
@@ -79,6 +89,7 @@ function PricingRulesContent() {
         onNewRule={handleNewRule}
         onOpenRuleBuilder={() => setShowRuleBuilder(true)}
         onOpenPublishDialog={() => setShowPublishDialog(true)}
+        onOpenRuleSetEditor={handleOpenRuleSetEditor}
       />
 
       {/* Table */}
@@ -99,10 +110,20 @@ function PricingRulesContent() {
         isNew={isNewRule}
       />
 
-      {/* Rule Builder Dialog */}
+      {/* Rule Builder Dialog - create new rule sets */}
       <RuleBuilderDialog
         open={showRuleBuilder}
         onOpenChange={setShowRuleBuilder}
+      />
+
+      {/* Rule Set Editor Dialog - edit existing rule sets */}
+      <RuleBuilderDialog
+        open={showRuleSetEditor}
+        onOpenChange={(open) => {
+          setShowRuleSetEditor(open)
+          if (!open) setEditingRuleSetIdLocal(null)
+        }}
+        editingRuleSetId={editingRuleSetId}
       />
 
       {/* Publish Dialog */}

@@ -34,7 +34,8 @@ import {
   ArrowUpDown,
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
-import { usePricingRules, type SortField } from '@/lib/pricing-rules-context'
+import { usePricingRules } from '@/lib/pricing-rules-context'
+import type { SortField } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import { formatCurrency, formatPrice, formatPercent } from '@/lib/pricing-rules-data'
 import { InlineQuickEdit } from './inline-quick-edit'
@@ -100,6 +101,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
     selectRows,
     clearSelection,
     toggleSort,
+    setRuleSetFilter,
   } = usePricingRules()
 
   const [currentPage, setCurrentPage] = useState(1)
@@ -263,6 +265,11 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                   />
                 </TableHead>
               )}
+              {visibleColumns.has('RuleSetId') && (
+                <TableHead className="w-[12%] min-w-[100px] bg-blue-50 text-gray-900 font-medium">
+                  Rule Set
+                </TableHead>
+              )}
               {visibleColumns.has('RuleDescription') && (
                 <TableHead className="w-[22%] min-w-[150px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
@@ -397,6 +404,42 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                             </Badge>
                           )}
                         </span>
+                      </TableCell>
+                    )}
+
+                    {visibleColumns.has('RuleSetId') && (
+                      <TableCell className="text-sm">
+                        {displayRule.RuleSetId ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setRuleSetFilter(
+                                    state.ruleSetFilter === displayRule.RuleSetId
+                                      ? null
+                                      : displayRule.RuleSetId!
+                                  )
+                                }}
+                                className={cn(
+                                  'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors',
+                                  state.ruleSetFilter === displayRule.RuleSetId
+                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+                                )}
+                              >
+                                {displayRule.RuleSetName || displayRule.RuleSetId}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                              {state.ruleSetFilter === displayRule.RuleSetId
+                                ? 'Click to clear filter'
+                                : 'Click to filter by this rule set'}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-gray-400">&mdash;</span>
+                        )}
                       </TableCell>
                     )}
 
