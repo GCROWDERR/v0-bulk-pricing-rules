@@ -521,11 +521,11 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               </div>
             </section>
 
-            {/* ── OPTIONAL CRITERIA ─────────────────────────────────────────────── */}
+            {/* ── RULE CONDITIONS ─────────────────────────────────────────────── */}
             <div className="space-y-3">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Optional criteria</h2>
-                <p className="text-sm text-gray-500 mt-1">Add conditions to limit when this rule applies. If no criteria are added, this rule applies to all scenarios.</p>
+                <h2 className="text-2xl font-bold text-gray-900">Rule conditions</h2>
+                <p className="text-sm text-gray-500 mt-1">Add conditions to limit when this rule applies. If no conditions are added, this rule applies to all scenarios.</p>
               </div>
 
               {/* Add Criteria pills — sticky */}
@@ -563,7 +563,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               {activeSections.has('conditions') && (
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-4 bg-white">
-                    <h3 className="text-lg font-bold text-gray-900">Optional criteria</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Rule conditions</h3>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
