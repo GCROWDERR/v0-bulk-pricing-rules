@@ -1201,34 +1201,170 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
     if (editingRuleSetId && open) {
       const existingRules = getRulesInSet(editingRuleSetId)
       existingRulesRef.current = existingRules
-      if (existingRules.length > 0) {
-        const first = existingRules[0]
-        setRuleSetName(first.RuleSetName || editingRuleSetId)
-        setDescriptionPrefix(
-          first.RuleDescription.split('|')[0]?.trim() || first.RuleDescription
-        )
-        // Pre-populate options from first rule
-        if (first.FeeSet) setFeeSet(first.FeeSet)
-        if (first.MICompany) setMiCompany(first.MICompany)
-        if (first.Rate) setRate(first.Rate)
-        if (first.MarginType) setMarginType(first.MarginType)
-        setHasSecondMortgage(first.HasSecondMortgage)
-        setIgnoreNonEighthRates(first.IgnoreNonEighthRates)
-        setIncludeUFMIP(first.IncludeUFMIP)
-        setFinanceUFMIP(first.FinanceUFMIP)
-        setHideInQuoteAdjustments(first.HideInQuoteAdjustments)
-        if (first.Lenders.length > 0) setSelectedLenders(first.Lenders)
-        if (first.PropertyTypes.length > 0) setSelectedPropertyTypes(first.PropertyTypes)
-        if (first.PropertyUsage.length > 0) setSelectedPropertyUsage(first.PropertyUsage)
-        if (first.LoanTypes.length > 0) setSelectedLoanTypes(first.LoanTypes)
-        if (first.QuotingChannels.length > 0) setSelectedQuotingChannels(first.QuotingChannels)
-        if (first.States.length > 0) setSelectedStates(first.States)
-        if (first.ProductFamilies.length > 0) setSelectedProductFamilies(first.ProductFamilies)
-        if (first.ProductClasses.length > 0) setSelectedProductClasses(first.ProductClasses)
-        if (first.ProductTypes.length > 0) setSelectedProductTypes(first.ProductTypes)
-        if (first.ProductTerms.length > 0) setSelectedProductTerms(first.ProductTerms)
-        setCurrentStep('dimensions')
+      if (existingRules.length === 0) return
+
+      const first = existingRules[0]
+
+      // ── Name / prefix ──────────────────────────────────────────────
+      setRuleSetName(first.RuleSetName || editingRuleSetId)
+      const parts = first.RuleDescription.split('|')
+      setDescriptionPrefix(parts[0]?.trim() || first.RuleDescription)
+
+      // ── Options from first rule ────────────────────────────────────
+      if (first.FeeSet) setFeeSet(first.FeeSet)
+      if (first.MICompany) setMiCompany(first.MICompany)
+      if (first.Rate) setRate(first.Rate)
+      if (first.MarginType) setMarginType(first.MarginType)
+      setDisallow(first.Disallow)
+      setHasSecondMortgage(first.HasSecondMortgage)
+      setIgnoreNonEighthRates(first.IgnoreNonEighthRates)
+      setIncludeUFMIP(first.IncludeUFMIP)
+      setFinanceUFMIP(first.FinanceUFMIP)
+      setHideInQuoteAdjustments(first.HideInQuoteAdjustments)
+      if (first.Lenders.length > 0) setSelectedLenders(first.Lenders)
+      if (first.PropertyTypes.length > 0) setSelectedPropertyTypes(first.PropertyTypes)
+      if (first.PropertyUsage.length > 0) setSelectedPropertyUsage(first.PropertyUsage)
+      if (first.LoanTypes.length > 0) setSelectedLoanTypes(first.LoanTypes)
+      if (first.QuotingChannels.length > 0) setSelectedQuotingChannels(first.QuotingChannels)
+      if (first.States.length > 0) setSelectedStates(first.States)
+      if (first.ProductFamilies.length > 0) setSelectedProductFamilies(first.ProductFamilies)
+      if (first.ProductClasses.length > 0) setSelectedProductClasses(first.ProductClasses)
+      if (first.ProductTypes.length > 0) setSelectedProductTypes(first.ProductTypes)
+      if (first.ProductTerms.length > 0) setSelectedProductTerms(first.ProductTerms)
+
+      // ── Detect cell value type ─────────────────────────────────────
+      // Use whichever numeric field is non-zero on the first rule
+      let detectedValueType: CellValueType = 'margin'
+      if (first.Price !== 0) detectedValueType = 'price'
+      else if (first.Fee !== 0) detectedValueType = 'fee'
+      else if (first.Disallow) detectedValueType = 'disallow'
+      setCellValueType(detectedValueType)
+
+      const getValue = (r: PricingRule): string => {
+        if (detectedValueType === 'price') return String(r.Price)
+        if (detectedValueType === 'fee') return String(r.Fee)
+        if (detectedValueType === 'disallow') return r.Disallow ? 'Yes' : 'No'
+        return String(r.CompPercent)
       }
+
+      // ── Detect builder mode: matrix = 2 pipe-separated dimension segments ──
+      const isMatrix = parts.length >= 3
+
+      if (isMatrix) {
+        // ── Matrix mode: reconstruct X ranges, Y ranges, and cell values ──
+        setBuilderMode('matrix')
+
+        // Detect X and Y dimensions from the first rule
+        // X = the dimension that varies across columns (first segment after prefix)
+        // We infer from which numeric field changes between rules at the same Y
+        // Simpler: detect from field presence: if FICO varies → fico, LTV → ltv, else loanAmount
+        const ficosX = new Set(existingRules.map(r => `${r.FICOMin}-${r.FICOMax}`))
+        const ltvsX = new Set(existingRules.map(r => `${r.LTVMin}-${r.LTVMax}`))
+        const loansX = new Set(existingRules.map(r => `${r.LoanAmountMin}-${r.LoanAmountMax}`))
+
+        // The dimension with more unique values is more likely X; use description parse as tiebreak
+        // Parse actual range bounds from the stored rules directly — more reliable
+        // Group rules by their Y-axis value to detect X dimension
+        // Strategy: collect unique values per candidate field; the one with sqrt(n) unique values each = axis
+        const nRules = existingRules.length
+        const nFico = ficosX.size
+        const nLtv = ltvsX.size
+        const nLoan = loansX.size
+
+        // Detect X and Y dimensions by checking which pairs of fields produce a grid
+        // The X dimension is the one whose unique count = sqrt(n) or n/yCount
+        // Simplest: check FICO vs LTV vs Loan for both axes using description label parsing
+        const firstXLabel = parts[1]?.trim() || ''
+        const firstYLabel = parts[2]?.trim() || ''
+
+        const inferDim = (label: string): DimensionType => {
+          const l = label.toLowerCase()
+          if (l.includes('fico') || l.includes('credit')) return 'fico'
+          if (l.includes('ltv') || l.includes('%')) return 'ltv'
+          return 'loanAmount'
+        }
+
+        const xDim = inferDim(firstXLabel)
+        const yDim = inferDim(firstYLabel)
+        setXDimension(xDim)
+        setYDimension(yDim)
+
+        // Collect unique X and Y range bounds in insertion order
+        const xRangeMap = new Map<string, { min: number; max: number }>()
+        const yRangeMap = new Map<string, { min: number; max: number }>()
+
+        const getXBounds = (r: PricingRule) => {
+          if (xDim === 'fico') return { min: r.FICOMin, max: r.FICOMax }
+          if (xDim === 'ltv') return { min: r.LTVMin, max: r.LTVMax }
+          return { min: r.LoanAmountMin, max: r.LoanAmountMax }
+        }
+        const getYBounds = (r: PricingRule) => {
+          if (yDim === 'fico') return { min: r.FICOMin, max: r.FICOMax }
+          if (yDim === 'ltv') return { min: r.LTVMin, max: r.LTVMax }
+          return { min: r.LoanAmountMin, max: r.LoanAmountMax }
+        }
+
+        existingRules.forEach(r => {
+          const xb = getXBounds(r)
+          const yb = getYBounds(r)
+          xRangeMap.set(`${xb.min}-${xb.max}`, xb)
+          yRangeMap.set(`${yb.min}-${yb.max}`, yb)
+        })
+
+        // Build Range objects with stable IDs
+        const newXRanges: Range[] = Array.from(xRangeMap.values()).map(b => ({
+          id: generateId(),
+          min: b.min,
+          max: b.max,
+        }))
+        const newYRanges: Range[] = Array.from(yRangeMap.values()).map(b => ({
+          id: generateId(),
+          min: b.min,
+          max: b.max,
+        }))
+
+        setXRanges(newXRanges)
+        setYRanges(newYRanges)
+
+        // Build cell values map: key = xRange.id + '-' + yRange.id
+        const newCellValues: Record<string, string> = {}
+        existingRules.forEach(r => {
+          const xb = getXBounds(r)
+          const yb = getYBounds(r)
+          const xR = newXRanges.find(rx => rx.min === xb.min && rx.max === xb.max)
+          const yR = newYRanges.find(ry => ry.min === yb.min && ry.max === yb.max)
+          if (xR && yR) {
+            newCellValues[`${xR.id}-${yR.id}`] = getValue(r)
+          }
+        })
+        setCellValues(newCellValues)
+        clearUndoHistory()
+
+      } else {
+        // ── List mode: reconstruct list ranges with values ─────────────
+        setBuilderMode('list')
+
+        // Detect the list dimension from the first rule
+        let listDim: DimensionType = 'loanAmount'
+        if (first.FICOMin !== 0 || first.FICOMax !== 0) listDim = 'fico'
+        else if (first.LTVMin !== 0 || first.LTVMax !== 0) listDim = 'ltv'
+        setListDimension(listDim)
+
+        const getBounds = (r: PricingRule) => {
+          if (listDim === 'fico') return { min: r.FICOMin, max: r.FICOMax }
+          if (listDim === 'ltv') return { min: r.LTVMin, max: r.LTVMax }
+          return { min: r.LoanAmountMin, max: r.LoanAmountMax }
+        }
+
+        const newListRanges: RangeWithValue[] = existingRules.map(r => {
+          const bounds = getBounds(r)
+          return { id: generateId(), min: bounds.min, max: bounds.max, value: getValue(r) }
+        })
+        setListRanges(newListRanges)
+        clearUndoHistory()
+      }
+
+      setCurrentStep('dimensions')
     } else if (!open) {
       existingRulesRef.current = []
     }
