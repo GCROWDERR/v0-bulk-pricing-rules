@@ -229,7 +229,7 @@ export function RuleSetEditSummaryModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0 font-sans">
+      <DialogContent className="max-w-2xl w-full flex flex-col gap-0 p-0 font-sans overflow-hidden" style={{ maxHeight: 'min(90vh, 720px)', height: 'min(90vh, 720px)' }}>
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200 shrink-0">
           <div className="flex items-start gap-3">
@@ -272,12 +272,12 @@ export function RuleSetEditSummaryModal({
 
         {/* Body */}
         {totalChanges === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-6 gap-3 text-center">
+          <div className="flex-1 flex flex-col items-center justify-center py-16 px-6 gap-3 text-center overflow-hidden">
             <CheckCircle2 className="h-10 w-10 text-gray-300" />
             <p className="text-gray-500 text-sm">No changes detected. All rules match their existing values.</p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 min-h-0">
+          <ScrollArea className="flex-1 overflow-hidden">
             <div className="px-6 py-4 space-y-3">
               {/* Updated rules */}
               {updates.length > 0 && (
@@ -303,7 +303,7 @@ export function RuleSetEditSummaryModal({
         )}
 
         {/* Footer */}
-        <DialogFooter className="px-6 py-4 border-t border-gray-200 bg-gray-50 shrink-0 flex items-center justify-between sm:justify-between">
+        <DialogFooter className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex-none flex items-center justify-between sm:justify-between">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
