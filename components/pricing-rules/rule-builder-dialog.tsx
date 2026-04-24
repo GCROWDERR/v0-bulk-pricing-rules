@@ -46,6 +46,7 @@ import {
   ChevronRight,
   Wand2,
   Search,
+  Undo2,
 } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
 import { RuleSetEditSummaryModal } from './rule-set-edit-summary-modal'
@@ -1022,6 +1023,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
     }
     setShowModeChangeWarning(false)
     setPendingMode(null)
+    clearUndoHistory()
   }
 
   const cancelModeChange = () => {
@@ -1113,12 +1115,65 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
   const [cellValueType, setCellValueType] = useState<CellValueType>('margin')
   const [cellValues, setCellValues] = useState<Record<string, string>>({})
 
+  // Refs to always hold the latest values without causing dep-loop re-renders
+  const cellValuesRef = useRef<Record<string, string>>({})
+  const listRangesRef = useRef<RangeWithValue[]>(listRanges)
+
+  // Keep refs in sync on every render (no useEffect needed — runs synchronously)
+  cellValuesRef.current = cellValues
+  listRangesRef.current = listRanges
+
+  // Undo history — snapshots of { cellValues, listRanges } before each mutation
+  interface UndoSnapshot { cellValues: Record<string, string>; listRanges: RangeWithValue[] }
+  const undoStackRef = useRef<UndoSnapshot[]>([])
+  const [canUndo, setCanUndo] = useState(false)
+
+  // Push current state onto the undo stack before a mutation
+  const pushUndo = useCallback(() => {
+    undoStackRef.current = [
+      ...undoStackRef.current.slice(-49), // cap at 50 snapshots
+      {
+        cellValues: { ...cellValuesRef.current },
+        listRanges: listRangesRef.current.map(r => ({ ...r })),
+      },
+    ]
+    setCanUndo(true)
+  }, [])
+
+  const handleUndo = useCallback(() => {
+    if (undoStackRef.current.length === 0) return
+    const snapshot = undoStackRef.current[undoStackRef.current.length - 1]
+    undoStackRef.current = undoStackRef.current.slice(0, -1)
+    setCellValues(snapshot.cellValues)
+    setListRanges(snapshot.listRanges)
+    setCanUndo(undoStackRef.current.length > 0)
+  }, [])
+
+  // Clear undo history when dialog closes or mode changes
+  const clearUndoHistory = useCallback(() => {
+    undoStackRef.current = []
+    setCanUndo(false)
+  }, [])
+
   // Preview state
   const [previewExpanded, setPreviewExpanded] = useState<string | null>(null)
 
   // Rule set edit summary modal
   const [showSummaryModal, setShowSummaryModal] = useState(false)
   const [pendingDiffs, setPendingDiffs] = useState<RuleSetEditDiff[]>([])
+
+  // Keyboard shortcut: Cmd/Ctrl+Z to undo (only when dialog is open)
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, handleUndo])
 
   // Mode B: pre-populate state from the rule set being edited
   const existingRulesRef = useRef<PricingRule[]>([])
@@ -1161,8 +1216,14 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
   }, [editingRuleSetId, open])
 
   const handleCellChange = useCallback((key: string, value: string) => {
+    pushUndo()
     setCellValues(prev => ({ ...prev, [key]: value }))
-  }, [])
+  }, [pushUndo])
+
+  const handleListRangesChange = useCallback((updater: RangeWithValue[] | ((prev: RangeWithValue[]) => RangeWithValue[])) => {
+    pushUndo()
+    setListRanges(prev => typeof updater === 'function' ? updater(prev) : updater)
+  }, [pushUndo])
 
   // Apply all options to a rule
   const applyOptionsToRule = useCallback((rule: PricingRule) => {
@@ -1364,8 +1425,10 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
       })
     }
     onOpenChange(false)
+    // Reset step to first step for next open
     setCurrentStep(isEditMode ? 'dimensions' : 'mode')
     setCellValues({})
+    clearUndoHistory()
   }
 
   const handleStageAll = () => {
@@ -1800,7 +1863,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                     <ListBuilder
                       dimension={listDimension}
                       ranges={listRanges}
-                      onChange={setListRanges}
+                      onChange={handleListRangesChange}
                       valueType={cellValueType}
                     />
                   </div>
@@ -2364,6 +2427,25 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                 }}
               >
                 Previous
+              </Button>
+            )}
+            {(currentStep === 'matrix' || currentStep === 'values') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleUndo}
+                disabled={!canUndo}
+                className={cn(
+                  'gap-1.5 text-gray-500',
+                  canUndo && 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                )}
+                title="Undo last change (Cmd/Ctrl+Z)"
+              >
+                <Undo2 className="h-4 w-4" />
+                Undo
+                {undoStackRef.current.length > 1 && (
+                  <span className="text-xs opacity-60">({undoStackRef.current.length})</span>
+                )}
               </Button>
             )}
             {currentStep === 'review' ? (
