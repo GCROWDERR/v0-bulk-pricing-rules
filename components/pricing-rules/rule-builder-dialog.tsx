@@ -1716,16 +1716,25 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                   <h3 className="font-medium mb-4">Base Rule Template</h3>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>
-                        Rule Set Name
-                        {!isEditMode && (
-                          <span className="ml-1 text-red-600 font-bold">*</span>
-                        )}
-                      </Label>
+                      <div className="flex items-center justify-between">
+                        <Label>
+                          Rule Set Name
+                          {!isEditMode && (
+                            <span className="ml-1 text-red-600 font-bold">*</span>
+                          )}
+                        </Label>
+                        <span className={cn(
+                          'text-xs tabular-nums',
+                          ruleSetName.length >= 30 ? 'text-red-500 font-medium' : ruleSetName.length >= 24 ? 'text-orange-500' : 'text-gray-400'
+                        )}>
+                          {ruleSetName.length}/30
+                        </span>
+                      </div>
                       <Input
                         value={ruleSetName}
-                        onChange={(e) => setRuleSetName(e.target.value)}
+                        onChange={(e) => setRuleSetName(e.target.value.slice(0, 30))}
                         placeholder="e.g., Conv 30yr Purchase Matrix"
+                        maxLength={30}
                         className={!ruleSetName && !isEditMode ? 'border-orange-300 focus:border-orange-500' : ''}
                       />
                       <p className="text-xs text-gray-500">

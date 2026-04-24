@@ -409,35 +409,40 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
 
                     {visibleColumns.has('RuleSetId') && (
                       <TableCell className="text-sm">
-                        {displayRule.RuleSetId ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setRuleSetFilter(
-                                    state.ruleSetFilter === displayRule.RuleSetId
-                                      ? null
-                                      : displayRule.RuleSetId!
-                                  )
-                                }}
-                                className={cn(
-                                  'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors',
-                                  state.ruleSetFilter === displayRule.RuleSetId
-                                    ? 'bg-blue-600 text-white border-blue-600'
-                                    : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+                        {displayRule.RuleSetId ? (() => {
+                          const fullName = displayRule.RuleSetName || displayRule.RuleSetId
+                          const isTruncated = fullName.length > 15
+                          const displayName = isTruncated ? fullName.slice(0, 15) + '…' : fullName
+                          const isFiltered = state.ruleSetFilter === displayRule.RuleSetId
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setRuleSetFilter(isFiltered ? null : displayRule.RuleSetId!)
+                                  }}
+                                  className={cn(
+                                    'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors max-w-[120px]',
+                                    isFiltered
+                                      ? 'bg-blue-600 text-white border-blue-600'
+                                      : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+                                  )}
+                                >
+                                  <span className="truncate">{displayName}</span>
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-[240px]">
+                                {isTruncated && (
+                                  <p className="font-medium mb-1">{fullName}</p>
                                 )}
-                              >
-                                {displayRule.RuleSetName || displayRule.RuleSetId}
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">
-                              {state.ruleSetFilter === displayRule.RuleSetId
-                                ? 'Click to clear filter'
-                                : 'Click to filter by this rule set'}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
+                                <p className="text-xs text-gray-300">
+                                  {isFiltered ? 'Click to clear filter' : 'Click to filter by this rule set'}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )
+                        })() : (
                           <span className="text-gray-400">&mdash;</span>
                         )}
                       </TableCell>
