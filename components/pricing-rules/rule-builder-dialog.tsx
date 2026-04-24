@@ -660,6 +660,9 @@ interface MatrixGridProps {
   cellValues: Record<string, string>
   onCellChange: (key: string, value: string) => void
   cellValueType: CellValueType
+  onUndo: () => void
+  canUndo: boolean
+  undoCount: number
 }
 
 function MatrixGrid({
@@ -670,6 +673,9 @@ function MatrixGrid({
   cellValues,
   onCellChange,
   cellValueType,
+  onUndo,
+  canUndo,
+  undoCount,
 }: MatrixGridProps) {
   const [fillValue, setFillValue] = useState('')
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set())
@@ -840,7 +846,7 @@ function MatrixGrid({
             <Button
               size="sm"
               variant="outline"
-              onClick={handleUndo}
+              onClick={onUndo}
               disabled={!canUndo}
               className={cn(
                 'h-9 gap-1.5',
@@ -850,8 +856,8 @@ function MatrixGrid({
             >
               <Undo2 className="h-3.5 w-3.5" />
               Undo
-              {undoStackRef.current.length > 1 && (
-                <span className="text-xs opacity-60">({undoStackRef.current.length})</span>
+              {undoCount > 1 && (
+                <span className="text-xs opacity-60">({undoCount})</span>
               )}
             </Button>
             <Button 
@@ -1916,6 +1922,9 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                     cellValues={cellValues}
                     onCellChange={handleCellChange}
                     cellValueType={cellValueType}
+                    onUndo={handleUndo}
+                    canUndo={canUndo}
+                    undoCount={undoStackRef.current.length}
                   />
                 </TabsContent>
               )}
