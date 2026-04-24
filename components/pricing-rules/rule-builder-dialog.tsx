@@ -856,9 +856,6 @@ function MatrixGrid({
             >
               <Undo2 className="h-3.5 w-3.5" />
               Undo
-              {undoCount > 1 && (
-                <span className="text-xs opacity-60">({undoCount})</span>
-              )}
             </Button>
             <Button 
               size="sm" 
