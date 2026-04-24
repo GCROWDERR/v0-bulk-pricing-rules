@@ -837,6 +837,23 @@ function MatrixGrid({
             <Button size="sm" variant="outline" onClick={handleSelectAll} className="h-9">
               Select All
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleUndo}
+              disabled={!canUndo}
+              className={cn(
+                'h-9 gap-1.5',
+                canUndo ? 'text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400' : 'text-gray-400'
+              )}
+              title="Undo last change (Cmd/Ctrl+Z)"
+            >
+              <Undo2 className="h-3.5 w-3.5" />
+              Undo
+              {undoStackRef.current.length > 1 && (
+                <span className="text-xs opacity-60">({undoStackRef.current.length})</span>
+              )}
+            </Button>
             <Button 
               size="sm" 
               variant="outline" 
@@ -2429,25 +2446,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                 Previous
               </Button>
             )}
-            {(currentStep === 'matrix' || currentStep === 'values') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleUndo}
-                disabled={!canUndo}
-                className={cn(
-                  'gap-1.5 text-gray-500',
-                  canUndo && 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
-                )}
-                title="Undo last change (Cmd/Ctrl+Z)"
-              >
-                <Undo2 className="h-4 w-4" />
-                Undo
-                {undoStackRef.current.length > 1 && (
-                  <span className="text-xs opacity-60">({undoStackRef.current.length})</span>
-                )}
-              </Button>
-            )}
+
             {currentStep === 'review' ? (
               <Button
                 onClick={handleStageAll}
