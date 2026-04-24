@@ -267,7 +267,13 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
               )}
               {visibleColumns.has('RuleSetId') && (
                 <TableHead className="w-[12%] min-w-[100px] bg-blue-50 text-gray-900 font-medium">
-                  Rule Set
+                  <SortableHeader
+                    field="RuleSetId"
+                    label="Rule Set"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
                 </TableHead>
               )}
               {visibleColumns.has('RuleDescription') && (
