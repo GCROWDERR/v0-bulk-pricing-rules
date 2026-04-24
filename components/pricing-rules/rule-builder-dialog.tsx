@@ -48,6 +48,8 @@ import {
   Search,
 } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
+import { RuleSetEditSummaryModal } from './rule-set-edit-summary-modal'
+import type { RuleSetEditDiff } from './rule-set-edit-summary-modal'
 import { 
   LENDERS, 
   PRODUCT_FAMILIES, 
@@ -1114,6 +1116,10 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
   // Preview state
   const [previewExpanded, setPreviewExpanded] = useState<string | null>(null)
 
+  // Rule set edit summary modal
+  const [showSummaryModal, setShowSummaryModal] = useState(false)
+  const [pendingDiffs, setPendingDiffs] = useState<RuleSetEditDiff[]>([])
+
   // Mode B: pre-populate state from the rule set being edited
   const existingRulesRef = useRef<PricingRule[]>([])
   useEffect(() => {
@@ -1333,37 +1339,21 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
     return rules
   }, [builderMode, listRanges, listDimension, xRanges, yRanges, xDimension, yDimension, cellValues, cellValueType, descriptionPrefix, disallow, applyOptionsToRule])
 
-  const handleStageAll = () => {
+  // Performs the actual staging after confirmation (Mode A or B)
+  const executeStage = (diffs: RuleSetEditDiff[]) => {
     if (isEditMode && editingRuleSetId) {
-      // Mode B: diff existing rules against preview; update matching, create new
-      const existingRules = existingRulesRef.current
       const updates: Array<{ rule: PricingRule; updates: Partial<PricingRule> }> = []
       const creates: PricingRule[] = []
-
-      previewRules.forEach(({ rule: previewRule }, idx) => {
-        // Stamp rule set info
-        const stamped: PricingRule = {
-          ...previewRule,
-          RuleSetId: editingRuleSetId,
-          RuleSetName: ruleSetName || editingRuleSetId,
-        }
-        const existing = existingRules[idx]
-        if (existing) {
-          // Compare and only update if changed
-          const changed = getChangedFields(existing, { ...existing, ...stamped })
-          if (changed.length > 0) {
-            updates.push({ rule: existing, updates: stamped })
-          }
+      diffs.forEach(diff => {
+        if (diff.isNew) {
+          creates.push(diff.updatedRule)
         } else {
-          // New rule in the set
-          creates.push(stamped)
+          updates.push({ rule: diff.rule, updates: diff.updatedRule })
         }
       })
-
       if (updates.length > 0) stageUpdateMany(updates)
       if (creates.length > 0) stageCreateMany(creates)
     } else {
-      // Mode A: create all with rule set stamp
       const setId = generateRuleSetId()
       previewRules.forEach(({ rule }) => {
         stageCreate({
@@ -1374,9 +1364,37 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
       })
     }
     onOpenChange(false)
-    // Reset step to first step for next open
     setCurrentStep(isEditMode ? 'dimensions' : 'mode')
     setCellValues({})
+  }
+
+  const handleStageAll = () => {
+    if (isEditMode && editingRuleSetId) {
+      // Mode B: compute diffs, show confirmation modal
+      const existingRules = existingRulesRef.current
+      const diffs: RuleSetEditDiff[] = []
+
+      previewRules.forEach(({ rule: previewRule }, idx) => {
+        const stamped: PricingRule = {
+          ...previewRule,
+          RuleSetId: editingRuleSetId,
+          RuleSetName: ruleSetName || editingRuleSetId,
+        }
+        const existing = existingRules[idx]
+        if (existing) {
+          const changedFields = getChangedFields(existing, { ...existing, ...stamped })
+          diffs.push({ rule: existing, updatedRule: stamped, isNew: false, changedFields })
+        } else {
+          diffs.push({ rule: stamped, updatedRule: stamped, isNew: true, changedFields: Object.keys(stamped) })
+        }
+      })
+
+      setPendingDiffs(diffs)
+      setShowSummaryModal(true)
+    } else {
+      // Mode A: no confirmation needed, stage immediately
+      executeStage([])
+    }
   }
 
   const toggleLender = (lender: string) => {
@@ -2383,6 +2401,15 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Rule Set Edit Summary / Confirmation Modal */}
+      <RuleSetEditSummaryModal
+        open={showSummaryModal}
+        onOpenChange={setShowSummaryModal}
+        ruleSetName={ruleSetName || editingRuleSetId || ''}
+        diffs={pendingDiffs}
+        onConfirm={() => executeStage(pendingDiffs)}
+      />
     </Dialog>
   )
 }
