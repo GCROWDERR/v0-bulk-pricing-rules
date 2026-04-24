@@ -521,15 +521,16 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               </div>
             </section>
 
-            {/* ── OPTIONAL CRITERIA ─────────────────────────────────────────────── */}
+            {/* ── RULE CONDITIONS ─────────────────────────────────────────────── */}
             <div className="space-y-3">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Optional criteria</h2>
-                <p className="text-sm text-gray-500 mt-1">Add conditions to limit when this rule applies. If no criteria are added, this rule applies to all scenarios.</p>
+                <h2 className="text-2xl font-bold text-gray-900">Rule conditions</h2>
+                <p className="text-sm text-gray-500 mt-1">Add conditions to limit when this rule applies. If no conditions are added, this rule applies to all scenarios.</p>
               </div>
 
-              {/* Add Criteria pills */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Add Criteria pills — sticky */}
+              <div className="sticky top-0 z-10 bg-white pt-2 pb-3 -mx-8 px-8 border-b border-gray-100">
+                <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-gray-500 mr-1">Add criteria:</span>
                 {([
                   { key: 'conditions' as const, label: 'Conditions' },
@@ -555,13 +556,14 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     </button>
                   )
                 })}
+                </div>
               </div>
 
               {/* Conditions section */}
               {activeSections.has('conditions') && (
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-4 bg-white">
-                    <h3 className="text-lg font-bold text-gray-900">Optional criteria</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Rule conditions</h3>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
