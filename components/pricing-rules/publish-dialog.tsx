@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, RotateCcw, Power, Layers } from 'lucide-react'
-import { useState } from 'react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
 import { formatCurrency, formatPrice, formatPercent, formatLoanAmount } from '@/lib/pricing-rules-data'
 import type { PricingRule, DraftEntry } from '@/lib/pricing-rules-data'
@@ -341,16 +340,6 @@ export function PublishDialog({ open, onOpenChange }: PublishDialogProps) {
     publishDrafts()
     onOpenChange(false)
   }
-
-  // Group drafts by type
-  const groupedDrafts = useMemo(() => {
-    return {
-      created: state.drafts.filter(d => d.type === 'create'),
-      updated: state.drafts.filter(d => d.type === 'update' || d.type === 'toggleActive'),
-      deleted: state.drafts.filter(d => d.type === 'delete'),
-      restored: state.drafts.filter(d => d.type === 'restore'),
-    }
-  }, [state.drafts])
 
   // Group drafts by rule set, with "ungrouped" catch-all
   const ruleSetGroups = useMemo(() => {

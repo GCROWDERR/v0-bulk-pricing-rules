@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -1115,8 +1115,8 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
   const [previewExpanded, setPreviewExpanded] = useState<string | null>(null)
 
   // Mode B: pre-populate state from the rule set being edited
-  const existingRulesRef = React.useRef<PricingRule[]>([])
-  React.useEffect(() => {
+  const existingRulesRef = useRef<PricingRule[]>([])
+  useEffect(() => {
     if (editingRuleSetId && open) {
       const existingRules = getRulesInSet(editingRuleSetId)
       existingRulesRef.current = existingRules
@@ -1374,8 +1374,8 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
       })
     }
     onOpenChange(false)
-    // Reset state
-    setCurrentStep('dimensions')
+    // Reset step to first step for next open
+    setCurrentStep(isEditMode ? 'dimensions' : 'mode')
     setCellValues({})
   }
 
@@ -1412,6 +1412,13 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
 
   // Get steps based on builder mode
   const getSteps = () => {
+    if (isEditMode) {
+      // Mode B skips the mode-selection step
+      if (builderMode === 'list') {
+        return ['dimensions', 'values', 'options', 'review']
+      }
+      return ['dimensions', 'ranges', 'matrix', 'options', 'review']
+    }
     if (builderMode === 'list') {
       return ['mode', 'dimensions', 'values', 'options', 'review']
     }
@@ -1425,13 +1432,15 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-gray-900">
-                Bulk Rule Builder
+                {isEditMode ? `Edit Rule Set: ${ruleSetName || editingRuleSetId}` : 'Bulk Rule Builder'}
               </DialogTitle>
               <DialogDescription className="text-gray-600">
-                Create multiple pricing rules efficiently using predefined ranges and values
+                {isEditMode
+                  ? 'Update the ranges, values, and options for all rules in this rule set'
+                  : 'Create multiple pricing rules efficiently using predefined ranges and values'}
               </DialogDescription>
             </div>
-            {currentStep !== 'mode' && (
+            {(isEditMode || currentStep !== 'mode') && (
               <Badge variant="outline" className="bg-white text-blue-700 border-blue-300">
                 {builderMode === 'matrix' ? 'Matrix Mode (2D)' : 'List Mode (1D)'}
               </Badge>
@@ -1442,22 +1451,41 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
         <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-4 pt-4 shrink-0">
             {builderMode === 'matrix' ? (
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="mode">1. Mode</TabsTrigger>
-                <TabsTrigger value="dimensions">2. Dimensions</TabsTrigger>
-                <TabsTrigger value="ranges">3. Ranges</TabsTrigger>
-                <TabsTrigger value="matrix">4. Matrix</TabsTrigger>
-                <TabsTrigger value="options">5. Options</TabsTrigger>
-                <TabsTrigger value="review">6. Review</TabsTrigger>
-              </TabsList>
+              isEditMode ? (
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
+                  <TabsTrigger value="ranges">2. Ranges</TabsTrigger>
+                  <TabsTrigger value="matrix">3. Matrix</TabsTrigger>
+                  <TabsTrigger value="options">4. Options</TabsTrigger>
+                  <TabsTrigger value="review">5. Review</TabsTrigger>
+                </TabsList>
+              ) : (
+                <TabsList className="grid w-full grid-cols-6">
+                  <TabsTrigger value="mode">1. Mode</TabsTrigger>
+                  <TabsTrigger value="dimensions">2. Dimensions</TabsTrigger>
+                  <TabsTrigger value="ranges">3. Ranges</TabsTrigger>
+                  <TabsTrigger value="matrix">4. Matrix</TabsTrigger>
+                  <TabsTrigger value="options">5. Options</TabsTrigger>
+                  <TabsTrigger value="review">6. Review</TabsTrigger>
+                </TabsList>
+              )
             ) : (
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="mode">1. Mode</TabsTrigger>
-                <TabsTrigger value="dimensions">2. Setup</TabsTrigger>
-                <TabsTrigger value="values">3. Ranges & Values</TabsTrigger>
-                <TabsTrigger value="options">4. Options</TabsTrigger>
-                <TabsTrigger value="review">5. Review</TabsTrigger>
-              </TabsList>
+              isEditMode ? (
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="dimensions">1. Setup</TabsTrigger>
+                  <TabsTrigger value="values">2. Ranges & Values</TabsTrigger>
+                  <TabsTrigger value="options">3. Options</TabsTrigger>
+                  <TabsTrigger value="review">4. Review</TabsTrigger>
+                </TabsList>
+              ) : (
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="mode">1. Mode</TabsTrigger>
+                  <TabsTrigger value="dimensions">2. Setup</TabsTrigger>
+                  <TabsTrigger value="values">3. Ranges & Values</TabsTrigger>
+                  <TabsTrigger value="options">4. Options</TabsTrigger>
+                  <TabsTrigger value="review">5. Review</TabsTrigger>
+                </TabsList>
+              )
             )}
           </div>
 
@@ -2297,7 +2325,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
             Cancel
           </Button>
           <div className="flex items-center gap-2">
-            {currentStep !== 'dimensions' && (
+            {currentStep !== getSteps()[0] && (
               <Button
                 variant="outline"
                 onClick={() => {
@@ -2317,7 +2345,9 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
                 disabled={previewRules.length === 0}
               >
-                Stage All ({previewRules.length} rules)
+                {isEditMode
+                  ? `Stage Updates (${previewRules.length} rules)`
+                  : `Stage All (${previewRules.length} rules)`}
               </Button>
             ) : (
               <Button
