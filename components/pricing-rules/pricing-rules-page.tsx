@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { PricingRulesProvider, usePricingRules } from '@/lib/pricing-rules-context'
 import { PricingRulesToolbar } from './pricing-rules-toolbar'
 import { PricingRulesTable } from './pricing-rules-table'
 import { EditRuleDialog } from './edit-rule-dialog'
 import { RuleBuilderDialog } from './rule-builder-dialog'
 import { PublishDialog } from './publish-dialog'
-import { createBlankRule } from '@/lib/pricing-rules-data'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_VISIBLE_COLUMNS = new Set([
@@ -23,6 +23,7 @@ const DEFAULT_VISIBLE_COLUMNS = new Set([
 ])
 
 function PricingRulesContent() {
+  const router = useRouter()
   const { state, setEditingRule, stageCreate } = usePricingRules()
   
   // UI state
@@ -31,18 +32,13 @@ function PricingRulesContent() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showRuleBuilder, setShowRuleBuilder] = useState(false)
   const [showPublishDialog, setShowPublishDialog] = useState(false)
-  const [isNewRule, setIsNewRule] = useState(false)
 
   const handleNewRule = () => {
-    const newRule = createBlankRule(-Date.now())
-    stageCreate(newRule)
-    setIsNewRule(true)
-    setEditingRule(newRule)
+    router.push('/rules/new')
   }
 
   const handleEditDialogClose = () => {
     setEditingRule(null)
-    setIsNewRule(false)
   }
 
   return (
@@ -96,7 +92,6 @@ function PricingRulesContent() {
         onOpenChange={(open) => {
           if (!open) handleEditDialogClose()
         }}
-        isNew={isNewRule}
       />
 
       {/* Rule Builder Dialog */}
