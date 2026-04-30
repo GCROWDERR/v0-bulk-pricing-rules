@@ -34,10 +34,14 @@ function PricingRulesContent() {
   const [isNewRule, setIsNewRule] = useState(false)
 
   const handleNewRule = () => {
+    console.log('[v0] handleNewRule called')
     const newRule = createBlankRule(-Date.now())
+    console.log('[v0] Created blank rule:', newRule)
     stageCreate(newRule)
+    console.log('[v0] Staged create, now setting editing rule')
     setIsNewRule(true)
     setEditingRule(newRule)
+    console.log('[v0] Set editing rule')
   }
 
   const handleEditDialogClose = () => {
