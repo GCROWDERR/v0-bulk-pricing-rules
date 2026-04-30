@@ -219,7 +219,7 @@ function NewRuleContent() {
   ]
   const allProgramsSelected = formData.SelectedPrograms?.length === programs.length
   const someProgramsSelected = (formData.SelectedPrograms?.length ?? 0) > 0 && !allProgramsSelected
-  const toggleAllPrograms = () => update('SelectedPrograms', allProgramsSelected ? [] : programs.map(p => p.id))
+  const toggleAllProgramRows = () => update('SelectedPrograms', allProgramsSelected ? [] : programs.map(p => p.id))
   const toggleProgramRow = (id: number) => {
     const current: number[] = formData.SelectedPrograms ?? []
     update('SelectedPrograms', current.includes(id) ? current.filter(i => i !== id) : [...current, id])
@@ -555,7 +555,7 @@ function NewRuleContent() {
                       <thead>
                         <tr className="bg-gray-50 border-b border-gray-200">
                           <th className="px-4 py-3 text-left w-10">
-                            <Checkbox checked={allProgramsSelected} onCheckedChange={toggleAllPrograms} />
+                            <Checkbox checked={allProgramsSelected} onCheckedChange={toggleAllProgramRows} />
                           </th>
                           <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
                           <th className="px-4 py-3 text-left font-semibold text-gray-700">Program Name</th>
