@@ -51,8 +51,10 @@ interface MultiSelectProps {
 
 function MultiSelect({ label, options, selected, onChange, info = false }: MultiSelectProps) {
   const [open, setOpen] = useState(false)
+  const allSelected = selected.length === options.length
   const toggle = (opt: string) =>
     selected.includes(opt) ? onChange(selected.filter(s => s !== opt)) : onChange([...selected, opt])
+  const toggleAll = () => onChange(allSelected ? [] : [...options])
 
   return (
     <div className="flex flex-col gap-1.5 min-w-[200px]">
@@ -102,6 +104,15 @@ function MultiSelect({ label, options, selected, onChange, info = false }: Multi
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
+                <CommandItem
+                  key="__select_all__"
+                  value="Select all"
+                  onSelect={toggleAll}
+                  className="cursor-pointer font-medium border-b border-gray-100"
+                >
+                  <Check className={cn('h-4 w-4 shrink-0', allSelected ? 'opacity-100 text-[#0157FF]' : 'opacity-0')} />
+                  Select all
+                </CommandItem>
                 {options.map(opt => (
                   <CommandItem
                     key={opt}
