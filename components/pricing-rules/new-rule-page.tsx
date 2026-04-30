@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Check, ChevronDown, ChevronUp, Info, Search, Plus, Trash2 } from 'lucide-react'
+import { Info, Search } from 'lucide-react'
 import { PricingRulesProvider, usePricingRules } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import {
@@ -112,14 +112,39 @@ function ToggleList({ label, options, selected, onChange, searchable = false, in
 
 // ── Inner content ─────────────────────────────────────────────────────────────
 
+// Pill toggle for filter criteria
+type FilterKey = 'ltv' | 'fico' | 'loanAmount' | 'propertyTypes' | 'propertyUsage' | 'loanTypes' | 'quotingChannels' | 'lockPeriod' | 'borrowerFilters' | 'pointGroups' | 'states'
+type ProgramKey = 'lenders' | 'productFamilies' | 'productClasses' | 'productTypes' | 'productTerms'
+
+function OptionalBadge() {
+  return <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 uppercase tracking-wide">Optional</span>
+}
+
+function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center px-3 py-1 rounded-full border text-sm font-medium transition-colors',
+        active
+          ? 'bg-gray-900 border-gray-900 text-white'
+          : 'bg-white border-gray-300 text-gray-700 hover:border-gray-500'
+      )}
+    >
+      {label}
+    </button>
+  )
+}
+
 function NewRuleContent() {
   const router = useRouter()
   const { stageCreate } = usePricingRules()
 
   const [formData, setFormData] = useState<PricingRule>(() => createBlankRule(-Date.now()))
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [activeSections, setActiveSections] = useState<Set<'conditions' | 'programs' | 'schedule'>>(new Set())
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['conditions', 'programs', 'schedule']))
+  const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set())
+  const [activePrograms, setActivePrograms] = useState<Set<ProgramKey>>(new Set())
 
   const update = <K extends keyof PricingRule>(field: K, value: PricingRule[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -128,25 +153,13 @@ function NewRuleContent() {
     }
   }
 
-  const toggleSection = (key: 'conditions' | 'programs' | 'schedule') => {
-    setActiveSections(prev => {
-      const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
-      return next
-    })
-  }
+  const toggleFilter = (key: FilterKey) => setActiveFilters(prev => {
+    const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next
+  })
 
-  const removeSection = (key: 'conditions' | 'programs' | 'schedule') => {
-    setActiveSections(prev => { const next = new Set(prev); next.delete(key); return next })
-  }
-
-  const toggleExpanded = (key: string) => {
-    setExpandedSections(prev => {
-      const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
-      return next
-    })
-  }
+  const toggleProgram = (key: ProgramKey) => setActivePrograms(prev => {
+    const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next
+  })
 
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {}
@@ -173,7 +186,7 @@ function NewRuleContent() {
   const allProgramsSelected = formData.SelectedPrograms?.length === programs.length
   const someProgramsSelected = (formData.SelectedPrograms?.length ?? 0) > 0 && !allProgramsSelected
   const toggleAllPrograms = () => update('SelectedPrograms', allProgramsSelected ? [] : programs.map(p => p.id))
-  const toggleProgram = (id: number) => {
+  const toggleProgramRow = (id: number) => {
     const current: number[] = formData.SelectedPrograms ?? []
     update('SelectedPrograms', current.includes(id) ? current.filter(i => i !== id) : [...current, id])
   }
@@ -347,206 +360,232 @@ function NewRuleContent() {
           </div>
         </section>
 
-        {/* ── Optional criteria ─────────────────────────────────────────── */}
+        {/* ── Filter criteria ───────────────────────────────────────────── */}
         <section className="space-y-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Optional criteria</h2>
-            <p className="text-sm text-gray-500 mt-1">Add conditions to limit when this rule applies. If no criteria are added, this rule applies to all scenarios.</p>
+            <h2 className="text-2xl font-bold text-gray-900">Filter criteria</h2>
+            <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 w-fit">
+              <Info className="h-4 w-4 shrink-0" />
+              Select any criteria to refine this rule. Leave fields blank to apply this rule to all scenarios.
+            </div>
           </div>
 
-          {/* Pills */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-gray-500 mr-1">Add criteria:</span>
-            {([
-              { key: 'conditions' as const, label: 'Conditions' },
-              { key: 'programs' as const, label: 'Programs' },
-              { key: 'schedule' as const, label: 'Schedule' },
-            ]).map(({ key, label }) => {
-              const active = activeSections.has(key)
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => toggleSection(key)}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-sm font-medium transition-colors',
-                    active
-                      ? 'bg-[#0157FF] border-[#0157FF] text-white hover:bg-blue-700 hover:border-blue-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:border-[#0157FF] hover:text-[#0157FF] hover:bg-blue-50'
-                  )}
-                  aria-pressed={active}
-                >
-                  {active ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                  {label}
-                </button>
-              )
-            })}
-          </div>
+          {/* ── Rule filters card ─────────────────────────────── */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+            <div className="flex items-center gap-0">
+              <h3 className="text-base font-bold text-gray-900">Rule filters</h3>
+              <OptionalBadge />
+            </div>
+            <p className="text-sm text-gray-500">Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.</p>
 
-          {/* Conditions section */}
-          {activeSections.has('conditions') && (
-            <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-              <div className="flex items-center justify-between px-5 py-4">
-                <h3 className="text-lg font-bold text-gray-900">Rule conditions</h3>
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => removeSection('conditions')} className="p-1.5 text-red-600 hover:text-red-700 transition-colors rounded">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                  <button type="button" onClick={() => toggleExpanded('conditions')} className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded">
-                    {expandedSections.has('conditions') ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-              {expandedSections.has('conditions') && (
-                <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-5">
-                  <p className="text-sm text-gray-500">Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.</p>
-                  <div className="grid grid-cols-3 gap-6">
-                    {[
-                      { label: 'LTV', minField: 'LTVMin' as const, maxField: 'LTVMax' as const },
-                      { label: 'FICO', minField: 'FICOMin' as const, maxField: 'FICOMax' as const },
-                      { label: 'Loan Amount', minField: 'LoanAmountMin' as const, maxField: 'LoanAmountMax' as const },
-                    ].map(({ label, minField, maxField }) => (
-                      <div key={label} className="space-y-1">
-                        <Label className="text-xs font-semibold text-gray-700">{label}</Label>
+            {/* Filter pills */}
+            <div className="flex flex-wrap gap-2">
+              {([
+                { key: 'ltv' as FilterKey, label: 'LTV' },
+                { key: 'fico' as FilterKey, label: 'FICO' },
+                { key: 'loanAmount' as FilterKey, label: 'Loan amount' },
+                { key: 'propertyTypes' as FilterKey, label: 'Property Types' },
+                { key: 'propertyUsage' as FilterKey, label: 'Property Usage' },
+                { key: 'loanTypes' as FilterKey, label: 'Loan Types' },
+                { key: 'quotingChannels' as FilterKey, label: 'Quoting Channels' },
+                { key: 'lockPeriod' as FilterKey, label: 'Lock Period' },
+                { key: 'borrowerFilters' as FilterKey, label: 'Borrower Filters' },
+                { key: 'pointGroups' as FilterKey, label: 'Point Groups' },
+                { key: 'states' as FilterKey, label: 'States' },
+              ]).map(({ key, label }) => (
+                <FilterPill key={key} label={label} active={activeFilters.has(key)} onClick={() => toggleFilter(key)} />
+              ))}
+            </div>
+
+            {/* Active filter inputs */}
+            {activeFilters.size > 0 && (
+              <div className="space-y-4 pt-2 border-t border-gray-100">
+                {/* Range inputs */}
+                {(activeFilters.has('ltv') || activeFilters.has('fico') || activeFilters.has('loanAmount')) && (
+                  <div className="flex flex-wrap gap-6">
+                    {activeFilters.has('ltv') && (
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-gray-700">LTV</Label>
                         <div className="flex items-center gap-2">
-                          <Input type="number" placeholder="Min" className="flex-1" value={formData[minField]} onChange={e => update(minField, parseFloat(e.target.value) || 0)} />
+                          <Input type="number" placeholder="Min" className="w-24" value={formData.LTVMin} onChange={e => update('LTVMin', parseFloat(e.target.value) || 0)} />
                           <span className="text-gray-400 text-sm">to</span>
-                          <Input type="number" placeholder="Max" className="flex-1" value={formData[maxField]} onChange={e => update(maxField, parseFloat(e.target.value) || 0)} />
+                          <Input type="number" placeholder="Max" className="w-24" value={formData.LTVMax} onChange={e => update('LTVMax', parseFloat(e.target.value) || 0)} />
                         </div>
                       </div>
-                    ))}
+                    )}
+                    {activeFilters.has('fico') && (
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-gray-700">FICO</Label>
+                        <div className="flex items-center gap-2">
+                          <Input type="number" placeholder="Min" className="w-24" value={formData.FICOMin} onChange={e => update('FICOMin', parseFloat(e.target.value) || 0)} />
+                          <span className="text-gray-400 text-sm">to</span>
+                          <Input type="number" placeholder="Max" className="w-24" value={formData.FICOMax} onChange={e => update('FICOMax', parseFloat(e.target.value) || 0)} />
+                        </div>
+                      </div>
+                    )}
+                    {activeFilters.has('loanAmount') && (
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold text-gray-700">Loan amount</Label>
+                        <div className="flex items-center gap-2">
+                          <Input type="number" placeholder="Min" className="w-32" value={formData.LoanAmountMin} onChange={e => update('LoanAmountMin', parseFloat(e.target.value) || 0)} />
+                          <span className="text-gray-400 text-sm">to</span>
+                          <Input type="number" placeholder="Max" className="w-32" value={formData.LoanAmountMax} onChange={e => update('LoanAmountMax', parseFloat(e.target.value) || 0)} />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="grid grid-cols-5 gap-4">
-                    <ToggleList label="Property Types" options={PROPERTY_TYPES} selected={formData.PropertyTypes} onChange={v => update('PropertyTypes', v)} />
-                    <ToggleList label="Property Usage" options={PROPERTY_USAGE} selected={formData.PropertyUsage} onChange={v => update('PropertyUsage', v)} />
-                    <ToggleList label="Loan Types" options={LOAN_TYPES} selected={formData.LoanTypes} onChange={v => update('LoanTypes', v)} />
-                    <ToggleList label="Quoting Channels" options={QUOTING_CHANNELS} selected={formData.QuotingChannels} onChange={v => update('QuotingChannels', v)} />
-                    <ToggleList label="Lock Period" options={LOCK_PERIODS.map(p => `${p} Days`)} selected={formData.LockPeriods.map(p => `${p} Days`)} onChange={v => update('LockPeriods', v.map(s => parseInt(s)))} info />
+                )}
+                {/* List selectors */}
+                {(activeFilters.has('propertyTypes') || activeFilters.has('propertyUsage') || activeFilters.has('loanTypes') || activeFilters.has('quotingChannels') || activeFilters.has('lockPeriod')) && (
+                  <div className="flex flex-wrap gap-4">
+                    {activeFilters.has('propertyTypes') && (
+                      <ToggleList label="Property Types" options={PROPERTY_TYPES} selected={formData.PropertyTypes} onChange={v => update('PropertyTypes', v)} />
+                    )}
+                    {activeFilters.has('propertyUsage') && (
+                      <ToggleList label="Property Usage" options={PROPERTY_USAGE} selected={formData.PropertyUsage} onChange={v => update('PropertyUsage', v)} />
+                    )}
+                    {activeFilters.has('loanTypes') && (
+                      <ToggleList label="Loan Types" options={LOAN_TYPES} selected={formData.LoanTypes} onChange={v => update('LoanTypes', v)} />
+                    )}
+                    {activeFilters.has('quotingChannels') && (
+                      <ToggleList label="Quoting Channels" options={QUOTING_CHANNELS} selected={formData.QuotingChannels} onChange={v => update('QuotingChannels', v)} />
+                    )}
+                    {activeFilters.has('lockPeriod') && (
+                      <ToggleList label="Lock Period" options={LOCK_PERIODS.map(p => `${p} Days`)} selected={formData.LockPeriods.map(p => `${p} Days`)} onChange={v => update('LockPeriods', v.map(s => parseInt(s)))} info />
+                    )}
                   </div>
-                  <div className="grid grid-cols-4 gap-4">
-                    <ToggleList label="Borrower Filters" options={BORROWER_FILTERS} selected={formData.BorrowerFilters} onChange={v => update('BorrowerFilters', v)} />
-                    <ToggleList label="Point Groups" options={POINT_GROUPS} selected={formData.PointGroups} onChange={v => update('PointGroups', v)} />
-                    <div className="col-span-2 grid grid-cols-2 gap-4">
+                )}
+                {(activeFilters.has('borrowerFilters') || activeFilters.has('pointGroups') || activeFilters.has('states')) && (
+                  <div className="flex flex-wrap gap-4">
+                    {activeFilters.has('borrowerFilters') && (
+                      <ToggleList label="Borrower Filters" options={BORROWER_FILTERS} selected={formData.BorrowerFilters} onChange={v => update('BorrowerFilters', v)} />
+                    )}
+                    {activeFilters.has('pointGroups') && (
+                      <ToggleList label="Point Groups" options={POINT_GROUPS} selected={formData.PointGroups} onChange={v => update('PointGroups', v)} />
+                    )}
+                    {activeFilters.has('states') && (
                       <ToggleList label="States" options={STATES} selected={formData.States} onChange={v => update('States', v)} searchable />
-                      <ToggleList label="Selected States" options={formData.States} selected={formData.States} onChange={v => update('States', v)} />
-                    </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Programs section */}
-          {activeSections.has('programs') && (
-            <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-              <div className="flex items-center justify-between px-5 py-4">
-                <h3 className="text-lg font-bold text-gray-900">Filter and verify the programs this rule will run against</h3>
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => removeSection('programs')} className="p-1.5 text-red-600 hover:text-red-700 transition-colors rounded">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                  <button type="button" onClick={() => toggleExpanded('programs')} className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded">
-                    {expandedSections.has('programs') ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </button>
-                </div>
+                )}
               </div>
-              {expandedSections.has('programs') && (
-                <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-5">
-                  <div className="grid grid-cols-5 gap-4">
+            )}
+          </div>
+
+          {/* ── Programs card ─────────────────────────────────── */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+            <div className="flex items-center">
+              <h3 className="text-base font-bold text-gray-900">Filter and verify the programs this rule will run against</h3>
+              <OptionalBadge />
+            </div>
+
+            {/* Program pills */}
+            <div className="flex flex-wrap gap-2">
+              {([
+                { key: 'lenders' as ProgramKey, label: 'Lenders' },
+                { key: 'productFamilies' as ProgramKey, label: 'Product Families' },
+                { key: 'productClasses' as ProgramKey, label: 'Product Classes' },
+                { key: 'productTypes' as ProgramKey, label: 'Product Types' },
+                { key: 'productTerms' as ProgramKey, label: 'Product Terms' },
+              ]).map(({ key, label }) => (
+                <FilterPill key={key} label={label} active={activePrograms.has(key)} onClick={() => toggleProgram(key)} />
+              ))}
+            </div>
+
+            {/* Active program inputs */}
+            {activePrograms.size > 0 && (
+              <div className="space-y-4 pt-2 border-t border-gray-100">
+                <div className="flex flex-wrap gap-4">
+                  {activePrograms.has('lenders') && (
                     <ToggleList label="Lenders" options={LENDERS} selected={formData.Lenders} onChange={v => update('Lenders', v)} />
+                  )}
+                  {activePrograms.has('productFamilies') && (
                     <ToggleList label="Product Families" options={PRODUCT_FAMILIES} selected={formData.ProductFamilies} onChange={v => update('ProductFamilies', v)} />
+                  )}
+                  {activePrograms.has('productClasses') && (
                     <ToggleList label="Product Classes" options={PRODUCT_CLASSES} selected={formData.ProductClasses} onChange={v => update('ProductClasses', v)} />
+                  )}
+                  {activePrograms.has('productTypes') && (
                     <ToggleList label="Product Types" options={PRODUCT_TYPES} selected={formData.ProductTypes} onChange={v => update('ProductTypes', v)} />
+                  )}
+                  {activePrograms.has('productTerms') && (
                     <ToggleList label="Product Terms" options={PRODUCT_TERMS} selected={formData.ProductTerms} onChange={v => update('ProductTerms', v)} />
-                  </div>
-                  <p className="text-sm text-gray-500">Review which lender programs this rule will apply to. Select or deselect programs as needed.</p>
-                  <div className="border border-input rounded-md overflow-hidden bg-white">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="bg-gray-100 border-b border-input">
-                            <th className="px-4 py-3 text-left w-10">
-                              <Checkbox checked={allProgramsSelected} onCheckedChange={toggleAllPrograms} data-state={someProgramsSelected ? 'indeterminate' : undefined} />
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Program Name</th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Family</th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Class</th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Type</th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Term</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-input">
-                          {programs.map(row => (
-                            <tr key={row.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3"><Checkbox checked={formData.SelectedPrograms?.includes(row.id) ?? false} onCheckedChange={() => toggleProgram(row.id)} /></td>
-                              <td className="px-4 py-3 text-gray-800">{row.lender}</td>
-                              <td className="px-4 py-3 text-gray-800">{row.program}</td>
-                              <td className="px-4 py-3 text-gray-800">{row.family}</td>
-                              <td className="px-4 py-3 text-gray-800">{row.cls}</td>
-                              <td className="px-4 py-3 text-gray-800">{row.type}</td>
-                              <td className="px-4 py-3 text-gray-800">{row.term}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 text-right">Showing 5 of 1,593 programs</div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Schedule section */}
-          {activeSections.has('schedule') && (
-            <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-              <div className="flex items-center justify-between px-5 py-4">
-                <h3 className="text-lg font-bold text-gray-900">Schedule when this rule applies</h3>
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => removeSection('schedule')} className="p-1.5 text-red-600 hover:text-red-700 transition-colors rounded">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                  <button type="button" onClick={() => toggleExpanded('schedule')} className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded">
-                    {expandedSections.has('schedule') ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </button>
+                <p className="text-sm text-gray-500">Review which lender programs this rule will apply to.</p>
+                <div className="border border-gray-200 rounded-md overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="px-4 py-3 text-left w-10">
+                            <Checkbox checked={allProgramsSelected} onCheckedChange={toggleAllPrograms} />
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Program Name</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Family</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Class</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Term</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {programs.map(row => (
+                          <tr key={row.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3"><Checkbox checked={formData.SelectedPrograms?.includes(row.id) ?? false} onCheckedChange={() => toggleProgramRow(row.id)} /></td>
+                            <td className="px-4 py-3 text-gray-800">{row.lender}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.program}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.family}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.cls}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.type}</td>
+                            <td className="px-4 py-3 text-gray-800">{row.term}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">Showing 5 of 1,593 programs</div>
                 </div>
               </div>
-              {expandedSections.has('schedule') && (
-                <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
-                  <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
-                      <Input type="date" value={formData.StartDate || ''} onChange={e => update('StartDate', e.target.value || null)} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs font-semibold text-gray-700">End Date</Label>
-                      <Input type="date" value={formData.EndDate || ''} onChange={e => update('EndDate', e.target.value || null)} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs font-semibold text-gray-700">Start Time (in ET)</Label>
-                      <Input type="time" value={formData.StartTime || ''} onChange={e => update('StartTime', e.target.value || null)} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs font-semibold text-gray-700">End Time (in ET)</Label>
-                      <Input type="time" value={formData.EndTime || ''} onChange={e => update('EndTime', e.target.value || null)} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-500">Week days on which the rule should be active.</p>
-                    <div className="flex items-center gap-5">
-                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
-                        <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
-                          <Checkbox /> {day}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
+            )}
+          </div>
+
+          {/* ── Schedule card ─────────────────────────────────── */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+            <div className="flex items-center">
+              <h3 className="text-base font-bold text-gray-900">Schedule when this rule applies</h3>
+              <OptionalBadge />
             </div>
-          )}
+            <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
+                <Input type="date" value={formData.StartDate || ''} onChange={e => update('StartDate', e.target.value || null)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-gray-700">End Date</Label>
+                <Input type="date" value={formData.EndDate || ''} onChange={e => update('EndDate', e.target.value || null)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-gray-700">Start Time (in ET)</Label>
+                <Input type="time" value={formData.StartTime || ''} onChange={e => update('StartTime', e.target.value || null)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-gray-700">End Time (in ET)</Label>
+                <Input type="time" value={formData.EndTime || ''} onChange={e => update('EndTime', e.target.value || null)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Week days on which the rule should be active.</p>
+              <div className="flex items-center gap-5 flex-wrap">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
+                  <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
+                    <Checkbox /> {day}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Disallow warning */}
