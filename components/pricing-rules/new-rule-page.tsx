@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
@@ -14,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Info, Search, Plus, X } from 'lucide-react'
+import { Info, Plus, X, Check, ChevronsUpDown } from 'lucide-react'
 import { PricingRulesProvider, usePricingRules } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import {
@@ -39,73 +41,83 @@ import { cn } from '@/lib/utils'
 
 // ── Shared helpers (mirrored from edit-rule-dialog) ───────────────────────────
 
-interface ToggleListProps {
+interface MultiSelectProps {
   label: string
   options: string[]
   selected: string[]
   onChange: (v: string[]) => void
-  searchable?: boolean
   info?: boolean
 }
 
-function ToggleList({ label, options, selected, onChange, searchable = false, info = false }: ToggleListProps) {
-  const [query, setQuery] = useState('')
+function MultiSelect({ label, options, selected, onChange, info = false }: MultiSelectProps) {
+  const [open, setOpen] = useState(false)
   const toggle = (opt: string) =>
     selected.includes(opt) ? onChange(selected.filter(s => s !== opt)) : onChange([...selected, opt])
 
-  const filtered = searchable && query.trim()
-    ? options.filter(o => o.toLowerCase().includes(query.toLowerCase()))
-    : options
-
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5 min-w-[200px]">
       <div className="flex items-center gap-1">
-        <span className="text-sm font-bold text-gray-900">{label}</span>
-        {info && <Info className="h-4 w-4 text-blue-500" />}
+        <span className="text-sm font-semibold text-gray-700">{label}</span>
+        {info && <Info className="h-3.5 w-3.5 text-blue-500" />}
       </div>
-      <div className="border border-input rounded-md bg-white overflow-hidden flex flex-col" style={{ minHeight: '180px', maxHeight: '240px' }}>
-        {searchable && (
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200">
-            <Search className="h-4 w-4 text-gray-400 shrink-0" />
-            <input
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Search"
-              className="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder:text-gray-400"
-            />
-          </div>
-        )}
-        <div className="flex-1 overflow-y-auto">
-          {searchable && !query && (
-            <button
-              type="button"
-              onClick={() => onChange(selected.length === options.length ? [] : [...options])}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-800 hover:bg-gray-50 border-b border-gray-100"
-            >
-              <span>Select all</span>
-              {selected.length === options.length && <Check className="h-4 w-4 text-[#0157FF]" />}
-            </button>
-          )}
-          {filtered.map((opt, i) => {
-            const isSelected = selected.includes(opt)
-            return (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => toggle(opt)}
-                className={cn(
-                  'w-full flex items-center justify-between px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors',
-                  i < filtered.length - 1 && 'border-b border-gray-100'
-                )}
-              >
-                <span className="text-gray-800">{opt}</span>
-                {isSelected && <Check className="h-4 w-4 text-[#0157FF] shrink-0" />}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            role="combobox"
+            aria-expanded={open}
+            className={cn(
+              'flex min-h-[40px] w-full items-start gap-1.5 flex-wrap rounded-md border border-input bg-white px-3 py-2 text-sm text-left transition-colors hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0157FF] focus:ring-offset-0',
+              open && 'border-[#0157FF] ring-2 ring-[#0157FF]'
+            )}
+          >
+            {selected.length === 0 ? (
+              <span className="text-gray-400 self-center">Select options...</span>
+            ) : (
+              selected.map(s => (
+                <span
+                  key={s}
+                  className="inline-flex items-center gap-1 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full"
+                >
+                  {s}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Remove ${s}`}
+                    onKeyDown={e => e.key === 'Enter' && (e.stopPropagation(), toggle(s))}
+                    onClick={e => { e.stopPropagation(); toggle(s) }}
+                    className="ml-0.5 hover:text-gray-900 cursor-pointer"
+                  >
+                    <X className="h-3 w-3" />
+                  </span>
+                </span>
+              ))
+            )}
+            <ChevronsUpDown className="h-4 w-4 text-gray-400 ml-auto self-center shrink-0" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 w-[240px]" align="start">
+          <Command>
+            <CommandInput placeholder={`Search ${label.toLowerCase()}...`} />
+            <CommandList>
+              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandGroup>
+                {options.map(opt => (
+                  <CommandItem
+                    key={opt}
+                    value={opt}
+                    onSelect={() => toggle(opt)}
+                    className="cursor-pointer"
+                  >
+                    <Check className={cn('h-4 w-4 shrink-0', selected.includes(opt) ? 'opacity-100 text-[#0157FF]' : 'opacity-0')} />
+                    {opt}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }
@@ -440,32 +452,32 @@ function NewRuleContent() {
                 {(activeFilters.has('propertyTypes') || activeFilters.has('propertyUsage') || activeFilters.has('loanTypes') || activeFilters.has('quotingChannels') || activeFilters.has('lockPeriod')) && (
                   <div className="flex flex-wrap gap-4">
                     {activeFilters.has('propertyTypes') && (
-                      <ToggleList label="Property Types" options={PROPERTY_TYPES} selected={formData.PropertyTypes} onChange={v => update('PropertyTypes', v)} />
+                      <MultiSelect label="Property Types" options={PROPERTY_TYPES} selected={formData.PropertyTypes} onChange={v => update('PropertyTypes', v)} />
                     )}
                     {activeFilters.has('propertyUsage') && (
-                      <ToggleList label="Property Usage" options={PROPERTY_USAGE} selected={formData.PropertyUsage} onChange={v => update('PropertyUsage', v)} />
+                      <MultiSelect label="Property Usage" options={PROPERTY_USAGE} selected={formData.PropertyUsage} onChange={v => update('PropertyUsage', v)} />
                     )}
                     {activeFilters.has('loanTypes') && (
-                      <ToggleList label="Loan Types" options={LOAN_TYPES} selected={formData.LoanTypes} onChange={v => update('LoanTypes', v)} />
+                      <MultiSelect label="Loan Types" options={LOAN_TYPES} selected={formData.LoanTypes} onChange={v => update('LoanTypes', v)} />
                     )}
                     {activeFilters.has('quotingChannels') && (
-                      <ToggleList label="Quoting Channels" options={QUOTING_CHANNELS} selected={formData.QuotingChannels} onChange={v => update('QuotingChannels', v)} />
+                      <MultiSelect label="Quoting Channels" options={QUOTING_CHANNELS} selected={formData.QuotingChannels} onChange={v => update('QuotingChannels', v)} />
                     )}
                     {activeFilters.has('lockPeriod') && (
-                      <ToggleList label="Lock Period" options={LOCK_PERIODS.map(p => `${p} Days`)} selected={formData.LockPeriods.map(p => `${p} Days`)} onChange={v => update('LockPeriods', v.map(s => parseInt(s)))} info />
+                      <MultiSelect label="Lock Period" options={LOCK_PERIODS.map(p => `${p} Days`)} selected={formData.LockPeriods.map(p => `${p} Days`)} onChange={v => update('LockPeriods', v.map(s => parseInt(s)))} info />
                     )}
                   </div>
                 )}
                 {(activeFilters.has('borrowerFilters') || activeFilters.has('pointGroups') || activeFilters.has('states')) && (
                   <div className="flex flex-wrap gap-4">
                     {activeFilters.has('borrowerFilters') && (
-                      <ToggleList label="Borrower Filters" options={BORROWER_FILTERS} selected={formData.BorrowerFilters} onChange={v => update('BorrowerFilters', v)} />
+                      <MultiSelect label="Borrower Filters" options={BORROWER_FILTERS} selected={formData.BorrowerFilters} onChange={v => update('BorrowerFilters', v)} />
                     )}
                     {activeFilters.has('pointGroups') && (
-                      <ToggleList label="Point Groups" options={POINT_GROUPS} selected={formData.PointGroups} onChange={v => update('PointGroups', v)} />
+                      <MultiSelect label="Point Groups" options={POINT_GROUPS} selected={formData.PointGroups} onChange={v => update('PointGroups', v)} />
                     )}
                     {activeFilters.has('states') && (
-                      <ToggleList label="States" options={STATES} selected={formData.States} onChange={v => update('States', v)} searchable />
+                      <MultiSelect label="States" options={STATES} selected={formData.States} onChange={v => update('States', v)} />
                     )}
                   </div>
                 )}
@@ -498,19 +510,19 @@ function NewRuleContent() {
               <div className="space-y-4 pt-2 border-t border-gray-100">
                 <div className="flex flex-wrap gap-4">
                   {activePrograms.has('lenders') && (
-                    <ToggleList label="Lenders" options={LENDERS} selected={formData.Lenders} onChange={v => update('Lenders', v)} />
+                    <MultiSelect label="Lenders" options={LENDERS} selected={formData.Lenders} onChange={v => update('Lenders', v)} />
                   )}
                   {activePrograms.has('productFamilies') && (
-                    <ToggleList label="Product Families" options={PRODUCT_FAMILIES} selected={formData.ProductFamilies} onChange={v => update('ProductFamilies', v)} />
+                    <MultiSelect label="Product Families" options={PRODUCT_FAMILIES} selected={formData.ProductFamilies} onChange={v => update('ProductFamilies', v)} />
                   )}
                   {activePrograms.has('productClasses') && (
-                    <ToggleList label="Product Classes" options={PRODUCT_CLASSES} selected={formData.ProductClasses} onChange={v => update('ProductClasses', v)} />
+                    <MultiSelect label="Product Classes" options={PRODUCT_CLASSES} selected={formData.ProductClasses} onChange={v => update('ProductClasses', v)} />
                   )}
                   {activePrograms.has('productTypes') && (
-                    <ToggleList label="Product Types" options={PRODUCT_TYPES} selected={formData.ProductTypes} onChange={v => update('ProductTypes', v)} />
+                    <MultiSelect label="Product Types" options={PRODUCT_TYPES} selected={formData.ProductTypes} onChange={v => update('ProductTypes', v)} />
                   )}
                   {activePrograms.has('productTerms') && (
-                    <ToggleList label="Product Terms" options={PRODUCT_TERMS} selected={formData.ProductTerms} onChange={v => update('ProductTerms', v)} />
+                    <MultiSelect label="Product Terms" options={PRODUCT_TERMS} selected={formData.ProductTerms} onChange={v => update('ProductTerms', v)} />
                   )}
                 </div>
                 <p className="text-sm text-gray-500">Review which lender programs this rule will apply to.</p>
