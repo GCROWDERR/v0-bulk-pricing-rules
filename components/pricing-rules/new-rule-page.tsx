@@ -151,7 +151,7 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
       className={cn(
         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors',
         active
-          ? 'bg-gray-900 border-gray-900 text-white hover:bg-gray-800'
+          ? 'bg-[#0157FF] border-[#0157FF] text-white hover:bg-blue-700'
           : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
       )}
     >
