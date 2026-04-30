@@ -169,6 +169,7 @@ function NewRuleContent() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set())
   const [activePrograms, setActivePrograms] = useState<Set<ProgramKey>>(new Set())
+  const [scheduleEnabled, setScheduleEnabled] = useState(false)
 
   const update = <K extends keyof PricingRule>(field: K, value: PricingRule[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -587,40 +588,49 @@ function NewRuleContent() {
           </div>
 
           {/* ── Schedule card ─────────────────────────────────── */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-            <div className="flex items-center">
-              <h3 className="text-base font-bold text-gray-900">Schedule when this rule applies</h3>
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <label className="flex items-center gap-3 px-6 py-5 cursor-pointer select-none">
+              <Checkbox
+                checked={scheduleEnabled}
+                onCheckedChange={v => setScheduleEnabled(v === true)}
+              />
+              <span className="text-base font-bold text-gray-900">Schedule when this rule applies</span>
               <OptionalBadge />
-            </div>
-            <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
-                <Input type="date" value={formData.StartDate || ''} onChange={e => update('StartDate', e.target.value || null)} />
+            </label>
+
+            {scheduleEnabled && (
+              <div className="px-6 pb-6 space-y-4 border-t border-gray-100 pt-4">
+                <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
+                    <Input type="date" value={formData.StartDate || ''} onChange={e => update('StartDate', e.target.value || null)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-700">End Date</Label>
+                    <Input type="date" value={formData.EndDate || ''} onChange={e => update('EndDate', e.target.value || null)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-700">Start Time (in ET)</Label>
+                    <Input type="time" value={formData.StartTime || ''} onChange={e => update('StartTime', e.target.value || null)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold text-gray-700">End Time (in ET)</Label>
+                    <Input type="time" value={formData.EndTime || ''} onChange={e => update('EndTime', e.target.value || null)} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">Week days on which the rule should be active.</p>
+                  <div className="flex items-center gap-5 flex-wrap">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
+                      <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
+                        <Checkbox /> {day}
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-gray-700">End Date</Label>
-                <Input type="date" value={formData.EndDate || ''} onChange={e => update('EndDate', e.target.value || null)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-gray-700">Start Time (in ET)</Label>
-                <Input type="time" value={formData.StartTime || ''} onChange={e => update('StartTime', e.target.value || null)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-gray-700">End Time (in ET)</Label>
-                <Input type="time" value={formData.EndTime || ''} onChange={e => update('EndTime', e.target.value || null)} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500">Week days on which the rule should be active.</p>
-              <div className="flex items-center gap-5 flex-wrap">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
-                  <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
-                    <Checkbox /> {day}
-                  </label>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </section>
 
