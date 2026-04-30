@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Info, Search } from 'lucide-react'
+import { Info, Search, Plus, X } from 'lucide-react'
 import { PricingRulesProvider, usePricingRules } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import {
@@ -126,12 +126,13 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center px-3 py-1 rounded-full border text-sm font-medium transition-colors',
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors',
         active
-          ? 'bg-gray-900 border-gray-900 text-white'
-          : 'bg-white border-gray-300 text-gray-700 hover:border-gray-500'
+          ? 'bg-gray-900 border-gray-900 text-white hover:bg-gray-800'
+          : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
       )}
     >
+      {active ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
       {label}
     </button>
   )
