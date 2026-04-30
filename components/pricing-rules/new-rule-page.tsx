@@ -102,7 +102,6 @@ function MultiSelect({ label, options, selected, onChange, info = false }: Multi
           <Command>
             <CommandInput placeholder={`Search ${label.toLowerCase()}...`} />
             <CommandList>
-              <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
                 <CommandItem
                   key="__select_all__"
@@ -125,6 +124,7 @@ function MultiSelect({ label, options, selected, onChange, info = false }: Multi
                   </CommandItem>
                 ))}
               </CommandGroup>
+              <CommandEmpty>No results found.</CommandEmpty>
             </CommandList>
           </Command>
         </PopoverContent>
