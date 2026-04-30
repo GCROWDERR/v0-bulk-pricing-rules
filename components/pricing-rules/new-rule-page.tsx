@@ -414,7 +414,7 @@ function NewRuleContent() {
 
             {/* Filter pills */}
             <div className="flex flex-wrap gap-2">
-              <FilterPill label="Select all" active={allFiltersActive} onClick={toggleAllFilters} />
+              <FilterPill label={allFiltersActive ? "Deselect all" : "Select all"} active={allFiltersActive} onClick={toggleAllFilters} />
               {([
                 { key: 'ltv' as FilterKey, label: 'LTV' },
                 { key: 'fico' as FilterKey, label: 'FICO' },
@@ -516,7 +516,7 @@ function NewRuleContent() {
 
             {/* Program pills */}
             <div className="flex flex-wrap gap-2">
-              <FilterPill label="Select all" active={allProgramsActive} onClick={toggleAllPrograms} />
+              <FilterPill label={allProgramsActive ? "Deselect all" : "Select all"} active={allProgramsActive} onClick={toggleAllPrograms} />
               {([
                 { key: 'lenders' as ProgramKey, label: 'Lenders' },
                 { key: 'productFamilies' as ProgramKey, label: 'Product Families' },
