@@ -177,13 +177,23 @@ function NewRuleContent() {
     }
   }
 
+  const allFilterKeys: FilterKey[] = ['ltv', 'fico', 'loanAmount', 'propertyTypes', 'propertyUsage', 'loanTypes', 'quotingChannels', 'lockPeriod', 'borrowerFilters', 'pointGroups', 'states']
+  const allProgramKeys: ProgramKey[] = ['lenders', 'productFamilies', 'productClasses', 'productTypes', 'productTerms']
+
+  const allFiltersActive = allFilterKeys.every(k => activeFilters.has(k))
+  const allProgramsActive = allProgramKeys.every(k => activePrograms.has(k))
+
   const toggleFilter = (key: FilterKey) => setActiveFilters(prev => {
     const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next
   })
 
+  const toggleAllFilters = () => setActiveFilters(allFiltersActive ? new Set() : new Set(allFilterKeys))
+
   const toggleProgram = (key: ProgramKey) => setActivePrograms(prev => {
     const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next
   })
+
+  const toggleAllPrograms = () => setActivePrograms(allProgramsActive ? new Set() : new Set(allProgramKeys))
 
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {}
@@ -404,6 +414,7 @@ function NewRuleContent() {
 
             {/* Filter pills */}
             <div className="flex flex-wrap gap-2">
+              <FilterPill label="Select all" active={allFiltersActive} onClick={toggleAllFilters} />
               {([
                 { key: 'ltv' as FilterKey, label: 'LTV' },
                 { key: 'fico' as FilterKey, label: 'FICO' },
@@ -505,6 +516,7 @@ function NewRuleContent() {
 
             {/* Program pills */}
             <div className="flex flex-wrap gap-2">
+              <FilterPill label="Select all" active={allProgramsActive} onClick={toggleAllPrograms} />
               {([
                 { key: 'lenders' as ProgramKey, label: 'Lenders' },
                 { key: 'productFamilies' as ProgramKey, label: 'Product Families' },
