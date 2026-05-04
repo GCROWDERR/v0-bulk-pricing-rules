@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, RotateCcw, Power } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, RotateCcw, Power, Layers } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
 import { formatCurrency, formatPrice, formatPercent, formatLoanAmount } from '@/lib/pricing-rules-data'
 import type { PricingRule, DraftEntry } from '@/lib/pricing-rules-data'
@@ -289,24 +288,94 @@ function DraftItem({ draft }: DraftItemProps) {
   )
 }
 
+interface RuleSetGroupProps {
+  group: { ruleSetId: string | null; ruleSetName: string; drafts: DraftEntry[] }
+}
+
+function RuleSetGroup({ group }: RuleSetGroupProps) {
+  const [isOpen, setIsOpen] = useState(true)
+  const isUngrouped = group.ruleSetId === null
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <div className="border rounded-lg overflow-hidden">
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 text-left border-b">
+          <div className="flex items-center gap-2">
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500" />
+            )}
+            {isUngrouped ? (
+              <span className="text-sm font-semibold text-gray-600">{group.ruleSetName}</span>
+            ) : (
+              <>
+                <Layers className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-semibold text-blue-700">{group.ruleSetName}</span>
+              </>
+            )}
+          </div>
+          <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+            {group.drafts.length} change{group.drafts.length !== 1 ? 's' : ''}
+          </span>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="p-3 space-y-2">
+            {group.drafts.map((draft) => (
+              <DraftItem key={draft.ruleId} draft={draft} />
+            ))}
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  )
+}
+
 export function PublishDialog({ open, onOpenChange }: PublishDialogProps) {
-  const { state, publishDrafts, getDraftCounts } = usePricingRules()
+  const { state, publishDrafts, getDraftCounts, getRuleSets } = usePricingRules()
   const draftCounts = getDraftCounts()
+  const ruleSets = getRuleSets()
 
   const handlePublish = () => {
     publishDrafts()
     onOpenChange(false)
   }
 
-  // Group drafts by type
-  const groupedDrafts = useMemo(() => {
-    return {
-      created: state.drafts.filter(d => d.type === 'create'),
-      updated: state.drafts.filter(d => d.type === 'update' || d.type === 'toggleActive'),
-      deleted: state.drafts.filter(d => d.type === 'delete'),
-      restored: state.drafts.filter(d => d.type === 'restore'),
+  // Group drafts by rule set, with "ungrouped" catch-all
+  const ruleSetGroups = useMemo(() => {
+    const groups: Array<{ ruleSetId: string | null; ruleSetName: string; drafts: typeof state.drafts }> = []
+    const ruleSetMap = new Map<string, typeof state.drafts>()
+    const ungrouped: typeof state.drafts = []
+
+    state.drafts.forEach(draft => {
+      const ruleSetId = draft.updatedRule.RuleSetId
+      if (ruleSetId) {
+        const existing = ruleSetMap.get(ruleSetId)
+        if (existing) {
+          existing.push(draft)
+        } else {
+          ruleSetMap.set(ruleSetId, [draft])
+        }
+      } else {
+        ungrouped.push(draft)
+      }
+    })
+
+    ruleSetMap.forEach((drafts, ruleSetId) => {
+      const rs = ruleSets.find(r => r.ruleSetId === ruleSetId)
+      groups.push({
+        ruleSetId,
+        ruleSetName: rs?.ruleSetName || ruleSetId,
+        drafts,
+      })
+    })
+
+    if (ungrouped.length > 0) {
+      groups.push({ ruleSetId: null, ruleSetName: 'Other changes', drafts: ungrouped })
     }
-  }, [state.drafts])
+
+    return groups
+  }, [state.drafts, ruleSets])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -344,67 +413,9 @@ export function PublishDialog({ open, onOpenChange }: PublishDialogProps) {
 
         <ScrollArea className="flex-1 max-h-[calc(85vh-200px)]">
           <div className="p-4 space-y-4">
-            {/* Created rules */}
-            {groupedDrafts.created.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-teal-600 flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Rules ({groupedDrafts.created.length})
-                </h3>
-                <div className="space-y-2">
-                  {groupedDrafts.created.map((draft) => (
-                    <DraftItem key={draft.ruleId} draft={draft} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Updated rules */}
-            {groupedDrafts.updated.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-blue-600 flex items-center gap-2">
-                  <Pencil className="h-4 w-4" />
-                  Updated Rules ({groupedDrafts.updated.length})
-                </h3>
-                <div className="space-y-2">
-                  {groupedDrafts.updated.map((draft) => (
-                    <DraftItem key={draft.ruleId} draft={draft} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Deleted rules */}
-            {groupedDrafts.deleted.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-coral-500 flex items-center gap-2">
-                  <Trash2 className="h-4 w-4" />
-                  Deleted Rules ({groupedDrafts.deleted.length})
-                </h3>
-                <div className="space-y-2">
-                  {groupedDrafts.deleted.map((draft) => (
-                    <DraftItem key={draft.ruleId} draft={draft} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Restored rules */}
-            {groupedDrafts.restored.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-teal-600 flex items-center gap-2">
-                  <RotateCcw className="h-4 w-4" />
-                  Restored Rules ({groupedDrafts.restored.length})
-                </h3>
-                <div className="space-y-2">
-                  {groupedDrafts.restored.map((draft) => (
-                    <DraftItem key={draft.ruleId} draft={draft} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {state.drafts.length === 0 && (
+            {ruleSetGroups.length > 0 ? ruleSetGroups.map((group) => (
+              <RuleSetGroup key={group.ruleSetId ?? '__ungrouped__'} group={group} />
+            )) : (
               <div className="text-center py-8 text-gray-500">
                 No changes to publish.
               </div>

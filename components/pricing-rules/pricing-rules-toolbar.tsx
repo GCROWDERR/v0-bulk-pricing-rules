@@ -26,8 +26,11 @@ import {
   Grid3X3,
   Pencil,
   XCircle,
+  Layers,
+  FilterX,
 } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
+import { cn } from '@/lib/utils'
 
 interface PricingRulesToolbarProps {
   density: 'comfortable' | 'compact' | 'spacious'
@@ -39,10 +42,12 @@ interface PricingRulesToolbarProps {
   onNewRule: () => void
   onOpenRuleBuilder: () => void
   onOpenPublishDialog: () => void
+  onOpenRuleSetEditor: (ruleSetId: string) => void
 }
 
 const ALL_COLUMNS = [
   { key: 'RuleId', label: 'Rule ID' },
+  { key: 'RuleSetId', label: 'Rule Set' },
   { key: 'RuleDescription', label: 'Rule Description' },
   { key: 'Lenders', label: 'Included Lenders' },
   { key: 'Fee', label: 'Fee' },
@@ -63,6 +68,7 @@ export function PricingRulesToolbar({
   onNewRule,
   onOpenRuleBuilder,
   onOpenPublishDialog,
+  onOpenRuleSetEditor,
 }: PricingRulesToolbarProps) {
   const {
     state,
@@ -73,7 +79,13 @@ export function PricingRulesToolbar({
     expandRows,
     collapseAllRows,
     clearSelection,
+    getRuleSets,
+    setRuleSetFilter,
+    clearRuleSetFilter,
+    setEditingRuleSetId,
   } = usePricingRules()
+
+  const ruleSets = getRuleSets()
 
   const [showSearch, setShowSearch] = useState(false)
   const draftCounts = getDraftCounts()
@@ -148,7 +160,7 @@ export function PricingRulesToolbar({
                 {state.selectedRows.size}
               </Badge>
             </Button>
-            
+
             <Button
               onClick={() => {
                 collapseAllRows()
@@ -185,6 +197,116 @@ export function PricingRulesToolbar({
               Discard All
             </Button>
           </>
+        )}
+
+        {/* Rule Sets dropdown */}
+        {ruleSets.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  'gap-2 h-9',
+                  state.ruleSetFilter && 'border-blue-600 text-blue-600 bg-blue-50'
+                )}
+              >
+                <Layers className="h-4 w-4" />
+                Rule Sets
+                {state.ruleSetFilter && (
+                  <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-600 text-xs">
+                    1
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel>Filter by Rule Set</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {ruleSets.map((rs) => (
+                <div key={rs.ruleSetId} className="flex items-center justify-between px-2 py-1.5 hover:bg-gray-50 rounded-sm group">
+                  <button
+                    className={cn(
+                      'flex-1 text-left text-sm',
+                      state.ruleSetFilter === rs.ruleSetId ? 'text-blue-600 font-medium' : 'text-gray-700'
+                    )}
+                    onClick={() => {
+                      if (state.ruleSetFilter === rs.ruleSetId) {
+                        clearRuleSetFilter()
+                      } else {
+                        setRuleSetFilter(rs.ruleSetId)
+                      }
+                    }}
+                  >
+                    <span className="block truncate">{rs.ruleSetName}</span>
+                    <span className="text-xs text-gray-400">{rs.ruleCount} rule{rs.ruleCount !== 1 ? 's' : ''}</span>
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0"
+                    onClick={() => {
+                      setEditingRuleSetId(rs.ruleSetId)
+                      onOpenRuleSetEditor(rs.ruleSetId)
+                    }}
+                    title="Edit rule set"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+              {state.ruleSetFilter && (
+                <>
+                  <DropdownMenuSeparator />
+                  <button
+                    className="flex items-center gap-2 w-full px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 rounded-sm"
+                    onClick={clearRuleSetFilter}
+                  >
+                    <FilterX className="h-4 w-4" />
+                    Clear filter
+                  </button>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {/* Active rule set filter chip */}
+        {state.ruleSetFilter && (() => {
+          const activeSet = ruleSets.find(rs => rs.ruleSetId === state.ruleSetFilter)
+          return activeSet ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 border border-blue-300 text-blue-700 text-xs font-medium">
+              <Layers className="h-3 w-3" />
+              <span className="max-w-[120px] truncate">{activeSet.ruleSetName}</span>
+              <button
+                onClick={clearRuleSetFilter}
+                className="ml-0.5 hover:text-blue-900"
+                aria-label="Clear rule set filter"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : null
+        })()}
+
+        {/* Selection actions - only visible when rows are selected and editing by rule set */}
+        {state.selectedRows.size > 0 && state.ruleSetFilter && (
+          <Button
+            onClick={() => {
+              const activeSet = ruleSets.find(rs => rs.ruleSetId === state.ruleSetFilter)
+              if (activeSet) {
+                setEditingRuleSetId(state.ruleSetFilter)
+                onOpenRuleSetEditor(state.ruleSetFilter)
+              }
+            }}
+            variant="outline"
+            className="gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit Rule Set
+            <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-600">
+              {state.selectedRows.size}
+            </Badge>
+          </Button>
         )}
 
         {/* Export Rules */}

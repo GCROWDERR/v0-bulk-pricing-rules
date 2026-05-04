@@ -34,7 +34,8 @@ import {
   ArrowUpDown,
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
-import { usePricingRules, type SortField } from '@/lib/pricing-rules-context'
+import { usePricingRules } from '@/lib/pricing-rules-context'
+import type { SortField } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import { formatCurrency, formatPrice, formatPercent } from '@/lib/pricing-rules-data'
 import { InlineQuickEdit } from './inline-quick-edit'
@@ -100,6 +101,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
     selectRows,
     clearSelection,
     toggleSort,
+    setRuleSetFilter,
   } = usePricingRules()
 
   const [currentPage, setCurrentPage] = useState(1)
@@ -263,6 +265,17 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                   />
                 </TableHead>
               )}
+              {visibleColumns.has('RuleSetId') && (
+                <TableHead className="w-[12%] min-w-[100px] bg-blue-50 text-gray-900 font-medium">
+                  <SortableHeader
+                    field="RuleSetId"
+                    label="Rule Set"
+                    sortField={state.sortField}
+                    sortDirection={state.sortDirection}
+                    onSort={toggleSort}
+                  />
+                </TableHead>
+              )}
               {visibleColumns.has('RuleDescription') && (
                 <TableHead className="w-[22%] min-w-[150px] bg-blue-50 text-gray-900 font-medium">
                   <SortableHeader
@@ -397,6 +410,47 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                             </Badge>
                           )}
                         </span>
+                      </TableCell>
+                    )}
+
+                    {visibleColumns.has('RuleSetId') && (
+                      <TableCell className="text-sm">
+                        {displayRule.RuleSetId ? (() => {
+                          const fullName = displayRule.RuleSetName || displayRule.RuleSetId
+                          const isTruncated = fullName.length > 15
+                          const displayName = isTruncated ? fullName.slice(0, 15) + '…' : fullName
+                          const isFiltered = state.ruleSetFilter === displayRule.RuleSetId
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setRuleSetFilter(isFiltered ? null : displayRule.RuleSetId!)
+                                  }}
+                                  className={cn(
+                                    'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors max-w-[120px]',
+                                    isFiltered
+                                      ? 'bg-blue-600 text-white border-blue-600'
+                                      : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
+                                  )}
+                                >
+                                  <span className="truncate">{displayName}</span>
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-[240px]">
+                                {isTruncated && (
+                                  <p className="font-medium mb-1">{fullName}</p>
+                                )}
+                                <p className="text-xs text-gray-300">
+                                  {isFiltered ? 'Click to clear filter' : 'Click to filter by this rule set'}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )
+                        })() : (
+                          <span className="text-gray-400">&mdash;</span>
+                        )}
                       </TableCell>
                     )}
 

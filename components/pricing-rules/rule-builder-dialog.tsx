@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -46,8 +46,11 @@ import {
   ChevronRight,
   Wand2,
   Search,
+  Undo2,
 } from 'lucide-react'
 import { usePricingRules } from '@/lib/pricing-rules-context'
+import { RuleSetEditSummaryModal } from './rule-set-edit-summary-modal'
+import type { RuleSetEditDiff } from './rule-set-edit-summary-modal'
 import { 
   LENDERS, 
   PRODUCT_FAMILIES, 
@@ -64,7 +67,9 @@ import {
   PRODUCT_TERMS,
   FEE_SETS,
   MI_COMPANIES,
-  createBlankRule 
+  createBlankRule,
+  generateRuleSetId,
+  getChangedFields,
 } from '@/lib/pricing-rules-data'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import { cn } from '@/lib/utils'
@@ -72,6 +77,8 @@ import { cn } from '@/lib/utils'
 interface RuleBuilderDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** When provided, the dialog opens in "Edit Rule Set" mode (Mode B) */
+  editingRuleSetId?: string | null
 }
 
 type DimensionType = 'loanAmount' | 'fico' | 'ltv' | 'price' | 'fee' | 'margin'
@@ -653,6 +660,9 @@ interface MatrixGridProps {
   cellValues: Record<string, string>
   onCellChange: (key: string, value: string) => void
   cellValueType: CellValueType
+  onUndo: () => void
+  canUndo: boolean
+  undoCount: number
 }
 
 function MatrixGrid({
@@ -663,6 +673,9 @@ function MatrixGrid({
   cellValues,
   onCellChange,
   cellValueType,
+  onUndo,
+  canUndo,
+  undoCount,
 }: MatrixGridProps) {
   const [fillValue, setFillValue] = useState('')
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set())
@@ -830,6 +843,20 @@ function MatrixGrid({
             <Button size="sm" variant="outline" onClick={handleSelectAll} className="h-9">
               Select All
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onUndo}
+              disabled={!canUndo}
+              className={cn(
+                'h-9 gap-1.5',
+                canUndo ? 'text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400' : 'text-gray-400'
+              )}
+              title="Undo last change (Cmd/Ctrl+Z)"
+            >
+              <Undo2 className="h-3.5 w-3.5" />
+              Undo
+            </Button>
             <Button 
               size="sm" 
               variant="outline" 
@@ -993,9 +1020,10 @@ function MatrixGrid({
   )
 }
 
-export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps) {
-  const { stageCreate } = usePricingRules()
-  const [currentStep, setCurrentStep] = useState('mode')
+export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: RuleBuilderDialogProps) {
+  const { stageCreate, getRulesInSet, stageUpdateMany, stageCreateMany } = usePricingRules()
+  const isEditMode = Boolean(editingRuleSetId)
+  const [currentStep, setCurrentStep] = useState(isEditMode ? 'dimensions' : 'mode')
   
   // Builder mode: matrix (2D) or list (1D)
   const [builderMode, setBuilderMode] = useState<BuilderMode>('matrix')
@@ -1015,12 +1043,16 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
     }
     setShowModeChangeWarning(false)
     setPendingMode(null)
+    clearUndoHistory()
   }
 
   const cancelModeChange = () => {
     setShowModeChangeWarning(false)
     setPendingMode(null)
   }
+
+  // Rule Set name (required for Mode A create, prefilled for Mode B edit)
+  const [ruleSetName, setRuleSetName] = useState('')
 
   // Step 1: Dimensions & Base Rule
   const [xDimension, setXDimension] = useState<DimensionType>('loanAmount')
@@ -1103,12 +1135,251 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
   const [cellValueType, setCellValueType] = useState<CellValueType>('margin')
   const [cellValues, setCellValues] = useState<Record<string, string>>({})
 
+  // Refs to always hold the latest values without causing dep-loop re-renders
+  const cellValuesRef = useRef<Record<string, string>>({})
+  const listRangesRef = useRef<RangeWithValue[]>(listRanges)
+
+  // Keep refs in sync on every render (no useEffect needed — runs synchronously)
+  cellValuesRef.current = cellValues
+  listRangesRef.current = listRanges
+
+  // Undo history — snapshots of { cellValues, listRanges } before each mutation
+  interface UndoSnapshot { cellValues: Record<string, string>; listRanges: RangeWithValue[] }
+  const undoStackRef = useRef<UndoSnapshot[]>([])
+  const [canUndo, setCanUndo] = useState(false)
+
+  // Push current state onto the undo stack before a mutation
+  const pushUndo = useCallback(() => {
+    undoStackRef.current = [
+      ...undoStackRef.current.slice(-49), // cap at 50 snapshots
+      {
+        cellValues: { ...cellValuesRef.current },
+        listRanges: listRangesRef.current.map(r => ({ ...r })),
+      },
+    ]
+    setCanUndo(true)
+  }, [])
+
+  const handleUndo = useCallback(() => {
+    if (undoStackRef.current.length === 0) return
+    const snapshot = undoStackRef.current[undoStackRef.current.length - 1]
+    undoStackRef.current = undoStackRef.current.slice(0, -1)
+    setCellValues(snapshot.cellValues)
+    setListRanges(snapshot.listRanges)
+    setCanUndo(undoStackRef.current.length > 0)
+  }, [])
+
+  // Clear undo history when dialog closes or mode changes
+  const clearUndoHistory = useCallback(() => {
+    undoStackRef.current = []
+    setCanUndo(false)
+  }, [])
+
   // Preview state
   const [previewExpanded, setPreviewExpanded] = useState<string | null>(null)
 
+  // Rule set edit summary modal
+  const [showSummaryModal, setShowSummaryModal] = useState(false)
+  const [pendingDiffs, setPendingDiffs] = useState<RuleSetEditDiff[]>([])
+
+  // Keyboard shortcut: Cmd/Ctrl+Z to undo (only when dialog is open)
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [open, handleUndo])
+
+  // Mode B: pre-populate state from the rule set being edited
+  const existingRulesRef = useRef<PricingRule[]>([])
+  useEffect(() => {
+    if (editingRuleSetId && open) {
+      const existingRules = getRulesInSet(editingRuleSetId)
+      existingRulesRef.current = existingRules
+      if (existingRules.length === 0) return
+
+      const first = existingRules[0]
+
+      // ── Name / prefix ──────────────────────────────────────────────
+      setRuleSetName(first.RuleSetName || editingRuleSetId)
+      const parts = first.RuleDescription.split('|')
+      setDescriptionPrefix(parts[0]?.trim() || first.RuleDescription)
+
+      // ── Options from first rule ────────────────────────────────────
+      if (first.FeeSet) setFeeSet(first.FeeSet)
+      if (first.MICompany) setMiCompany(first.MICompany)
+      if (first.Rate) setRate(first.Rate)
+      if (first.MarginType) setMarginType(first.MarginType)
+      setDisallow(first.Disallow)
+      setHasSecondMortgage(first.HasSecondMortgage)
+      setIgnoreNonEighthRates(first.IgnoreNonEighthRates)
+      setIncludeUFMIP(first.IncludeUFMIP)
+      setFinanceUFMIP(first.FinanceUFMIP)
+      setHideInQuoteAdjustments(first.HideInQuoteAdjustments)
+      if (first.Lenders.length > 0) setSelectedLenders(first.Lenders)
+      if (first.PropertyTypes.length > 0) setSelectedPropertyTypes(first.PropertyTypes)
+      if (first.PropertyUsage.length > 0) setSelectedPropertyUsage(first.PropertyUsage)
+      if (first.LoanTypes.length > 0) setSelectedLoanTypes(first.LoanTypes)
+      if (first.QuotingChannels.length > 0) setSelectedQuotingChannels(first.QuotingChannels)
+      if (first.States.length > 0) setSelectedStates(first.States)
+      if (first.ProductFamilies.length > 0) setSelectedProductFamilies(first.ProductFamilies)
+      if (first.ProductClasses.length > 0) setSelectedProductClasses(first.ProductClasses)
+      if (first.ProductTypes.length > 0) setSelectedProductTypes(first.ProductTypes)
+      if (first.ProductTerms.length > 0) setSelectedProductTerms(first.ProductTerms)
+
+      // ── Detect cell value type ─────────────────────────────────────
+      // Use whichever numeric field is non-zero on the first rule
+      let detectedValueType: CellValueType = 'margin'
+      if (first.Price !== 0) detectedValueType = 'price'
+      else if (first.Fee !== 0) detectedValueType = 'fee'
+      else if (first.Disallow) detectedValueType = 'disallow'
+      setCellValueType(detectedValueType)
+
+      const getValue = (r: PricingRule): string => {
+        if (detectedValueType === 'price') return String(r.Price)
+        if (detectedValueType === 'fee') return String(r.Fee)
+        if (detectedValueType === 'disallow') return r.Disallow ? 'Yes' : 'No'
+        return String(r.CompPercent)
+      }
+
+      // ── Detect builder mode: matrix = 2 pipe-separated dimension segments ──
+      const isMatrix = parts.length >= 3
+
+      if (isMatrix) {
+        // ── Matrix mode: reconstruct X ranges, Y ranges, and cell values ──
+        setBuilderMode('matrix')
+
+        // Detect X and Y dimensions from the first rule
+        // X = the dimension that varies across columns (first segment after prefix)
+        // We infer from which numeric field changes between rules at the same Y
+        // Simpler: detect from field presence: if FICO varies → fico, LTV → ltv, else loanAmount
+        const ficosX = new Set(existingRules.map(r => `${r.FICOMin}-${r.FICOMax}`))
+        const ltvsX = new Set(existingRules.map(r => `${r.LTVMin}-${r.LTVMax}`))
+        const loansX = new Set(existingRules.map(r => `${r.LoanAmountMin}-${r.LoanAmountMax}`))
+
+        // The dimension with more unique values is more likely X; use description parse as tiebreak
+        // Parse actual range bounds from the stored rules directly — more reliable
+        // Group rules by their Y-axis value to detect X dimension
+        // Strategy: collect unique values per candidate field; the one with sqrt(n) unique values each = axis
+        const nRules = existingRules.length
+        const nFico = ficosX.size
+        const nLtv = ltvsX.size
+        const nLoan = loansX.size
+
+        // Detect X and Y dimensions by checking which pairs of fields produce a grid
+        // The X dimension is the one whose unique count = sqrt(n) or n/yCount
+        // Simplest: check FICO vs LTV vs Loan for both axes using description label parsing
+        const firstXLabel = parts[1]?.trim() || ''
+        const firstYLabel = parts[2]?.trim() || ''
+
+        const inferDim = (label: string): DimensionType => {
+          const l = label.toLowerCase()
+          if (l.includes('fico') || l.includes('credit')) return 'fico'
+          if (l.includes('ltv') || l.includes('%')) return 'ltv'
+          return 'loanAmount'
+        }
+
+        const xDim = inferDim(firstXLabel)
+        const yDim = inferDim(firstYLabel)
+        setXDimension(xDim)
+        setYDimension(yDim)
+
+        // Collect unique X and Y range bounds in insertion order
+        const xRangeMap = new Map<string, { min: number; max: number }>()
+        const yRangeMap = new Map<string, { min: number; max: number }>()
+
+        const getXBounds = (r: PricingRule) => {
+          if (xDim === 'fico') return { min: r.FICOMin, max: r.FICOMax }
+          if (xDim === 'ltv') return { min: r.LTVMin, max: r.LTVMax }
+          return { min: r.LoanAmountMin, max: r.LoanAmountMax }
+        }
+        const getYBounds = (r: PricingRule) => {
+          if (yDim === 'fico') return { min: r.FICOMin, max: r.FICOMax }
+          if (yDim === 'ltv') return { min: r.LTVMin, max: r.LTVMax }
+          return { min: r.LoanAmountMin, max: r.LoanAmountMax }
+        }
+
+        existingRules.forEach(r => {
+          const xb = getXBounds(r)
+          const yb = getYBounds(r)
+          xRangeMap.set(`${xb.min}-${xb.max}`, xb)
+          yRangeMap.set(`${yb.min}-${yb.max}`, yb)
+        })
+
+        // Build Range objects with stable IDs
+        const newXRanges: Range[] = Array.from(xRangeMap.values()).map(b => ({
+          id: generateId(),
+          min: b.min,
+          max: b.max,
+        }))
+        const newYRanges: Range[] = Array.from(yRangeMap.values()).map(b => ({
+          id: generateId(),
+          min: b.min,
+          max: b.max,
+        }))
+
+        setXRanges(newXRanges)
+        setYRanges(newYRanges)
+
+        // Build cell values map: key = xRange.id + '-' + yRange.id
+        const newCellValues: Record<string, string> = {}
+        existingRules.forEach(r => {
+          const xb = getXBounds(r)
+          const yb = getYBounds(r)
+          const xR = newXRanges.find(rx => rx.min === xb.min && rx.max === xb.max)
+          const yR = newYRanges.find(ry => ry.min === yb.min && ry.max === yb.max)
+          if (xR && yR) {
+            newCellValues[`${xR.id}-${yR.id}`] = getValue(r)
+          }
+        })
+        setCellValues(newCellValues)
+        clearUndoHistory()
+
+      } else {
+        // ── List mode: reconstruct list ranges with values ─────────────
+        setBuilderMode('list')
+
+        // Detect the list dimension from the first rule
+        let listDim: DimensionType = 'loanAmount'
+        if (first.FICOMin !== 0 || first.FICOMax !== 0) listDim = 'fico'
+        else if (first.LTVMin !== 0 || first.LTVMax !== 0) listDim = 'ltv'
+        setListDimension(listDim)
+
+        const getBounds = (r: PricingRule) => {
+          if (listDim === 'fico') return { min: r.FICOMin, max: r.FICOMax }
+          if (listDim === 'ltv') return { min: r.LTVMin, max: r.LTVMax }
+          return { min: r.LoanAmountMin, max: r.LoanAmountMax }
+        }
+
+        const newListRanges: RangeWithValue[] = existingRules.map(r => {
+          const bounds = getBounds(r)
+          return { id: generateId(), min: bounds.min, max: bounds.max, value: getValue(r) }
+        })
+        setListRanges(newListRanges)
+        clearUndoHistory()
+      }
+
+      setCurrentStep('dimensions')
+    } else if (!open) {
+      existingRulesRef.current = []
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingRuleSetId, open])
+
   const handleCellChange = useCallback((key: string, value: string) => {
+    pushUndo()
     setCellValues(prev => ({ ...prev, [key]: value }))
-  }, [])
+  }, [pushUndo])
+
+  const handleListRangesChange = useCallback((updater: RangeWithValue[] | ((prev: RangeWithValue[]) => RangeWithValue[])) => {
+    pushUndo()
+    setListRanges(prev => typeof updater === 'function' ? updater(prev) : updater)
+  }, [pushUndo])
 
   // Apply all options to a rule
   const applyOptionsToRule = useCallback((rule: PricingRule) => {
@@ -1285,14 +1556,64 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
     return rules
   }, [builderMode, listRanges, listDimension, xRanges, yRanges, xDimension, yDimension, cellValues, cellValueType, descriptionPrefix, disallow, applyOptionsToRule])
 
-  const handleStageAll = () => {
-    previewRules.forEach(({ rule }) => {
-      stageCreate(rule)
-    })
+  // Performs the actual staging after confirmation (Mode A or B)
+  const executeStage = (diffs: RuleSetEditDiff[]) => {
+    if (isEditMode && editingRuleSetId) {
+      const updates: Array<{ rule: PricingRule; updates: Partial<PricingRule> }> = []
+      const creates: PricingRule[] = []
+      diffs.forEach(diff => {
+        if (diff.isNew) {
+          creates.push(diff.updatedRule)
+        } else {
+          updates.push({ rule: diff.rule, updates: diff.updatedRule })
+        }
+      })
+      if (updates.length > 0) stageUpdateMany(updates)
+      if (creates.length > 0) stageCreateMany(creates)
+    } else {
+      const setId = generateRuleSetId()
+      previewRules.forEach(({ rule }) => {
+        stageCreate({
+          ...rule,
+          RuleSetId: setId,
+          RuleSetName: ruleSetName || setId,
+        })
+      })
+    }
     onOpenChange(false)
-    // Reset state
-    setCurrentStep('dimensions')
+    // Reset step to first step for next open
+    setCurrentStep(isEditMode ? 'dimensions' : 'mode')
     setCellValues({})
+    clearUndoHistory()
+  }
+
+  const handleStageAll = () => {
+    if (isEditMode && editingRuleSetId) {
+      // Mode B: compute diffs, show confirmation modal
+      const existingRules = existingRulesRef.current
+      const diffs: RuleSetEditDiff[] = []
+
+      previewRules.forEach(({ rule: previewRule }, idx) => {
+        const stamped: PricingRule = {
+          ...previewRule,
+          RuleSetId: editingRuleSetId,
+          RuleSetName: ruleSetName || editingRuleSetId,
+        }
+        const existing = existingRules[idx]
+        if (existing) {
+          const changedFields = getChangedFields(existing, { ...existing, ...stamped })
+          diffs.push({ rule: existing, updatedRule: stamped, isNew: false, changedFields })
+        } else {
+          diffs.push({ rule: stamped, updatedRule: stamped, isNew: true, changedFields: Object.keys(stamped) })
+        }
+      })
+
+      setPendingDiffs(diffs)
+      setShowSummaryModal(true)
+    } else {
+      // Mode A: no confirmation needed, stage immediately
+      executeStage([])
+    }
   }
 
   const toggleLender = (lender: string) => {
@@ -1328,6 +1649,13 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
 
   // Get steps based on builder mode
   const getSteps = () => {
+    if (isEditMode) {
+      // Mode B skips the mode-selection step
+      if (builderMode === 'list') {
+        return ['dimensions', 'values', 'options', 'review']
+      }
+      return ['dimensions', 'ranges', 'matrix', 'options', 'review']
+    }
     if (builderMode === 'list') {
       return ['mode', 'dimensions', 'values', 'options', 'review']
     }
@@ -1341,13 +1669,15 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-gray-900">
-                Bulk Rule Builder
+                {isEditMode ? `Edit Rule Set: ${ruleSetName || editingRuleSetId}` : 'Bulk Rule Builder'}
               </DialogTitle>
               <DialogDescription className="text-gray-600">
-                Create multiple pricing rules efficiently using predefined ranges and values
+                {isEditMode
+                  ? 'Update the ranges, values, and options for all rules in this rule set'
+                  : 'Create multiple pricing rules efficiently using predefined ranges and values'}
               </DialogDescription>
             </div>
-            {currentStep !== 'mode' && (
+            {(isEditMode || currentStep !== 'mode') && (
               <Badge variant="outline" className="bg-white text-blue-700 border-blue-300">
                 {builderMode === 'matrix' ? 'Matrix Mode (2D)' : 'List Mode (1D)'}
               </Badge>
@@ -1358,22 +1688,41 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
         <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-4 pt-4 shrink-0">
             {builderMode === 'matrix' ? (
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="mode">1. Mode</TabsTrigger>
-                <TabsTrigger value="dimensions">2. Dimensions</TabsTrigger>
-                <TabsTrigger value="ranges">3. Ranges</TabsTrigger>
-                <TabsTrigger value="matrix">4. Matrix</TabsTrigger>
-                <TabsTrigger value="options">5. Options</TabsTrigger>
-                <TabsTrigger value="review">6. Review</TabsTrigger>
-              </TabsList>
+              isEditMode ? (
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
+                  <TabsTrigger value="ranges">2. Ranges</TabsTrigger>
+                  <TabsTrigger value="matrix">3. Matrix</TabsTrigger>
+                  <TabsTrigger value="options">4. Options</TabsTrigger>
+                  <TabsTrigger value="review">5. Review</TabsTrigger>
+                </TabsList>
+              ) : (
+                <TabsList className="grid w-full grid-cols-6">
+                  <TabsTrigger value="mode">1. Mode</TabsTrigger>
+                  <TabsTrigger value="dimensions">2. Dimensions</TabsTrigger>
+                  <TabsTrigger value="ranges">3. Ranges</TabsTrigger>
+                  <TabsTrigger value="matrix">4. Matrix</TabsTrigger>
+                  <TabsTrigger value="options">5. Options</TabsTrigger>
+                  <TabsTrigger value="review">6. Review</TabsTrigger>
+                </TabsList>
+              )
             ) : (
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="mode">1. Mode</TabsTrigger>
-                <TabsTrigger value="dimensions">2. Setup</TabsTrigger>
-                <TabsTrigger value="values">3. Ranges & Values</TabsTrigger>
-                <TabsTrigger value="options">4. Options</TabsTrigger>
-                <TabsTrigger value="review">5. Review</TabsTrigger>
-              </TabsList>
+              isEditMode ? (
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="dimensions">1. Setup</TabsTrigger>
+                  <TabsTrigger value="values">2. Ranges & Values</TabsTrigger>
+                  <TabsTrigger value="options">3. Options</TabsTrigger>
+                  <TabsTrigger value="review">4. Review</TabsTrigger>
+                </TabsList>
+              ) : (
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="mode">1. Mode</TabsTrigger>
+                  <TabsTrigger value="dimensions">2. Setup</TabsTrigger>
+                  <TabsTrigger value="values">3. Ranges & Values</TabsTrigger>
+                  <TabsTrigger value="options">4. Options</TabsTrigger>
+                  <TabsTrigger value="review">5. Review</TabsTrigger>
+                </TabsList>
+              )
             )}
           </div>
 
@@ -1586,6 +1935,35 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                   <h3 className="font-medium mb-4">Base Rule Template</h3>
                   <div className="space-y-4">
                     <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label>
+                          Rule Set Name
+                          {!isEditMode && (
+                            <span className="ml-1 text-red-600 font-bold">*</span>
+                          )}
+                        </Label>
+                        <span className={cn(
+                          'text-xs tabular-nums',
+                          ruleSetName.length >= 30 ? 'text-red-500 font-medium' : ruleSetName.length >= 24 ? 'text-orange-500' : 'text-gray-400'
+                        )}>
+                          {ruleSetName.length}/30
+                        </span>
+                      </div>
+                      <Input
+                        value={ruleSetName}
+                        onChange={(e) => setRuleSetName(e.target.value.slice(0, 30))}
+                        placeholder="e.g., Conv 30yr Purchase Matrix"
+                        maxLength={30}
+                        className={!ruleSetName && !isEditMode ? 'border-orange-300 focus:border-orange-500' : ''}
+                      />
+                      <p className="text-xs text-gray-500">
+                        {isEditMode
+                          ? 'Updating the rule set name will apply to all rules in this set.'
+                          : 'All generated rules will be grouped under this rule set name. Required.'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
                       <Label>Rule Description Prefix</Label>
                       <Input
                         value={descriptionPrefix}
@@ -1641,7 +2019,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                     <ListBuilder
                       dimension={listDimension}
                       ranges={listRanges}
-                      onChange={setListRanges}
+                      onChange={handleListRangesChange}
                       valueType={cellValueType}
                     />
                   </div>
@@ -1677,6 +2055,9 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                     cellValues={cellValues}
                     onCellChange={handleCellChange}
                     cellValueType={cellValueType}
+                    onUndo={handleUndo}
+                    canUndo={canUndo}
+                    undoCount={undoStackRef.current.length}
                   />
                 </TabsContent>
               )}
@@ -2193,7 +2574,7 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
             Cancel
           </Button>
           <div className="flex items-center gap-2">
-            {currentStep !== 'dimensions' && (
+            {currentStep !== getSteps()[0] && (
               <Button
                 variant="outline"
                 onClick={() => {
@@ -2207,13 +2588,16 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
                 Previous
               </Button>
             )}
+
             {currentStep === 'review' ? (
               <Button
                 onClick={handleStageAll}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
                 disabled={previewRules.length === 0}
               >
-                Stage All ({previewRules.length} rules)
+                {isEditMode
+                  ? `Stage Updates (${previewRules.length} rules)`
+                  : `Stage All (${previewRules.length} rules)`}
               </Button>
             ) : (
               <Button
@@ -2249,6 +2633,15 @@ export function RuleBuilderDialog({ open, onOpenChange }: RuleBuilderDialogProps
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Rule Set Edit Summary / Confirmation Modal */}
+      <RuleSetEditSummaryModal
+        open={showSummaryModal}
+        onOpenChange={setShowSummaryModal}
+        ruleSetName={ruleSetName || editingRuleSetId || ''}
+        diffs={pendingDiffs}
+        onConfirm={() => executeStage(pendingDiffs)}
+      />
     </Dialog>
   )
 }
