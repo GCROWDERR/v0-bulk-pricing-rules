@@ -57,7 +57,7 @@ function MultiSelect({ label, options, selected, onChange, info = false }: Multi
   const toggleAll = () => onChange(allSelected ? [] : [...options])
 
   return (
-    <div className="flex flex-col gap-1.5 min-w-[200px]">
+    <div className="flex flex-col gap-1.5 w-full sm:w-auto sm:min-w-[200px]">
       <div className="flex items-center gap-1">
         <span className="text-sm font-semibold text-gray-700">{label}</span>
         {info && <Info className="h-3.5 w-3.5 text-blue-500" />}
@@ -229,22 +229,22 @@ function NewRuleContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top nav */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center gap-4">
-          <img src="/loantek-logo.webp" alt="LoanTek" className="h-8" />
-          <div className="h-8 w-px bg-gray-300" />
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Pricing Rules: New</h1>
-            <p className="text-sm text-gray-600">Configure rule details, criteria, and schedule.</p>
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <img src="/loantek-logo.webp" alt="LoanTek" className="h-7 sm:h-8 shrink-0" />
+          <div className="h-8 w-px bg-gray-300 shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Pricing Rules: New</h1>
+            <p className="text-xs sm:text-sm text-gray-600">Configure rule details, criteria, and schedule.</p>
           </div>
         </div>
       </div>
 
       {/* Page content */}
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
 
         {/* ── Apply these rules ─────────────────────────────────────────── */}
-        <section className="bg-white border border-gray-200 rounded-lg p-8 space-y-6">
+        <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-8 space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Apply these rules</h2>
             <p className="text-sm text-gray-500 mt-1">This is a required step. Define what this rule will do.</p>
@@ -278,7 +278,7 @@ function NewRuleContent() {
           </div>
 
           {/* Lock Period / Fee Set / MI Company */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-1">
                 <Label className="text-xs font-semibold text-gray-700">Lock period<span className="text-red-600 ml-1">*</span></Label>
@@ -318,7 +318,7 @@ function NewRuleContent() {
           </div>
 
           {/* Price / Rate / Fees */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-gray-700">Price</Label>
               <Input type="number" step="0.001" value={formData.Price} onChange={e => update('Price', parseFloat(e.target.value) || 0)} placeholder="Price" />
@@ -347,7 +347,7 @@ function NewRuleContent() {
           </div>
 
           {/* Comp Flat Fee / Final Price Min / Max */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-gray-700">Comp Flat Fee</Label>
               <Input type="number" step="0.01" value={formData.CompFlatFee || ''} onChange={e => update('CompFlatFee', parseFloat(e.target.value) || 0)} placeholder="Comp Flat Fee" />
@@ -406,7 +406,7 @@ function NewRuleContent() {
           </div>
 
           {/* ── Rule filters card ─────────────────────────────── */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
             <div className="flex items-center gap-0">
               <h3 className="text-base font-bold text-gray-900">Rule filters</h3>
               <OptionalBadge />
@@ -509,8 +509,8 @@ function NewRuleContent() {
           </div>
 
           {/* ── Programs card ─────────────────────────────────── */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-            <div className="flex items-center">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
+            <div className="flex items-start flex-wrap gap-y-1">
               <h3 className="text-base font-bold text-gray-900">Filter and verify the programs this rule will run against</h3>
               <OptionalBadge />
             </div>
@@ -601,7 +601,7 @@ function NewRuleContent() {
             {scheduleEnabled && (
               <div className="px-6 pb-6 space-y-4 border-t border-gray-100 pt-4">
                 <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
                     <Input type="date" value={formData.StartDate || ''} onChange={e => update('StartDate', e.target.value || null)} />
@@ -645,7 +645,7 @@ function NewRuleContent() {
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-end gap-3 pb-8">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-3 pb-8">
           <Button variant="outline" onClick={() => router.push('/')} className="border-gray-300">
             Return to Rules
           </Button>
