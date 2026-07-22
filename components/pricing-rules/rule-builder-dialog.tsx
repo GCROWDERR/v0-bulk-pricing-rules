@@ -479,7 +479,7 @@ function ListBuilder({ dimension, ranges, onChange, valueType }: ListBuilderProp
             <Wand2 className="h-4 w-4 text-blue-600" />
             <span className="text-sm font-semibold text-blue-800">Auto-fill Ranges</span>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-blue-700">Start</Label>
               <Input
@@ -523,7 +523,7 @@ function ListBuilder({ dimension, ranges, onChange, valueType }: ListBuilderProp
               <Wand2 className="h-4 w-4 text-gray-500" />
               <span className="text-sm font-semibold text-gray-700">Fill Values</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1 space-y-1">
                 <Label className="text-xs text-gray-500">Starting Value</Label>
                 <Input
@@ -535,7 +535,7 @@ function ListBuilder({ dimension, ranges, onChange, valueType }: ListBuilderProp
                   className="h-8 text-sm"
                 />
               </div>
-              <div className="w-32 space-y-1">
+              <div className="w-full sm:w-32 space-y-1">
                 <Label className="text-xs text-gray-500">Increment</Label>
                 <Input
                   type="number"
@@ -546,8 +546,8 @@ function ListBuilder({ dimension, ranges, onChange, valueType }: ListBuilderProp
                   className="h-8 text-sm"
                 />
               </div>
-              <div className="pt-5">
-                <Button size="sm" variant="outline" onClick={handleBulkFill} className="h-8">
+              <div className="sm:pt-5">
+                <Button size="sm" variant="outline" onClick={handleBulkFill} className="h-8 w-full sm:w-auto">
                   Apply
                 </Button>
               </div>
@@ -1664,7 +1664,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[95vw] !w-[95vw] h-[90vh] p-0 gap-0 flex flex-col" showCloseButton={false}>
+      <DialogContent className="!max-w-[100vw] !w-[100vw] h-[100dvh] rounded-none sm:!max-w-[95vw] sm:!w-[95vw] sm:h-[90vh] sm:rounded-lg p-0 gap-0 flex flex-col" showCloseButton={false}>
         <DialogHeader className="p-4 border-b border-gray-200 shrink-0 bg-blue-50">
           <div className="flex items-center justify-between">
             <div>
@@ -1686,10 +1686,10 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
         </DialogHeader>
 
         <Tabs value={currentStep} onValueChange={setCurrentStep} className="flex-1 flex flex-col overflow-hidden">
-          <div className="px-4 pt-4 shrink-0">
+          <div className="px-4 pt-4 shrink-0 overflow-x-auto">
             {builderMode === 'matrix' ? (
               isEditMode ? (
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full min-w-[520px] grid-cols-5">
                   <TabsTrigger value="dimensions">1. Dimensions</TabsTrigger>
                   <TabsTrigger value="ranges">2. Ranges</TabsTrigger>
                   <TabsTrigger value="matrix">3. Matrix</TabsTrigger>
@@ -1697,7 +1697,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                   <TabsTrigger value="review">5. Review</TabsTrigger>
                 </TabsList>
               ) : (
-                <TabsList className="grid w-full grid-cols-6">
+                <TabsList className="grid w-full min-w-[620px] grid-cols-6">
                   <TabsTrigger value="mode">1. Mode</TabsTrigger>
                   <TabsTrigger value="dimensions">2. Dimensions</TabsTrigger>
                   <TabsTrigger value="ranges">3. Ranges</TabsTrigger>
@@ -1708,14 +1708,14 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
               )
             ) : (
               isEditMode ? (
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full min-w-[460px] grid-cols-4">
                   <TabsTrigger value="dimensions">1. Setup</TabsTrigger>
                   <TabsTrigger value="values">2. Ranges & Values</TabsTrigger>
                   <TabsTrigger value="options">3. Options</TabsTrigger>
                   <TabsTrigger value="review">4. Review</TabsTrigger>
                 </TabsList>
               ) : (
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full min-w-[560px] grid-cols-5">
                   <TabsTrigger value="mode">1. Mode</TabsTrigger>
                   <TabsTrigger value="dimensions">2. Setup</TabsTrigger>
                   <TabsTrigger value="values">3. Ranges & Values</TabsTrigger>
@@ -1736,7 +1736,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                     <p className="text-gray-600">Choose how you want to create your pricing rules</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Matrix Mode Card */}
                     <button
                       type="button"
@@ -1856,7 +1856,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
               {/* Step 2: Dimensions */}
               <TabsContent value="dimensions" className="mt-0 space-y-6">
                 {builderMode === 'matrix' ? (
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label>Dimension X (Rows)</Label>
                       <Select value={xDimension} onValueChange={(v) => setXDimension(v as DimensionType)}>
@@ -1890,7 +1890,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label>Dimension (Range Variable)</Label>
                       <Select value={listDimension} onValueChange={(v) => setListDimension(v as DimensionType)}>
@@ -1997,7 +1997,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
               {/* Step 2: Ranges (Matrix mode only) */}
               {builderMode === 'matrix' && (
                 <TabsContent value="ranges" className="mt-0">
-                  <div className="grid grid-cols-2 gap-6" style={{ minHeight: '500px' }}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:min-h-[500px]">
                     <RangeBuilder
                       dimension={xDimension}
                       ranges={xRanges}
@@ -2074,7 +2074,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
 
                   {/* Action Inputs Grid */}
                   <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label className="font-semibold">Lock Period</Label>
                         <Select value={lockPeriod?.toString() || ''} onValueChange={(v) => setLockPeriod(v ? parseInt(v) : null)}>
@@ -2116,7 +2116,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label className="font-semibold">Price</Label>
                         <Input type="number" step="0.001" placeholder="0.000" value={price} onChange={(e) => setPrice(e.target.value)} />
@@ -2145,7 +2145,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label className="font-semibold">Comp Flat Fee</Label>
                         <Input type="number" step="0.01" placeholder="0.00" value={compFlatFee} onChange={(e) => setCompFlatFee(e.target.value)} />
@@ -2160,7 +2160,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="font-semibold">Max Cash Back to Borrower</Label>
                         <Input type="number" step="0.01" placeholder="0.00" value={maxCashBack} onChange={(e) => setMaxCashBack(e.target.value)} />
@@ -2212,7 +2212,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                         <ChevronDown className="h-4 w-4 text-gray-500" />
                       </CollapsibleTrigger>
                       <CollapsibleContent className="p-4 border border-t-0 border-gray-200 bg-white rounded-b-lg space-y-4">
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {/* LTV Range */}
                           <Collapsible>
                             <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
@@ -2353,7 +2353,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                         <ChevronDown className="h-4 w-4 text-gray-500" />
                       </CollapsibleTrigger>
                       <CollapsibleContent className="p-4 border border-t-0 border-gray-200 bg-white rounded-b-lg space-y-4">
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {/* Lenders */}
                           <Collapsible>
                             <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded">
@@ -2447,7 +2447,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                   </CollapsibleTrigger>
                   <CollapsibleContent className="p-4 border border-t-0 border-gray-200 bg-white rounded-b-lg space-y-4">
                     <p className="text-xs text-gray-500">For time-sensitive pricing only. Leave blank if not needed.</p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm">Start Date</Label>
                         <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -2527,7 +2527,7 @@ export function RuleBuilderDialog({ open, onOpenChange, editingRuleSetId }: Rule
                           </Badge>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="px-3 pb-3 pt-2 border-t bg-gray-50">
-                          <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                             <div>
                               <span className="text-gray-500">Lenders:</span>
                               <p className="font-medium">{rule.Lenders.length > 0 ? rule.Lenders.join(', ') : 'None'}</p>
