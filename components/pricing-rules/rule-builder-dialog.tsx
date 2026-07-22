@@ -824,22 +824,22 @@ function MatrixGrid({
     <div className="space-y-3">
       {/* Fill cells helper */}
       <div className="bg-slate-50 border rounded-lg p-3 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Label className="text-sm font-medium text-slate-700">Fill selected cells with:</Label>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <Label className="text-sm font-medium text-slate-700 w-full sm:w-auto">Fill selected cells with:</Label>
             <Input
               type={cellValueType === 'disallow' ? 'text' : 'number'}
               step={cellValueType === 'price' || cellValueType === 'margin' ? '0.001' : '0.01'}
               value={fillValue}
               onChange={(e) => setFillValue(e.target.value)}
-              className="h-9 w-32"
+              className="h-9 w-24 sm:w-32"
               placeholder={cellValueType === 'disallow' ? 'Yes/No' : '0.000'}
             />
-            <Button size="sm" onClick={handleFillCells} className="h-9">
+            <Button size="sm" onClick={handleFillCells} className="h-9 flex-1 sm:flex-none">
               {selectedCells.size > 0 ? `Fill ${selectedCells.size} Selected` : 'Fill All Cells'}
             </Button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={handleSelectAll} className="h-9">
               Select All
             </Button>
