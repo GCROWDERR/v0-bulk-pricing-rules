@@ -249,11 +249,11 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="!max-w-[1000px] !w-[1000px] h-[92vh] p-0 gap-0 flex flex-col overflow-hidden"
+        className="!max-w-[100vw] !w-[100vw] h-[100dvh] rounded-none sm:!max-w-[1000px] sm:!w-[1000px] sm:h-[92vh] sm:rounded-lg p-0 gap-0 flex flex-col overflow-hidden"
         showCloseButton={false}
       >
         {/* Header */}
-        <DialogHeader className="px-8 pt-6 pb-4 border-b shrink-0">
+        <DialogHeader className="px-4 sm:px-8 pt-6 pb-4 border-b shrink-0">
           <DialogTitle className="text-xl font-bold text-gray-900">
             {isNew ? 'Pricing Rules: New' : `Pricing Rules: Edit #${formData.RuleId}`}
           </DialogTitle>
@@ -264,7 +264,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-8 py-6 space-y-8">
+          <div className="px-4 sm:px-8 py-6 space-y-8">
 
             {/* ��─ STEP 1 ──────────────────────────────────────────────── */}
             <section className="space-y-4">
@@ -310,7 +310,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
 
                 {/* Lock Period / Fee Set / MI Company */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
                     <div className="flex items-center gap-1">
                       <Label className="text-xs font-semibold text-gray-700">
@@ -368,7 +368,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
 
                 {/* Price / Rate / Fees */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Price</Label>
                     <Input
@@ -425,7 +425,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
 
                 {/* Comp Flat Fee / Final Price Min / Final Price Max */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Comp Flat Fee</Label>
                     <Input
@@ -529,7 +529,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
               </div>
 
               {/* Add Criteria pills — sticky */}
-              <div className="sticky top-0 z-10 bg-white pt-2 pb-3 -mx-8 px-8 border-b border-gray-100">
+              <div className="sticky top-0 z-10 bg-white pt-2 pb-3 -mx-4 px-4 sm:-mx-8 sm:px-8 border-b border-gray-100">
                 <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-gray-500 mr-1">Add criteria:</span>
                 {([
@@ -588,7 +588,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       <p className="text-sm text-gray-500">
                         Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.
                       </p>
-                      <div className="grid grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         {[
                           { label: 'LTV', minField: 'LTVMin' as const, maxField: 'LTVMax' as const },
                           { label: 'FICO', minField: 'FICOMin' as const, maxField: 'FICOMax' as const },
@@ -608,17 +608,17 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                           </div>
                         ))}
                       </div>
-                      <div className="grid grid-cols-5 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         <ToggleList label="Property Types" options={PROPERTY_TYPES} selected={formData.PropertyTypes} onChange={v => update('PropertyTypes', v)} />
                         <ToggleList label="Property Usage" options={PROPERTY_USAGE} selected={formData.PropertyUsage} onChange={v => update('PropertyUsage', v)} />
                         <ToggleList label="Loan Types" options={LOAN_TYPES} selected={formData.LoanTypes} onChange={v => update('LoanTypes', v)} />
                         <ToggleList label="Quoting Channels" options={QUOTING_CHANNELS} selected={formData.QuotingChannels} onChange={v => update('QuotingChannels', v)} />
                         <ToggleList label="Lock Period" options={LOCK_PERIODS.map(p => `${p} Days`)} selected={formData.LockPeriods.map(p => `${p} Days`)} onChange={v => update('LockPeriods', v.map(s => parseInt(s)))} info />
                       </div>
-                      <div className="grid grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <ToggleList label="Borrower Filters" options={BORROWER_FILTERS} selected={formData.BorrowerFilters} onChange={v => update('BorrowerFilters', v)} />
                         <ToggleList label="Point Groups" options={POINT_GROUPS} selected={formData.PointGroups} onChange={v => update('PointGroups', v)} />
-                        <div className="col-span-2 grid grid-cols-2 gap-4">
+                        <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <ToggleList label="States" options={STATES} selected={formData.States} onChange={v => update('States', v)} searchable />
                           <ToggleList label="Selected States" options={formData.States} selected={formData.States} onChange={v => update('States', v)} />
                         </div>
@@ -659,7 +659,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                     </div>
                     {expandedSections.has('programs') && (
                       <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-5">
-                        <div className="grid grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                           <ToggleList label="Lenders" options={LENDERS} selected={formData.Lenders} onChange={v => update('Lenders', v)} />
                           <ToggleList label="Product Families" options={PRODUCT_FAMILIES} selected={formData.ProductFamilies} onChange={v => update('ProductFamilies', v)} />
                           <ToggleList label="Product Classes" options={PRODUCT_CLASSES} selected={formData.ProductClasses} onChange={v => update('ProductClasses', v)} />
@@ -723,7 +723,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   {expandedSections.has('schedule') && (
                     <div className="px-5 pb-5 border-t border-gray-100 pt-4 space-y-4">
                       <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
                           <Input type="date" value={formData.StartDate || ''} onChange={e => update('StartDate', e.target.value || null)} aria-label="Start date" />
@@ -743,7 +743,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       </div>
                       <div className="space-y-2">
                         <p className="text-sm text-gray-500">Week days on which the rule should be active.</p>
-                        <div className="flex items-center gap-5">
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
                             <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
                               <Checkbox aria-label={`${day} - rule applies`} />
@@ -777,7 +777,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
         </div>
 
         {/* Footer — pinned outside the scroll container */}
-        <div className="shrink-0 flex items-center justify-end gap-3 px-8 py-4 border-t border-gray-200 bg-white">
+        <div className="shrink-0 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 px-4 sm:px-8 py-4 border-t border-gray-200 bg-white">
           <Button variant="outline" onClick={handleClose} className="border-gray-300" aria-label="Close dialog and return to rules">
             Return to Rules
           </Button>
