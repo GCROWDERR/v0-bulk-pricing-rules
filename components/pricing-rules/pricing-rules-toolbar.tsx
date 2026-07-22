@@ -102,19 +102,19 @@ export function PricingRulesToolbar({
   }
 
   return (
-    <div className="flex items-center justify-between py-3 px-4 bg-white border-b border-gray-200">
+    <div className="flex items-center justify-between gap-2 py-3 px-4 bg-white border-b border-gray-200 flex-wrap">
       {/* Left side - Search */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0 flex-1 sm:flex-none">
         {showSearch ? (
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Search rules..."
                 value={state.searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64 pl-9 h-9"
+                className="w-full sm:w-64 pl-9 h-9"
                 autoFocus
               />
             </div>
@@ -143,7 +143,7 @@ export function PricingRulesToolbar({
       </div>
 
       {/* Right side - Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
         {/* Selection actions - only visible when rows are selected */}
         {state.selectedRows.size > 0 && (
           <>

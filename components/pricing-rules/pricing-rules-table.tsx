@@ -239,8 +239,8 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
 
   return (
     <div className="flex flex-col h-full">
-      {/* Table Container */}
-      <div className="flex-1 overflow-auto border border-gray-300 rounded-lg bg-white">
+      {/* Table Container - desktop/tablet */}
+      <div className="hidden md:block flex-1 overflow-auto border border-gray-300 rounded-lg bg-white">
         <Table className="w-full table-fixed">
           <TableHeader className="sticky top-0 z-10">
             <TableRow className="bg-blue-50 hover:bg-blue-50 border-b border-gray-300">
@@ -615,8 +615,211 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
         </Table>
       </div>
 
+      {/* Card list - mobile */}
+      <div className="md:hidden flex-1 overflow-auto flex flex-col gap-2">
+        {/* Mobile select-all bar */}
+        <div className="shrink-0 flex items-center gap-2 px-1 py-1">
+          <Checkbox
+            checked={isAllSelected}
+            onCheckedChange={handleSelectAll}
+            aria-label="Select all"
+            className={isSomeSelected && !isAllSelected ? 'opacity-50' : ''}
+          />
+          <span className="text-sm text-muted-foreground">
+            {isAllSelected ? 'Deselect all' : 'Select all on page'}
+          </span>
+        </div>
+
+        {paginatedRules.map((rule) => {
+          const isExpanded = state.expandedRows.has(rule.RuleId)
+          const isDraft = hasDraft(rule.RuleId)
+          const draft = getDraftForRule(rule.RuleId)
+          const displayRule = isDraft ? getRuleWithDraft(rule.RuleId) : rule
+          const rowBg = getRowBackground(displayRule)
+          const isDeleted = displayRule.RuleIsDeleted
+          const isSelected = state.selectedRows.has(rule.RuleId)
+
+          return (
+            <div
+              key={rule.RuleId}
+              className={cn(
+                'shrink-0 border border-gray-300 rounded-lg bg-white overflow-hidden transition-colors',
+                rowBg,
+                isSelected && 'ring-2 ring-blue-500 border-blue-500',
+                isDeleted && 'opacity-70'
+              )}
+            >
+              {/* Card body - tap to edit */}
+              <div
+                className="p-3 cursor-pointer"
+                onClick={(e) => handleRowClick(displayRule, e)}
+              >
+                {/* Top row: select + description + active */}
+                <div className="flex items-start gap-3">
+                  <div onClick={(e) => e.stopPropagation()} className="pt-0.5">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelectedRow(rule.RuleId)}
+                      aria-label={`Select rule ${rule.RuleId}`}
+                      data-no-navigate
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {rule.RuleId < 0 ? 'New' : `#${rule.RuleId}`}
+                      </span>
+                      {isDraft && (
+                        <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-300">
+                          Draft
+                        </Badge>
+                      )}
+                      {isDeleted && (
+                        <Badge variant="outline" className="text-xs bg-red-100 text-red-700 border-red-300">
+                          Deleted
+                        </Badge>
+                      )}
+                    </div>
+                    <p className={cn('font-medium text-gray-900 mt-0.5 break-words', isDeleted && 'line-through text-muted-foreground')}>
+                      {displayRule.RuleDescription || '(No description)'}
+                    </p>
+                    {displayRule.RuleSetId && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const isFiltered = state.ruleSetFilter === displayRule.RuleSetId
+                          setRuleSetFilter(isFiltered ? null : displayRule.RuleSetId!)
+                        }}
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors mt-1.5 max-w-full',
+                          state.ruleSetFilter === displayRule.RuleSetId
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-blue-50 text-blue-700 border-blue-300'
+                        )}
+                        data-no-navigate
+                      >
+                        <span className="truncate">{displayRule.RuleSetName || displayRule.RuleSetId}</span>
+                      </button>
+                    )}
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()} className="shrink-0 flex flex-col items-center gap-1">
+                    <Switch
+                      checked={displayRule.Active}
+                      onCheckedChange={() => {}}
+                      onClick={(e) => handleToggleActive(displayRule, e)}
+                      disabled={isDeleted}
+                    />
+                    <span className="text-[10px] text-muted-foreground">
+                      {displayRule.Active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Stats grid */}
+                <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100 text-sm">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Margin</p>
+                    <p className="font-sans">{formatPercent(displayRule.CompPercent)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Fee</p>
+                    <p className="font-sans">{formatCurrency(displayRule.Fee)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Price</p>
+                    <p className="font-sans">{formatPrice(displayRule.Price)}</p>
+                  </div>
+                </div>
+
+                {/* Lenders */}
+                <div className="mt-2 text-sm">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Lenders</p>
+                  <p className="text-gray-700 break-words">
+                    {displayRule.Lenders.length === 0
+                      ? '—'
+                      : displayRule.Lenders.join(', ')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions bar */}
+              <div className="flex items-center gap-1 px-2 py-1.5 border-t border-gray-100 bg-gray-50/60">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 gap-1.5 text-gray-700"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setEditingRule(displayRule)
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 gap-1.5 text-gray-700"
+                  onClick={(e) => handleCopyRule(displayRule, e)}
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </Button>
+                <div className="ml-auto flex items-center gap-1">
+                  {isDraft && draft?.type !== 'create' && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      onClick={(e) => handleDiscardDraft(rule.RuleId, e)}
+                      aria-label="Discard draft"
+                    >
+                      <Undo2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {displayRule.RuleIsDeleted ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-gray-600 hover:text-gray-700 hover:bg-gray-200"
+                      onClick={(e) => handleRestoreRule(displayRule, e)}
+                      aria-label="Restore rule"
+                    >
+                      <Undo2 className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={(e) => handleDeleteRule(displayRule, e)}
+                      aria-label="Delete rule"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Expanded inline edit */}
+              {isExpanded && (
+                <div className="border-t border-gray-200">
+                  <InlineQuickEdit rule={displayRule} />
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {paginatedRules.length === 0 && (
+          <div className="h-32 flex items-center justify-center text-center text-muted-foreground border border-gray-300 rounded-lg bg-white">
+            No pricing rules found.
+          </div>
+        )}
+      </div>
+
       {/* Pagination */}
-      <div className="flex items-center justify-between px-4 py-3 border-t bg-white">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-t bg-white flex-wrap">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Rows per page:</span>
           <Select

@@ -57,17 +57,17 @@ function PricingRulesContent() {
       isFullscreen ? 'fixed inset-0 z-50' : 'h-screen'
     )}>
       {/* Header with LoanTek branding */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-4">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-3 sm:gap-4">
           <img 
             src="/loantek-logo.webp" 
             alt="LoanTek" 
-            className="h-8"
+            className="h-7 sm:h-8 shrink-0"
           />
-          <div className="h-8 w-px bg-gray-300" />
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Pricing Rules</h1>
-            <p className="text-sm text-gray-600">
+          <div className="h-8 w-px bg-gray-300 shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Pricing Rules</h1>
+            <p className="text-xs sm:text-sm text-gray-600">
               Manage client pricing rules and adjustments
             </p>
           </div>
@@ -89,7 +89,7 @@ function PricingRulesContent() {
       />
 
       {/* Table */}
-      <div className="flex-1 overflow-hidden px-4 py-4 bg-gray-50">
+      <div className="flex-1 overflow-hidden px-2 sm:px-4 py-2 sm:py-4 bg-gray-50">
         <PricingRulesTable
           density={density}
           visibleColumns={visibleColumns}
