@@ -249,7 +249,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="!max-w-[100vw] !w-[100vw] h-[100dvh] rounded-none sm:!max-w-[1000px] sm:!w-[1000px] sm:h-[92vh] sm:rounded-lg p-0 gap-0 flex flex-col overflow-hidden"
+        className="!max-w-[100vw] !w-[100vw] h-[100dvh] rounded-none sm:!max-w-[95vw] sm:!w-[95vw] sm:h-[92vh] sm:rounded-lg lg:!max-w-[1000px] lg:!w-[1000px] p-0 gap-0 flex flex-col overflow-hidden"
         showCloseButton={false}
       >
         {/* Header */}
@@ -310,7 +310,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
 
                 {/* Lock Period / Fee Set / MI Company */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
                     <div className="flex items-center gap-1">
                       <Label className="text-xs font-semibold text-gray-700">
@@ -368,7 +368,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
 
                 {/* Price / Rate / Fees */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Price</Label>
                     <Input
@@ -425,7 +425,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                 </div>
 
                 {/* Comp Flat Fee / Final Price Min / Final Price Max */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1 flex flex-col">
                     <Label className="text-xs font-semibold text-gray-700">Comp Flat Fee</Label>
                     <Input
@@ -588,7 +588,7 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                       <p className="text-sm text-gray-500">
                         Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.
                       </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
                           { label: 'LTV', minField: 'LTVMin' as const, maxField: 'LTVMax' as const },
                           { label: 'FICO', minField: 'FICOMin' as const, maxField: 'FICOMax' as const },
