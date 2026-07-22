@@ -683,24 +683,6 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                     <p className={cn('font-medium text-gray-900 mt-0.5 break-words', isDeleted && 'line-through text-muted-foreground')}>
                       {displayRule.RuleDescription || '(No description)'}
                     </p>
-                    {displayRule.RuleSetId && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          const isFiltered = state.ruleSetFilter === displayRule.RuleSetId
-                          setRuleSetFilter(isFiltered ? null : displayRule.RuleSetId!)
-                        }}
-                        className={cn(
-                          'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors mt-1.5 max-w-full',
-                          state.ruleSetFilter === displayRule.RuleSetId
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-blue-50 text-blue-700 border-blue-300'
-                        )}
-                        data-no-navigate
-                      >
-                        <span className="truncate">{displayRule.RuleSetName || displayRule.RuleSetId}</span>
-                      </button>
-                    )}
                   </div>
                   <div onClick={(e) => e.stopPropagation()} className="shrink-0 flex flex-col items-center gap-1">
                     <Switch
@@ -728,6 +710,37 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                   <div>
                     <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Price</p>
                     <p className="font-sans">{formatPrice(displayRule.Price)}</p>
+                  </div>
+                </div>
+
+                {/* Rule Set + Disallow */}
+                <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Rule Set</p>
+                    {displayRule.RuleSetId ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const isFiltered = state.ruleSetFilter === displayRule.RuleSetId
+                          setRuleSetFilter(isFiltered ? null : displayRule.RuleSetId!)
+                        }}
+                        className={cn(
+                          'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors mt-0.5 max-w-full',
+                          state.ruleSetFilter === displayRule.RuleSetId
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-blue-50 text-blue-700 border-blue-300'
+                        )}
+                        data-no-navigate
+                      >
+                        <span className="truncate">{displayRule.RuleSetName || displayRule.RuleSetId}</span>
+                      </button>
+                    ) : (
+                      <p className="text-gray-700">—</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Disallow</p>
+                    <p className="text-gray-700">{displayRule.Disallow ? 'Yes' : 'No'}</p>
                   </div>
                 </div>
 
