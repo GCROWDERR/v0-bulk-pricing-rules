@@ -877,7 +877,11 @@ function NewRuleContent() {
         {/* Disallow warning */}
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <label className="flex items-start gap-3 cursor-pointer">
-            <Checkbox checked={formData.HideInQuoteAdjustments} onCheckedChange={c => update('HideInQuoteAdjustments', c === true)} className="mt-0.5" />
+            <Checkbox
+              checked={formData.HideInQuoteAdjustments}
+              onCheckedChange={c => update('HideInQuoteAdjustments', c === true)}
+              className="mt-0.5 border-red-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 data-[state=checked]:text-white"
+            />
             <span className="text-sm text-red-800">
               Do NOT show this rule details in quote adjustments. If you select this option, only you will be able to see the adjustments in LoanPricer.
             </span>
