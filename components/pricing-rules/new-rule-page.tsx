@@ -312,11 +312,11 @@ function AccordionSectionHeader({
           <label htmlFor={`accordion-${title}`} className="text-base font-bold text-gray-900 cursor-pointer">
             {title}
           </label>
-          <span className="text-sm text-gray-500">(optional)</span>
+          <span className="text-sm text-gray-600">(optional)</span>
           <FieldInfoTip content={tooltip} />
         </div>
         {!checked && (
-          <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>
+          <p className="text-sm text-gray-600 mt-0.5">{subtitle}</p>
         )}
       </div>
     </div>
