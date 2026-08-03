@@ -880,7 +880,7 @@ function NewRuleContent() {
             <Checkbox
               checked={formData.HideInQuoteAdjustments}
               onCheckedChange={c => update('HideInQuoteAdjustments', c === true)}
-              className="mt-0.5 border-red-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 data-[state=checked]:text-white"
+              className="mt-0.5 border-red-200 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 data-[state=checked]:text-white"
             />
             <span className="text-sm text-red-800">
               Do NOT show this rule details in quote adjustments. If you select this option, only you will be able to see the adjustments in LoanPricer.
