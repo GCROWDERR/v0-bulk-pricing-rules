@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, Fragment } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Table,
   TableBody,
@@ -94,7 +95,6 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
     stageRestore,
     discardDraft,
     toggleExpandedRow,
-    setEditingRule,
     stageCreate,
     getRuleWithDraft,
     toggleSelectedRow,
@@ -103,6 +103,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
     toggleSort,
     setRuleSetFilter,
   } = usePricingRules()
+  const router = useRouter()
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState<number | 'All'>(50)
@@ -122,12 +123,16 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
     spacious: 'h-16',
   }
 
+  const openEditRule = (rule: PricingRule) => {
+    router.push(`/rules/edit?ruleId=${rule.RuleId}`)
+  }
+
   const handleRowClick = (rule: PricingRule, e: React.MouseEvent) => {
     // Don't navigate if clicking on interactive elements
     if ((e.target as HTMLElement).closest('button, [role="switch"], [data-no-navigate]')) {
       return
     }
-    setEditingRule(rule)
+    openEditRule(rule)
   }
 
   const handleCopyRule = (rule: PricingRule, e: React.MouseEvent) => {
@@ -517,7 +522,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                               className="h-8 w-8"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                setEditingRule(displayRule)
+                                openEditRule(displayRule)
                               }}
                             >
                               <Pencil className="h-4 w-4" />
@@ -763,7 +768,7 @@ export function PricingRulesTable({ density, visibleColumns }: PricingRulesTable
                   className="h-9 gap-1.5 text-gray-700"
                   onClick={(e) => {
                     e.stopPropagation()
-                    setEditingRule(displayRule)
+                    openEditRule(displayRule)
                   }}
                 >
                   <Pencil className="h-4 w-4" />
