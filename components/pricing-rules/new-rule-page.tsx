@@ -296,7 +296,6 @@ function NewRuleContent() {
   const { stageCreate } = usePricingRules()
 
   const [formData, setFormData] = useState<PricingRule>(() => createBlankRule(-Date.now()))
-  const [errors, setErrors] = useState<Record<string, string>>({})
   const [filtersEnabled, setFiltersEnabled] = useState(false)
   const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set())
   const [activePrograms, setActivePrograms] = useState<Set<ProgramKey>>(new Set())
@@ -304,9 +303,6 @@ function NewRuleContent() {
 
   const update = <K extends keyof PricingRule>(field: K, value: PricingRule[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    if (errors[field as string]) {
-      setErrors(prev => { const next = { ...prev }; delete next[field as string]; return next })
-    }
   }
 
   const allFilterKeys: FilterKey[] = ['ltv', 'fico', 'loanAmount', 'propertyTypes', 'propertyUsage', 'loanTypes', 'quotingChannels', 'lockPeriod', 'borrowerFilters', 'pointGroups', 'states']
@@ -327,17 +323,7 @@ function NewRuleContent() {
 
   const toggleAllPrograms = () => setActivePrograms(allProgramsActive ? new Set() : new Set(allProgramKeys))
 
-  const validate = (): Record<string, string> => {
-    const errs: Record<string, string> = {}
-    if (!formData.RuleDescription?.trim()) errs.RuleDescription = 'A rule description is required.'
-    if (formData.LockPeriod === null || formData.LockPeriod === undefined || formData.LockPeriod === 0) errs.LockPeriod = 'Please select a lock period.'
-    if (!formData.FeeSet || formData.FeeSet.trim() === '') errs.FeeSet = 'Please select a fee set.'
-    return errs
-  }
-
   const handleSave = () => {
-    const errs = validate()
-    if (Object.keys(errs).length > 0) { setErrors(errs); return }
     stageCreate(formData)
     router.push('/')
   }
@@ -378,7 +364,7 @@ function NewRuleContent() {
         <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-8 space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Apply these rules</h2>
-            <p className="text-sm text-gray-500 mt-1">Define the description and the pricing or fee changes for this rule. This section is required.</p>
+            <p className="text-sm text-gray-500 mt-1">Define the description and the pricing or fee changes for this rule.</p>
           </div>
 
           {/* Description + Disallow */}
@@ -386,7 +372,6 @@ function NewRuleContent() {
             <div className="flex items-center gap-1">
               <Label className="text-xs font-semibold text-gray-700">
                 Enter a brief description to identify the rule in your pricing adjustments
-                <span className="text-red-600 ml-1">*</span>
               </Label>
               <FieldInfoTip content={RULE_FIELD_TOOLTIPS.description} />
             </div>
@@ -396,10 +381,8 @@ function NewRuleContent() {
                   value={formData.RuleDescription}
                   onChange={e => update('RuleDescription', e.target.value)}
                   placeholder="Describe this rule"
-                  className={cn('w-full', errors.RuleDescription && 'border-red-500 focus-visible:ring-red-500')}
-                  aria-invalid={!!errors.RuleDescription}
+                  className="w-full"
                 />
-                {errors.RuleDescription && <p className="text-xs text-red-600">{errors.RuleDescription}</p>}
               </div>
               <label className="flex items-center gap-1.5 shrink-0 self-start mt-1 cursor-pointer text-sm text-gray-700">
                 <Checkbox checked={formData.Disallow} onCheckedChange={c => update('Disallow', c === true)} />
@@ -413,29 +396,27 @@ function NewRuleContent() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-1">
-                <Label className="text-xs font-semibold text-gray-700">Lock period<span className="text-red-600 ml-1">*</span></Label>
+                <Label className="text-xs font-semibold text-gray-700">Lock period</Label>
                 <FieldInfoTip content={RULE_FIELD_TOOLTIPS.lockPeriod} />
               </div>
               <Select value={formData.LockPeriod?.toString() || ''} onValueChange={v => update('LockPeriod', parseInt(v))}>
-                <SelectTrigger className={cn('w-full', errors.LockPeriod && 'border-red-500')} aria-invalid={!!errors.LockPeriod}>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>{LOCK_PERIODS.map(p => <SelectItem key={p} value={p.toString()}>{p} Days</SelectItem>)}</SelectContent>
               </Select>
-              {errors.LockPeriod && <p className="text-xs text-red-600">{errors.LockPeriod}</p>}
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-1">
-                <Label className="text-xs font-semibold text-gray-700">Fee Set<span className="text-red-600 ml-1">*</span></Label>
+                <Label className="text-xs font-semibold text-gray-700">Fee Set</Label>
                 <FieldInfoTip content={RULE_FIELD_TOOLTIPS.feeSet} />
               </div>
               <Select value={formData.FeeSet} onValueChange={v => update('FeeSet', v)}>
-                <SelectTrigger className={cn('w-full', errors.FeeSet && 'border-red-500')} aria-invalid={!!errors.FeeSet}>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>{FEE_SETS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
               </Select>
-              {errors.FeeSet && <p className="text-xs text-red-600">{errors.FeeSet}</p>}
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-gray-700">MI Company</Label>
