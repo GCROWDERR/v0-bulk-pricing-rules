@@ -305,7 +305,7 @@ function AccordionSectionHeader({
         id={`accordion-${title}`}
         checked={checked}
         onCheckedChange={v => onCheckedChange(v === true)}
-        className="mt-1"
+        className="mt-1 border-[#898f9e]"
       />
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
