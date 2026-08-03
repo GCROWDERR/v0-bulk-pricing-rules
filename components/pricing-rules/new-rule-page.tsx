@@ -428,7 +428,7 @@ function NewRuleContent() {
         <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-8 space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Apply these rules</h2>
-            <p className="text-sm text-gray-500 mt-1">Define the description and the pricing or fee changes for this rule.</p>
+            <p className="text-sm text-gray-600 mt-1">Define the description and the pricing or fee changes for this rule.</p>
           </div>
 
           {/* Description + Disallow */}
@@ -787,7 +787,7 @@ function NewRuleContent() {
                           <MultiSelect label="Product Terms" options={PRODUCT_TERMS} selected={formData.ProductTerms} onChange={v => update('ProductTerms', v)} />
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">Review which lender programs this rule will apply to.</p>
+                      <p className="text-sm text-gray-600">Review which lender programs this rule will apply to.</p>
                       <div className="border border-gray-200 rounded-md overflow-hidden">
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
@@ -840,7 +840,7 @@ function NewRuleContent() {
 
             {scheduleEnabled && (
               <div className="px-6 pb-6 space-y-4 border-t border-gray-100 pt-4">
-                <p className="text-sm text-gray-500">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
+                <p className="text-sm text-gray-600">Start and End dates/times are not required, and should only be used for special, time-sensitive pricing. Times are in ET.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-xs font-semibold text-gray-700">Start Date</Label>
@@ -860,7 +860,7 @@ function NewRuleContent() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-500">Week days on which the rule should be active.</p>
+                  <p className="text-sm text-gray-600">Week days on which the rule should be active.</p>
                   <div className="flex items-center gap-5 flex-wrap">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'All days'].map(day => (
                       <label key={day} className="flex items-center gap-1.5 cursor-pointer text-sm text-gray-700">
