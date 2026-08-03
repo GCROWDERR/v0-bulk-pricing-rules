@@ -99,7 +99,7 @@
   --warning: var(--yellow-200);
   --warning-foreground: var(--gray-900);
   --border: var(--gray-300);
-  --input: var(--gray-200);
+  --input: var(--gray-500);
   --ring: var(--blue-500);
   --chart-1: var(--blue-600);
   --chart-2: var(--teal-500);
