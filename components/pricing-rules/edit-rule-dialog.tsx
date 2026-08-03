@@ -424,43 +424,88 @@ export function EditRuleDialog({ rule, open, onOpenChange, isNew = false }: Edit
                   </RadioGroup>
                 </div>
 
-                {/* Comp Flat Fee / Final Price Min / Final Price Max */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1 flex flex-col">
-                    <Label className="text-xs font-semibold text-gray-700">Comp Flat Fee</Label>
-                    <Input
-                      type="number" step="0.01"
-                      value={formData.CompFlatFee || ''}
-                      onChange={e => update('CompFlatFee', parseFloat(e.target.value) || 0)}
-                      placeholder="Comp Flat Fee"
-                      className="w-full"
-                      aria-label="Comp flat fee"
-                    />
-                  </div>
-                  <div className="space-y-1 flex flex-col">
-                    <Label className="text-xs font-semibold text-gray-700">Final Price MIN</Label>
-                    <Input
-                      type="number" step="0.001"
-                      value={formData.FinalPriceMin}
-                      onChange={e => update('FinalPriceMin', parseFloat(e.target.value) || 0)}
-                      className="w-full"
-                      aria-label="Final price minimum"
-                    />
-                  </div>
-                  <div className="space-y-1 flex flex-col">
-                    <div className="flex items-center gap-1">
-                      <Label className="text-xs font-semibold text-gray-700">Final Price MAX</Label>
-                      <Info className="h-3.5 w-3.5 text-blue-500" />
+                {/* Margin inputs — differ by margin type */}
+                {formData.MarginType === 'percentage' ? (
+                  /* Percentage: Comp %  +  Comp Min $  to  Comp Max $ */
+                  <div className="flex flex-col md:flex-row md:items-end gap-3">
+                    <div className="space-y-1 flex flex-col flex-1">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs font-semibold text-gray-700">Comp %</Label>
+                        <Info className="h-3.5 w-3.5 text-blue-500" />
+                      </div>
+                      <Input
+                        type="number" step="0.001"
+                        value={formData.CompPercent || ''}
+                        onChange={e => update('CompPercent', parseFloat(e.target.value) || 0)}
+                        placeholder="Comp %"
+                        className="w-full"
+                        aria-label="Comp percentage"
+                      />
                     </div>
-                    <Input
-                      type="number" step="0.001"
-                      value={formData.FinalPriceMax}
-                      onChange={e => update('FinalPriceMax', parseFloat(e.target.value) || 0)}
-                      className="w-full"
-                      aria-label="Final price maximum"
-                    />
+                    <span className="hidden md:block text-gray-500 text-sm pb-2.5">+</span>
+                    <div className="space-y-1 flex flex-col flex-1">
+                      <Label className="text-xs font-semibold text-gray-700">Comp Min $</Label>
+                      <Input
+                        type="number" step="0.01"
+                        value={formData.CompMin || ''}
+                        onChange={e => update('CompMin', parseFloat(e.target.value) || 0)}
+                        placeholder="Comp Min $"
+                        className="w-full"
+                        aria-label="Comp minimum in dollars"
+                      />
+                    </div>
+                    <span className="hidden md:block text-gray-500 text-sm pb-2.5">to</span>
+                    <div className="space-y-1 flex flex-col flex-1">
+                      <Label className="text-xs font-semibold text-gray-700">Comp Max $</Label>
+                      <Input
+                        type="number" step="0.01"
+                        value={formData.CompMax || ''}
+                        onChange={e => update('CompMax', parseFloat(e.target.value) || 0)}
+                        placeholder="Comp Max $"
+                        className="w-full"
+                        aria-label="Comp maximum in dollars"
+                      />
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  /* Flat fee: Comp Flat Fee / Final Price MIN / Final Price MAX */
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1 flex flex-col">
+                      <Label className="text-xs font-semibold text-gray-700">Comp Flat Fee</Label>
+                      <Input
+                        type="number" step="0.01"
+                        value={formData.CompFlatFee || ''}
+                        onChange={e => update('CompFlatFee', parseFloat(e.target.value) || 0)}
+                        placeholder="Comp Flat Fee"
+                        className="w-full"
+                        aria-label="Comp flat fee"
+                      />
+                    </div>
+                    <div className="space-y-1 flex flex-col">
+                      <Label className="text-xs font-semibold text-gray-700">Final Price MIN</Label>
+                      <Input
+                        type="number" step="0.001"
+                        value={formData.FinalPriceMin}
+                        onChange={e => update('FinalPriceMin', parseFloat(e.target.value) || 0)}
+                        className="w-full"
+                        aria-label="Final price minimum"
+                      />
+                    </div>
+                    <div className="space-y-1 flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs font-semibold text-gray-700">Final Price MAX</Label>
+                        <Info className="h-3.5 w-3.5 text-blue-500" />
+                      </div>
+                      <Input
+                        type="number" step="0.001"
+                        value={formData.FinalPriceMax}
+                        onChange={e => update('FinalPriceMax', parseFloat(e.target.value) || 0)}
+                        className="w-full"
+                        aria-label="Final price maximum"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Checkboxes row 1 */}
                 <div className="flex flex-wrap gap-x-8 gap-y-3">
