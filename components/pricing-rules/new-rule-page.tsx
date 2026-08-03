@@ -16,7 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Info, Plus, X, Check, ChevronsUpDown } from 'lucide-react'
+import { Plus, X, Check, ChevronsUpDown } from 'lucide-react'
+import { FieldInfoTip, RULE_FIELD_TOOLTIPS } from '@/components/pricing-rules/field-info-tip'
 import { PricingRulesProvider, usePricingRules } from '@/lib/pricing-rules-context'
 import type { PricingRule } from '@/lib/pricing-rules-data'
 import {
@@ -46,10 +47,10 @@ interface MultiSelectProps {
   options: string[]
   selected: string[]
   onChange: (v: string[]) => void
-  info?: boolean
+  info?: string
 }
 
-function MultiSelect({ label, options, selected, onChange, info = false }: MultiSelectProps) {
+function MultiSelect({ label, options, selected, onChange, info }: MultiSelectProps) {
   const [open, setOpen] = useState(false)
   const allSelected = selected.length === options.length
   const toggle = (opt: string) =>
@@ -60,7 +61,7 @@ function MultiSelect({ label, options, selected, onChange, info = false }: Multi
     <div className="flex flex-col gap-1.5 w-full sm:w-auto sm:min-w-[200px]">
       <div className="flex items-center gap-1">
         <span className="text-sm font-semibold text-gray-700">{label}</span>
-        {info && <Info className="h-3.5 w-3.5 text-blue-500" />}
+        {info && <FieldInfoTip content={info} />}
       </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -139,8 +140,100 @@ function MultiSelect({ label, options, selected, onChange, info = false }: Multi
 type FilterKey = 'ltv' | 'fico' | 'loanAmount' | 'propertyTypes' | 'propertyUsage' | 'loanTypes' | 'quotingChannels' | 'lockPeriod' | 'borrowerFilters' | 'pointGroups' | 'states'
 type ProgramKey = 'lenders' | 'productFamilies' | 'productClasses' | 'productTypes' | 'productTerms'
 
-function OptionalBadge() {
-  return <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 uppercase tracking-wide">Optional</span>
+const RULE_FILTER_GROUPS: { heading: string; filters: { key: FilterKey; label: string }[] }[] = [
+  {
+    heading: 'Loan & credit ranges',
+    filters: [
+      { key: 'ltv', label: 'LTV' },
+      { key: 'fico', label: 'FICO' },
+      { key: 'loanAmount', label: 'Loan Amount' },
+    ],
+  },
+  {
+    heading: 'Property, channel & lock',
+    filters: [
+      { key: 'propertyTypes', label: 'Property Types' },
+      { key: 'propertyUsage', label: 'Property Usage' },
+      { key: 'loanTypes', label: 'Loan Purposes' },
+      { key: 'quotingChannels', label: 'Quoting Channels' },
+      { key: 'lockPeriod', label: 'Lock Periods' },
+    ],
+  },
+  {
+    heading: 'Borrower & geography',
+    filters: [
+      { key: 'borrowerFilters', label: 'Borrower Filters' },
+      { key: 'pointGroups', label: 'Point Groups' },
+      { key: 'states', label: 'States' },
+    ],
+  },
+]
+
+const PROGRAM_FILTERS: { key: ProgramKey; label: string }[] = [
+  { key: 'lenders', label: 'Lenders' },
+  { key: 'productFamilies', label: 'Product Families' },
+  { key: 'productClasses', label: 'Product Classes' },
+  { key: 'productTypes', label: 'Product Types' },
+  { key: 'productTerms', label: 'Product Terms' },
+]
+
+/** Sample counties by state display label — mirrors Loantek “one state → counties” behavior. */
+const SAMPLE_COUNTIES_BY_STATE: Record<string, string[]> = {
+  'Alabama (AL)': ['Jefferson', 'Mobile', 'Madison', 'Montgomery', 'Tuscaloosa', 'Baldwin', 'Shelby'],
+  'Alaska (AK)': ['Anchorage', 'Fairbanks North Star', 'Matanuska-Susitna', 'Kenai Peninsula', 'Juneau'],
+  'Arizona (AZ)': ['Maricopa', 'Pima', 'Pinal', 'Yavapai', 'Mohave', 'Coconino', 'Yuma'],
+  'Arkansas (AR)': ['Pulaski', 'Benton', 'Washington', 'Faulkner', 'Sebastian', 'Saline'],
+  'California (CA)': ['Los Angeles', 'San Diego', 'Orange', 'Riverside', 'San Bernardino', 'Santa Clara', 'Alameda', 'Sacramento', 'Contra Costa', 'Fresno', 'San Francisco', 'Ventura'],
+  'Colorado (CO)': ['Denver', 'El Paso', 'Arapahoe', 'Jefferson', 'Adams', 'Douglas', 'Larimer', 'Boulder'],
+  'Connecticut (CT)': ['Fairfield', 'Hartford', 'New Haven', 'New London', 'Litchfield', 'Middlesex', 'Tolland', 'Windham'],
+  'Delaware (DE)': ['New Castle', 'Kent', 'Sussex'],
+  'District of Columbia (DC)': ['District of Columbia'],
+  'Florida (FL)': ['Miami-Dade', 'Broward', 'Palm Beach', 'Hillsborough', 'Orange', 'Pinellas', 'Duval', 'Lee', 'Polk', 'Brevard'],
+  'Georgia (GA)': ['Fulton', 'Gwinnett', 'Cobb', 'DeKalb', 'Clayton', 'Cherokee', 'Henry', 'Forsyth'],
+  'Hawaii (HI)': ['Honolulu', 'Hawaii', 'Maui', 'Kauai', 'Kalawao'],
+  'Idaho (ID)': ['Ada', 'Canyon', 'Kootenai', 'Bonneville', 'Twin Falls', 'Bannock'],
+  'Illinois (IL)': ['Cook', 'DuPage', 'Lake', 'Will', 'Kane', 'McHenry', 'Winnebago', 'St. Clair'],
+  'Indiana (IN)': ['Marion', 'Lake', 'Allen', 'Hamilton', 'St. Joseph', 'Elkhart', 'Tippecanoe'],
+  'Iowa (IA)': ['Polk', 'Linn', 'Scott', 'Johnson', 'Black Hawk', 'Woodbury', 'Dubuque'],
+  'Kansas (KS)': ['Johnson', 'Sedgwick', 'Shawnee', 'Wyandotte', 'Douglas', 'Leavenworth'],
+  'Kentucky (KY)': ['Jefferson', 'Fayette', 'Kenton', 'Boone', 'Warren', 'Hardin', 'Campbell'],
+  'Louisiana (LA)': ['East Baton Rouge', 'Jefferson', 'Orleans', 'St. Tammany', 'Lafayette', 'Caddo'],
+  'Maine (ME)': ['Cumberland', 'York', 'Penobscot', 'Kennebec', 'Androscoggin', 'Aroostook'],
+  'Maryland (MD)': ['Montgomery', 'Prince George\'s', 'Baltimore', 'Anne Arundel', 'Howard', 'Baltimore City', 'Frederick'],
+  'Massachusetts (MA)': ['Middlesex', 'Worcester', 'Essex', 'Suffolk', 'Norfolk', 'Bristol', 'Plymouth', 'Hampden'],
+  'Michigan (MI)': ['Wayne', 'Oakland', 'Macomb', 'Kent', 'Genesee', 'Washtenaw', 'Ottawa', 'Ingham'],
+  'Minnesota (MN)': ['Hennepin', 'Ramsey', 'Dakota', 'Anoka', 'Washington', 'St. Louis', 'Stearns'],
+  'Mississippi (MS)': ['Hinds', 'Harrison', 'DeSoto', 'Rankin', 'Jackson', 'Madison', 'Lee'],
+  'Missouri (MO)': ['St. Louis', 'Jackson', 'St. Charles', 'St. Louis City', 'Greene', 'Clay', 'Jefferson'],
+  'Montana (MT)': ['Yellowstone', 'Missoula', 'Gallatin', 'Flathead', 'Cascade', 'Lewis and Clark'],
+  'Nebraska (NE)': ['Douglas', 'Lancaster', 'Sarpy', 'Hall', 'Buffalo', 'Dodge'],
+  'Nevada (NV)': ['Clark', 'Washoe', 'Carson City', 'Lyon', 'Elko', 'Nye', 'Douglas'],
+  'New Hampshire (NH)': ['Hillsborough', 'Rockingham', 'Merrimack', 'Strafford', 'Grafton', 'Cheshire'],
+  'New Jersey (NJ)': ['Bergen', 'Middlesex', 'Essex', 'Hudson', 'Monmouth', 'Ocean', 'Union', 'Camden', 'Passaic', 'Morris'],
+  'New Mexico (NM)': ['Bernalillo', 'Doña Ana', 'Santa Fe', 'Sandoval', 'San Juan', 'Valencia'],
+  'New York (NY)': ['Kings', 'Queens', 'New York', 'Suffolk', 'Bronx', 'Nassau', 'Westchester', 'Erie', 'Monroe', 'Richmond'],
+  'North Carolina (NC)': ['Mecklenburg', 'Wake', 'Guilford', 'Forsyth', 'Cumberland', 'Durham', 'Buncombe'],
+  'North Dakota (ND)': ['Cass', 'Burleigh', 'Grand Forks', 'Ward', 'Morton', 'Stark'],
+  'Ohio (OH)': ['Franklin', 'Cuyahoga', 'Hamilton', 'Summit', 'Montgomery', 'Lucas', 'Butler', 'Stark'],
+  'Oklahoma (OK)': ['Oklahoma', 'Tulsa', 'Cleveland', 'Canadian', 'Comanche', 'Rogers'],
+  'Oregon (OR)': ['Multnomah', 'Washington', 'Clackamas', 'Lane', 'Marion', 'Jackson', 'Deschutes'],
+  'Pennsylvania (PA)': ['Philadelphia', 'Allegheny', 'Montgomery', 'Bucks', 'Delaware', 'Lancaster', 'Chester'],
+  'Rhode Island (RI)': ['Providence', 'Kent', 'Washington', 'Newport', 'Bristol'],
+  'South Carolina (SC)': ['Greenville', 'Richland', 'Charleston', 'Horry', 'Spartanburg', 'Lexington', 'York'],
+  'South Dakota (SD)': ['Minnehaha', 'Pennington', 'Lincoln', 'Brown', 'Brookings', 'Codington'],
+  'Tennessee (TN)': ['Shelby', 'Davidson', 'Knox', 'Hamilton', 'Rutherford', 'Williamson', 'Montgomery'],
+  'Texas (TX)': ['Harris', 'Dallas', 'Tarrant', 'Bexar', 'Travis', 'Collin', 'Denton', 'Fort Bend', 'Hidalgo', 'El Paso'],
+  'Utah (UT)': ['Salt Lake', 'Utah', 'Davis', 'Weber', 'Washington', 'Cache', 'Tooele'],
+  'Vermont (VT)': ['Chittenden', 'Rutland', 'Washington', 'Windsor', 'Franklin', 'Windham'],
+  'Virginia (VA)': ['Fairfax', 'Prince William', 'Virginia Beach', 'Loudoun', 'Chesterfield', 'Henrico', 'Arlington'],
+  'Washington (WA)': ['King', 'Pierce', 'Snohomish', 'Spokane', 'Clark', 'Thurston', 'Kitsap', 'Yakima'],
+  'West Virginia (WV)': ['Kanawha', 'Berkeley', 'Monongalia', 'Cabell', 'Wood', 'Raleigh'],
+  'Wisconsin (WI)': ['Milwaukee', 'Dane', 'Waukesha', 'Brown', 'Racine', 'Outagamie', 'Winnebago'],
+  'Wyoming (WY)': ['Laramie', 'Natrona', 'Campbell', 'Sweetwater', 'Fremont', 'Albany'],
+}
+
+function getCountiesForState(state: string): string[] {
+  return SAMPLE_COUNTIES_BY_STATE[state] ?? []
 }
 
 function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
@@ -161,12 +254,50 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
   )
 }
 
+function AccordionSectionHeader({
+  checked,
+  onCheckedChange,
+  title,
+  subtitle,
+  tooltip,
+}: {
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+  title: string
+  subtitle: string
+  tooltip: string
+}) {
+  return (
+    <div className="flex items-start gap-3 px-6 py-5">
+      <Checkbox
+        id={`accordion-${title}`}
+        checked={checked}
+        onCheckedChange={v => onCheckedChange(v === true)}
+        className="mt-1"
+      />
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor={`accordion-${title}`} className="text-base font-bold text-gray-900 cursor-pointer">
+            {title}
+          </label>
+          <span className="text-sm text-gray-500">(optional)</span>
+          <FieldInfoTip content={tooltip} />
+        </div>
+        {!checked && (
+          <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function NewRuleContent() {
   const router = useRouter()
   const { stageCreate } = usePricingRules()
 
   const [formData, setFormData] = useState<PricingRule>(() => createBlankRule(-Date.now()))
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [filtersEnabled, setFiltersEnabled] = useState(false)
   const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set())
   const [activePrograms, setActivePrograms] = useState<Set<ProgramKey>>(new Set())
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
@@ -247,7 +378,7 @@ function NewRuleContent() {
         <section className="bg-white border border-gray-200 rounded-lg p-4 sm:p-8 space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Apply these rules</h2>
-            <p className="text-sm text-gray-500 mt-1">This is a required step. Define what this rule will do.</p>
+            <p className="text-sm text-gray-500 mt-1">Define the description and the pricing or fee changes for this rule. This section is required.</p>
           </div>
 
           {/* Description + Disallow */}
@@ -257,7 +388,7 @@ function NewRuleContent() {
                 Enter a brief description to identify the rule in your pricing adjustments
                 <span className="text-red-600 ml-1">*</span>
               </Label>
-              <Info className="h-3.5 w-3.5 text-blue-500" />
+              <FieldInfoTip content={RULE_FIELD_TOOLTIPS.description} />
             </div>
             <div className="flex items-center gap-3">
               <div className="flex-1 space-y-1">
@@ -273,6 +404,7 @@ function NewRuleContent() {
               <label className="flex items-center gap-1.5 shrink-0 self-start mt-1 cursor-pointer text-sm text-gray-700">
                 <Checkbox checked={formData.Disallow} onCheckedChange={c => update('Disallow', c === true)} />
                 Disallow
+                <FieldInfoTip content={RULE_FIELD_TOOLTIPS.disallow} />
               </label>
             </div>
           </div>
@@ -282,7 +414,7 @@ function NewRuleContent() {
             <div className="space-y-1">
               <div className="flex items-center gap-1">
                 <Label className="text-xs font-semibold text-gray-700">Lock period<span className="text-red-600 ml-1">*</span></Label>
-                <Info className="h-3.5 w-3.5 text-blue-500" />
+                <FieldInfoTip content={RULE_FIELD_TOOLTIPS.lockPeriod} />
               </div>
               <Select value={formData.LockPeriod?.toString() || ''} onValueChange={v => update('LockPeriod', parseInt(v))}>
                 <SelectTrigger className={cn('w-full', errors.LockPeriod && 'border-red-500')} aria-invalid={!!errors.LockPeriod}>
@@ -295,7 +427,7 @@ function NewRuleContent() {
             <div className="space-y-1">
               <div className="flex items-center gap-1">
                 <Label className="text-xs font-semibold text-gray-700">Fee Set<span className="text-red-600 ml-1">*</span></Label>
-                <Info className="h-3.5 w-3.5 text-blue-500" />
+                <FieldInfoTip content={RULE_FIELD_TOOLTIPS.feeSet} />
               </div>
               <Select value={formData.FeeSet} onValueChange={v => update('FeeSet', v)}>
                 <SelectTrigger className={cn('w-full', errors.FeeSet && 'border-red-500')} aria-invalid={!!errors.FeeSet}>
@@ -353,7 +485,7 @@ function NewRuleContent() {
               <div className="space-y-1 flex-1">
                 <div className="flex items-center gap-1">
                   <Label className="text-xs font-semibold text-gray-700">Comp %</Label>
-                  <Info className="h-3.5 w-3.5 text-blue-500" />
+                  <FieldInfoTip content={RULE_FIELD_TOOLTIPS.compPercent} />
                 </div>
                 <Input type="number" step="0.001" value={formData.CompPercent || ''} onChange={e => update('CompPercent', parseFloat(e.target.value) || 0)} placeholder="Comp %" />
               </div>
@@ -382,7 +514,7 @@ function NewRuleContent() {
               <div className="space-y-1">
                 <div className="flex items-center gap-1">
                   <Label className="text-xs font-semibold text-gray-700">Final Price MAX</Label>
-                  <Info className="h-3.5 w-3.5 text-blue-500" />
+                  <FieldInfoTip content={RULE_FIELD_TOOLTIPS.finalPriceMax} />
                 </div>
                 <Input type="number" step="0.001" value={formData.FinalPriceMax} onChange={e => update('FinalPriceMax', parseFloat(e.target.value) || 0)} />
               </div>
@@ -410,7 +542,7 @@ function NewRuleContent() {
               <Label className="text-xs font-semibold text-gray-700">Max Cash Back to Borrower</Label>
               <div className="flex items-center gap-2">
                 <Input type="number" step="0.01" className="w-36" value={formData.MaxCashBack} onChange={e => update('MaxCashBack', parseFloat(e.target.value) || 0)} />
-                <Info className="h-4 w-4 text-blue-500" />
+                <FieldInfoTip content={RULE_FIELD_TOOLTIPS.maxCashBack} iconClassName="h-4 w-4 text-blue-500" />
               </div>
             </div>
             <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 mb-0.5">
@@ -419,208 +551,247 @@ function NewRuleContent() {
           </div>
         </section>
 
-        {/* ── Filter criteria ───────────────────────────────────────────── */}
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Filter criteria</h2>
-            <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700 w-fit">
-              <Info className="h-4 w-4 shrink-0" />
-              Select any criteria to refine this rule. Leave fields blank to apply this rule to all scenarios.
-            </div>
-          </div>
-
-          {/* ── Rule filters card ─────────────────────────────── */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
-            <div className="flex items-center gap-0">
-              <h3 className="text-base font-bold text-gray-900">Rule filters</h3>
-              <OptionalBadge />
-            </div>
-            <p className="text-sm text-gray-500">Selecting from these criteria isn&apos;t necessary. If you leave them blank the rule will be applied to all scenarios.</p>
-
-            {/* Filter pills */}
-            <div className="flex flex-wrap gap-2">
-              <FilterPill label={allFiltersActive ? "Deselect all" : "Select all"} active={allFiltersActive} onClick={toggleAllFilters} />
-              {([
-                { key: 'ltv' as FilterKey, label: 'LTV' },
-                { key: 'fico' as FilterKey, label: 'FICO' },
-                { key: 'loanAmount' as FilterKey, label: 'Loan amount' },
-                { key: 'propertyTypes' as FilterKey, label: 'Property Types' },
-                { key: 'propertyUsage' as FilterKey, label: 'Property Usage' },
-                { key: 'loanTypes' as FilterKey, label: 'Loan Types' },
-                { key: 'quotingChannels' as FilterKey, label: 'Quoting Channels' },
-                { key: 'lockPeriod' as FilterKey, label: 'Lock Period' },
-                { key: 'borrowerFilters' as FilterKey, label: 'Borrower Filters' },
-                { key: 'pointGroups' as FilterKey, label: 'Point Groups' },
-                { key: 'states' as FilterKey, label: 'States' },
-              ]).map(({ key, label }) => (
-                <FilterPill key={key} label={label} active={activeFilters.has(key)} onClick={() => toggleFilter(key)} />
-              ))}
-            </div>
-
-            {/* Active filter inputs */}
-            {activeFilters.size > 0 && (
-              <div className="space-y-4 pt-2 border-t border-gray-100">
-                {/* Range inputs */}
-                {(activeFilters.has('ltv') || activeFilters.has('fico') || activeFilters.has('loanAmount')) && (
-                  <div className="flex flex-wrap gap-6">
-                    {activeFilters.has('ltv') && (
-                      <div className="space-y-1">
-                        <Label className="text-xs font-semibold text-gray-700">LTV</Label>
-                        <div className="flex items-center gap-2">
-                          <Input type="number" placeholder="Min" className="w-24" value={formData.LTVMin} onChange={e => update('LTVMin', parseFloat(e.target.value) || 0)} />
-                          <span className="text-gray-400 text-sm">to</span>
-                          <Input type="number" placeholder="Max" className="w-24" value={formData.LTVMax} onChange={e => update('LTVMax', parseFloat(e.target.value) || 0)} />
-                        </div>
-                      </div>
-                    )}
-                    {activeFilters.has('fico') && (
-                      <div className="space-y-1">
-                        <Label className="text-xs font-semibold text-gray-700">FICO</Label>
-                        <div className="flex items-center gap-2">
-                          <Input type="number" placeholder="Min" className="w-24" value={formData.FICOMin} onChange={e => update('FICOMin', parseFloat(e.target.value) || 0)} />
-                          <span className="text-gray-400 text-sm">to</span>
-                          <Input type="number" placeholder="Max" className="w-24" value={formData.FICOMax} onChange={e => update('FICOMax', parseFloat(e.target.value) || 0)} />
-                        </div>
-                      </div>
-                    )}
-                    {activeFilters.has('loanAmount') && (
-                      <div className="space-y-1">
-                        <Label className="text-xs font-semibold text-gray-700">Loan amount</Label>
-                        <div className="flex items-center gap-2">
-                          <Input type="number" placeholder="Min" className="w-32" value={formData.LoanAmountMin} onChange={e => update('LoanAmountMin', parseFloat(e.target.value) || 0)} />
-                          <span className="text-gray-400 text-sm">to</span>
-                          <Input type="number" placeholder="Max" className="w-32" value={formData.LoanAmountMax} onChange={e => update('LoanAmountMax', parseFloat(e.target.value) || 0)} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {/* List selectors */}
-                {(activeFilters.has('propertyTypes') || activeFilters.has('propertyUsage') || activeFilters.has('loanTypes') || activeFilters.has('quotingChannels') || activeFilters.has('lockPeriod')) && (
-                  <div className="flex flex-wrap gap-4">
-                    {activeFilters.has('propertyTypes') && (
-                      <MultiSelect label="Property Types" options={PROPERTY_TYPES} selected={formData.PropertyTypes} onChange={v => update('PropertyTypes', v)} />
-                    )}
-                    {activeFilters.has('propertyUsage') && (
-                      <MultiSelect label="Property Usage" options={PROPERTY_USAGE} selected={formData.PropertyUsage} onChange={v => update('PropertyUsage', v)} />
-                    )}
-                    {activeFilters.has('loanTypes') && (
-                      <MultiSelect label="Loan Types" options={LOAN_TYPES} selected={formData.LoanTypes} onChange={v => update('LoanTypes', v)} />
-                    )}
-                    {activeFilters.has('quotingChannels') && (
-                      <MultiSelect label="Quoting Channels" options={QUOTING_CHANNELS} selected={formData.QuotingChannels} onChange={v => update('QuotingChannels', v)} />
-                    )}
-                    {activeFilters.has('lockPeriod') && (
-                      <MultiSelect label="Lock Period" options={LOCK_PERIODS.map(p => `${p} Days`)} selected={formData.LockPeriods.map(p => `${p} Days`)} onChange={v => update('LockPeriods', v.map(s => parseInt(s)))} info />
-                    )}
-                  </div>
-                )}
-                {(activeFilters.has('borrowerFilters') || activeFilters.has('pointGroups') || activeFilters.has('states')) && (
-                  <div className="flex flex-wrap gap-4">
-                    {activeFilters.has('borrowerFilters') && (
-                      <MultiSelect label="Borrower Filters" options={BORROWER_FILTERS} selected={formData.BorrowerFilters} onChange={v => update('BorrowerFilters', v)} />
-                    )}
-                    {activeFilters.has('pointGroups') && (
-                      <MultiSelect label="Point Groups" options={POINT_GROUPS} selected={formData.PointGroups} onChange={v => update('PointGroups', v)} />
-                    )}
-                    {activeFilters.has('states') && (
-                      <MultiSelect label="States" options={STATES} selected={formData.States} onChange={v => update('States', v)} />
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* ── Programs card ─────────────────────────────────── */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
-            <div className="flex items-start flex-wrap gap-y-1">
-              <h3 className="text-base font-bold text-gray-900">Filter and verify the programs this rule will run against</h3>
-              <OptionalBadge />
-            </div>
-
-            {/* Program pills */}
-            <div className="flex flex-wrap gap-2">
-              <FilterPill label={allProgramsActive ? "Deselect all" : "Select all"} active={allProgramsActive} onClick={toggleAllPrograms} />
-              {([
-                { key: 'lenders' as ProgramKey, label: 'Lenders' },
-                { key: 'productFamilies' as ProgramKey, label: 'Product Families' },
-                { key: 'productClasses' as ProgramKey, label: 'Product Classes' },
-                { key: 'productTypes' as ProgramKey, label: 'Product Types' },
-                { key: 'productTerms' as ProgramKey, label: 'Product Terms' },
-              ]).map(({ key, label }) => (
-                <FilterPill key={key} label={label} active={activePrograms.has(key)} onClick={() => toggleProgram(key)} />
-              ))}
-            </div>
-
-            {/* Active program inputs */}
-            {activePrograms.size > 0 && (
-              <div className="space-y-4 pt-2 border-t border-gray-100">
-                <div className="flex flex-wrap gap-4">
-                  {activePrograms.has('lenders') && (
-                    <MultiSelect label="Lenders" options={LENDERS} selected={formData.Lenders} onChange={v => update('Lenders', v)} />
-                  )}
-                  {activePrograms.has('productFamilies') && (
-                    <MultiSelect label="Product Families" options={PRODUCT_FAMILIES} selected={formData.ProductFamilies} onChange={v => update('ProductFamilies', v)} />
-                  )}
-                  {activePrograms.has('productClasses') && (
-                    <MultiSelect label="Product Classes" options={PRODUCT_CLASSES} selected={formData.ProductClasses} onChange={v => update('ProductClasses', v)} />
-                  )}
-                  {activePrograms.has('productTypes') && (
-                    <MultiSelect label="Product Types" options={PRODUCT_TYPES} selected={formData.ProductTypes} onChange={v => update('ProductTypes', v)} />
-                  )}
-                  {activePrograms.has('productTerms') && (
-                    <MultiSelect label="Product Terms" options={PRODUCT_TERMS} selected={formData.ProductTerms} onChange={v => update('ProductTerms', v)} />
-                  )}
-                </div>
-                <p className="text-sm text-gray-500">Review which lender programs this rule will apply to.</p>
-                <div className="border border-gray-200 rounded-md overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-200">
-                          <th className="px-4 py-3 text-left w-10">
-                            <Checkbox checked={allProgramsSelected} onCheckedChange={toggleAllProgramRows} />
-                          </th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Program Name</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Family</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Class</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-700">Term</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {programs.map(row => (
-                          <tr key={row.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-3"><Checkbox checked={formData.SelectedPrograms?.includes(row.id) ?? false} onCheckedChange={() => toggleProgramRow(row.id)} /></td>
-                            <td className="px-4 py-3 text-gray-800">{row.lender}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.program}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.family}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.cls}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.type}</td>
-                            <td className="px-4 py-3 text-gray-800">{row.term}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">Showing 5 of 1,593 programs</div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ── Schedule card ─────────────────────────────────── */}
+        {/* ── Optional accordion sections ───────────────────────────────── */}
+        <section className="space-y-6">
+          {/* Apply filters to rule */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <label className="flex items-center gap-3 px-6 py-5 cursor-pointer select-none">
-              <Checkbox
-                checked={scheduleEnabled}
-                onCheckedChange={v => setScheduleEnabled(v === true)}
-              />
-              <span className="text-base font-bold text-gray-900">Schedule when this rule applies</span>
-              <OptionalBadge />
-            </label>
+            <AccordionSectionHeader
+              checked={filtersEnabled}
+              onCheckedChange={setFiltersEnabled}
+              title="Apply filters to rule"
+              subtitle="e.g. LTV, FICO, Loan amount"
+              tooltip={RULE_FIELD_TOOLTIPS.applyFilters}
+            />
+
+            {filtersEnabled && (
+              <div className="px-6 pb-6 space-y-8 border-t border-gray-100 pt-5">
+                {/* Rule filters */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-base font-bold text-gray-900">Rule filters</h3>
+                    <button
+                      type="button"
+                      onClick={toggleAllFilters}
+                      className="text-sm text-[#0157FF] hover:underline font-medium"
+                    >
+                      {allFiltersActive ? 'Deselect all' : 'Select all'}
+                    </button>
+                  </div>
+
+                  <div className="space-y-5">
+                    {RULE_FILTER_GROUPS.map(group => {
+                      const activeInGroup = group.filters.filter(({ key }) => activeFilters.has(key))
+                      return (
+                        <div key={group.heading} className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            {group.heading}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {group.filters.map(({ key, label }) => (
+                              <FilterPill
+                                key={key}
+                                label={label}
+                                active={activeFilters.has(key)}
+                                onClick={() => toggleFilter(key)}
+                              />
+                            ))}
+                          </div>
+                          {activeInGroup.length > 0 && (
+                            <div className="flex flex-wrap gap-4 pt-1">
+                              {activeInGroup.map(({ key }) => {
+                                if (key === 'ltv') {
+                                  return (
+                                    <div key={key} className="space-y-1">
+                                      <Label className="text-xs font-semibold text-gray-700">LTV</Label>
+                                      <div className="flex items-center gap-2">
+                                        <Input type="number" placeholder="Min" className="w-24" value={formData.LTVMin} onChange={e => update('LTVMin', parseFloat(e.target.value) || 0)} />
+                                        <span className="text-gray-400 text-sm">to</span>
+                                        <Input type="number" placeholder="Max" className="w-24" value={formData.LTVMax} onChange={e => update('LTVMax', parseFloat(e.target.value) || 0)} />
+                                      </div>
+                                    </div>
+                                  )
+                                }
+                                if (key === 'fico') {
+                                  return (
+                                    <div key={key} className="space-y-1">
+                                      <Label className="text-xs font-semibold text-gray-700">FICO</Label>
+                                      <div className="flex items-center gap-2">
+                                        <Input type="number" placeholder="Min" className="w-24" value={formData.FICOMin} onChange={e => update('FICOMin', parseFloat(e.target.value) || 0)} />
+                                        <span className="text-gray-400 text-sm">to</span>
+                                        <Input type="number" placeholder="Max" className="w-24" value={formData.FICOMax} onChange={e => update('FICOMax', parseFloat(e.target.value) || 0)} />
+                                      </div>
+                                    </div>
+                                  )
+                                }
+                                if (key === 'loanAmount') {
+                                  return (
+                                    <div key={key} className="space-y-1">
+                                      <Label className="text-xs font-semibold text-gray-700">Loan Amount</Label>
+                                      <div className="flex items-center gap-2">
+                                        <Input type="number" placeholder="Min" className="w-32" value={formData.LoanAmountMin} onChange={e => update('LoanAmountMin', parseFloat(e.target.value) || 0)} />
+                                        <span className="text-gray-400 text-sm">to</span>
+                                        <Input type="number" placeholder="Max" className="w-32" value={formData.LoanAmountMax} onChange={e => update('LoanAmountMax', parseFloat(e.target.value) || 0)} />
+                                      </div>
+                                    </div>
+                                  )
+                                }
+                                if (key === 'propertyTypes') {
+                                  return <MultiSelect key={key} label="Property Types" options={PROPERTY_TYPES} selected={formData.PropertyTypes} onChange={v => update('PropertyTypes', v)} />
+                                }
+                                if (key === 'propertyUsage') {
+                                  return <MultiSelect key={key} label="Property Usage" options={PROPERTY_USAGE} selected={formData.PropertyUsage} onChange={v => update('PropertyUsage', v)} />
+                                }
+                                if (key === 'loanTypes') {
+                                  return <MultiSelect key={key} label="Loan Purposes" options={LOAN_TYPES} selected={formData.LoanTypes} onChange={v => update('LoanTypes', v)} />
+                                }
+                                if (key === 'quotingChannels') {
+                                  return <MultiSelect key={key} label="Quoting Channels" options={QUOTING_CHANNELS} selected={formData.QuotingChannels} onChange={v => update('QuotingChannels', v)} />
+                                }
+                                if (key === 'lockPeriod') {
+                                  return <MultiSelect key={key} label="Lock Periods" options={LOCK_PERIODS.map(p => `${p} Days`)} selected={formData.LockPeriods.map(p => `${p} Days`)} onChange={v => update('LockPeriods', v.map(s => parseInt(s)))} />
+                                }
+                                if (key === 'borrowerFilters') {
+                                  return <MultiSelect key={key} label="Borrower Filters" options={BORROWER_FILTERS} selected={formData.BorrowerFilters} onChange={v => update('BorrowerFilters', v)} />
+                                }
+                                if (key === 'pointGroups') {
+                                  return <MultiSelect key={key} label="Point Groups" options={POINT_GROUPS} selected={formData.PointGroups} onChange={v => update('PointGroups', v)} info={RULE_FIELD_TOOLTIPS.pointGroups} />
+                                }
+                                if (key === 'states') {
+                                  const selectedCounties = formData.Counties ?? []
+                                  const singleState = formData.States.length === 1 ? formData.States[0] : null
+                                  const countyOptions = singleState ? getCountiesForState(singleState) : []
+                                  return (
+                                    <div key={key} className="w-full space-y-3">
+                                      <MultiSelect
+                                        label="States"
+                                        options={STATES}
+                                        selected={formData.States}
+                                        onChange={v => {
+                                          // Loantek clears counties whenever the state selection changes
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            States: v,
+                                            Counties: [],
+                                          }))
+                                        }}
+                                        info={RULE_FIELD_TOOLTIPS.selectedStates}
+                                      />
+                                      {singleState && (
+                                        <MultiSelect
+                                          label="Counties"
+                                          options={countyOptions}
+                                          selected={selectedCounties}
+                                          onChange={v => update('Counties', v)}
+                                        />
+                                      )}
+                                    </div>
+                                  )
+                                }
+                                return null
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Programs */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-base font-bold text-gray-900">
+                      Filter and verify the programs this rule will run against
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={toggleAllPrograms}
+                      className="text-sm text-[#0157FF] hover:underline font-medium shrink-0"
+                    >
+                      {allProgramsActive ? 'Deselect all' : 'Select all'}
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {PROGRAM_FILTERS.map(({ key, label }) => (
+                      <FilterPill
+                        key={key}
+                        label={label}
+                        active={activePrograms.has(key)}
+                        onClick={() => toggleProgram(key)}
+                      />
+                    ))}
+                  </div>
+
+                  {activePrograms.size > 0 && (
+                    <div className="space-y-4 pt-2 border-t border-gray-100">
+                      <div className="flex flex-wrap gap-4">
+                        {activePrograms.has('lenders') && (
+                          <MultiSelect label="Lenders" options={LENDERS} selected={formData.Lenders} onChange={v => update('Lenders', v)} />
+                        )}
+                        {activePrograms.has('productFamilies') && (
+                          <MultiSelect label="Product Families" options={PRODUCT_FAMILIES} selected={formData.ProductFamilies} onChange={v => update('ProductFamilies', v)} />
+                        )}
+                        {activePrograms.has('productClasses') && (
+                          <MultiSelect label="Product Classes" options={PRODUCT_CLASSES} selected={formData.ProductClasses} onChange={v => update('ProductClasses', v)} />
+                        )}
+                        {activePrograms.has('productTypes') && (
+                          <MultiSelect label="Product Types" options={PRODUCT_TYPES} selected={formData.ProductTypes} onChange={v => update('ProductTypes', v)} />
+                        )}
+                        {activePrograms.has('productTerms') && (
+                          <MultiSelect label="Product Terms" options={PRODUCT_TERMS} selected={formData.ProductTerms} onChange={v => update('ProductTerms', v)} />
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">Review which lender programs this rule will apply to.</p>
+                      <div className="border border-gray-200 rounded-md overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-gray-50 border-b border-gray-200">
+                                <th className="px-4 py-3 text-left w-10">
+                                  <Checkbox checked={allProgramsSelected} onCheckedChange={toggleAllProgramRows} />
+                                </th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Lender Name</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Program Name</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Family</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Class</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Term</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {programs.map(row => (
+                                <tr key={row.id} className="hover:bg-gray-50">
+                                  <td className="px-4 py-3"><Checkbox checked={formData.SelectedPrograms?.includes(row.id) ?? false} onCheckedChange={() => toggleProgramRow(row.id)} /></td>
+                                  <td className="px-4 py-3 text-gray-800">{row.lender}</td>
+                                  <td className="px-4 py-3 text-gray-800">{row.program}</td>
+                                  <td className="px-4 py-3 text-gray-800">{row.family}</td>
+                                  <td className="px-4 py-3 text-gray-800">{row.cls}</td>
+                                  <td className="px-4 py-3 text-gray-800">{row.type}</td>
+                                  <td className="px-4 py-3 text-gray-800">{row.term}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">Showing 5 of 1,593 programs</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Schedule */}
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <AccordionSectionHeader
+              checked={scheduleEnabled}
+              onCheckedChange={setScheduleEnabled}
+              title="Schedule when this rule applies"
+              subtitle="Use only for time-sensitive pricing."
+              tooltip={RULE_FIELD_TOOLTIPS.schedule}
+            />
 
             {scheduleEnabled && (
               <div className="px-6 pb-6 space-y-4 border-t border-gray-100 pt-4">

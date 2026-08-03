@@ -41,6 +41,8 @@ export interface PricingRule {
   BorrowerFilters: string[]
   PointGroups: string[]
   States: string[]
+  /** Only applicable when exactly one state is selected (Loantek Step2 counties). */
+  Counties?: string[]
   // Step 3 fields
   ProductFamilies: string[]
   ProductClasses: string[]
@@ -104,18 +106,78 @@ export const LENDERS = [
   'US Bank',
 ]
 
-export const PROPERTY_TYPES = ['SFH', 'Townhouse', 'Condo 4-', 'Condo 5+', 'Multi 2', 'Multi 3-4']
-export const PROPERTY_USAGE = ['Primary', 'Secondary', 'Investment']
-export const LOAN_TYPES = ['Purchase', 'Refinance', 'Cash Out', 'HEL', 'HELOC']
-export const QUOTING_CHANNELS = ['Retail', 'Wholesale', 'Correspondent', 'Consumer Direct']
+/** Display labels match Loantek portal pricing-rules edit Step2/Step3. */
+export const PROPERTY_TYPES = [
+  'Single Family',
+  'Townhouse',
+  'Condo 4 or Fewer Stories',
+  'Condo 5 + Stories',
+  'Multi Family (2 units)',
+  'Multi Family (3 or 4 Units)',
+]
+export const PROPERTY_USAGE = [
+  'Primary residence',
+  'Secondary or vacation',
+  'Investment or Rental',
+]
+/** Shown as "Loan Purposes" in Loantek. */
+export const LOAN_TYPES = [
+  'Purchase',
+  'Refinance',
+  'Cash Out Refinance',
+  'Home Equity (CES)',
+  'HELOC',
+]
+/** Sample channel names (live Loantek loads these from DB). */
+export const QUOTING_CHANNELS = [
+  'Bankrate',
+  'Utility1',
+  'Utility2',
+  'NerdWallet',
+  'LendingTree',
+  'Zillow',
+]
 export const LOCK_PERIODS = [15, 30, 45, 60, 75, 90, 120, 180]
-export const BORROWER_FILTERS = ['Bankruptcy', 'Foreclosure', 'First Time Buyer', 'Self Employed', 'Non-QM', 'Foreign National']
-export const POINT_GROUPS = ['-1 No Fee', '0 Point', '1 Point', '2 Point', '3 Point']
-export const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY']
-export const PRODUCT_FAMILIES = ['Conventional', 'FHA', 'VA', 'USDA', 'Jumbo', 'Non-QM']
-export const PRODUCT_CLASSES = ['Fixed', 'ARM', 'Hybrid']
-export const PRODUCT_TYPES = ['Agency', 'Non-Agency', 'Government']
-export const PRODUCT_TERMS = ['10 Year', '15 Year', '20 Year', '25 Year', '30 Year', '40 Year']
+export const BORROWER_FILTERS = [
+  'Bankruptcy',
+  'Foreclosure',
+  'First Time Buyer',
+  'New Construction',
+  'Mission Index 1',
+  'Mission Index 2',
+  'Mission Index 3',
+]
+export const POINT_GROUPS = ['No Fee', '0 Point', '1 Point', '2 Point', '3 Point']
+/** Display format matches Loantek: "State Name (AB)". */
+export const STATES = [
+  'Alabama (AL)', 'Alaska (AK)', 'Arizona (AZ)', 'Arkansas (AR)', 'California (CA)',
+  'Colorado (CO)', 'Connecticut (CT)', 'Delaware (DE)', 'District of Columbia (DC)',
+  'Florida (FL)', 'Georgia (GA)', 'Hawaii (HI)', 'Idaho (ID)', 'Illinois (IL)',
+  'Indiana (IN)', 'Iowa (IA)', 'Kansas (KS)', 'Kentucky (KY)', 'Louisiana (LA)',
+  'Maine (ME)', 'Maryland (MD)', 'Massachusetts (MA)', 'Michigan (MI)', 'Minnesota (MN)',
+  'Mississippi (MS)', 'Missouri (MO)', 'Montana (MT)', 'Nebraska (NE)', 'Nevada (NV)',
+  'New Hampshire (NH)', 'New Jersey (NJ)', 'New Mexico (NM)', 'New York (NY)',
+  'North Carolina (NC)', 'North Dakota (ND)', 'Ohio (OH)', 'Oklahoma (OK)', 'Oregon (OR)',
+  'Pennsylvania (PA)', 'Rhode Island (RI)', 'South Carolina (SC)', 'South Dakota (SD)',
+  'Tennessee (TN)', 'Texas (TX)', 'Utah (UT)', 'Vermont (VT)', 'Virginia (VA)',
+  'Washington (WA)', 'West Virginia (WV)', 'Wisconsin (WI)', 'Wyoming (WY)',
+]
+/** Sample product values shaped like Loantek DB codes (live app loads distinct values from loan programs). */
+export const PRODUCT_FAMILIES = [
+  'CONVENTIONAL',
+  'FHA',
+  'VA',
+  'HOMEEQUITY',
+  'JUMBO',
+  'NONQM',
+]
+export const PRODUCT_CLASSES = [
+  'STANDARD',
+  'HIGH BALANCE',
+  'EQUITY',
+]
+export const PRODUCT_TYPES = ['FIXED', 'ARM']
+export const PRODUCT_TERMS = ['10', '15', '20', '25', '30', '40', '5/6', '7/6', '10/6']
 export const FEE_SETS = ['Standard', 'Low Fee', 'Premium', 'Wholesale']
 export const MI_COMPANIES = ['MGIC', 'Radian', 'Essent', 'National MI', 'Arch MI', 'Genworth']
 
@@ -2049,6 +2111,7 @@ export const createBlankRule = (tempId: number): PricingRule => ({
   BorrowerFilters: [],
   PointGroups: [],
   States: [],
+  Counties: [],
   ProductFamilies: [],
   ProductClasses: [],
   ProductTypes: [],
