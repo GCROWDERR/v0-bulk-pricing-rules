@@ -2,10 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { PricingRulesProvider, usePricingRules } from '@/lib/pricing-rules-context'
+import { PricingRulesProvider } from '@/lib/pricing-rules-context'
 import { PricingRulesToolbar } from './pricing-rules-toolbar'
 import { PricingRulesTable } from './pricing-rules-table'
-import { EditRuleDialog } from './edit-rule-dialog'
 import { RuleBuilderDialog } from './rule-builder-dialog'
 import { PublishDialog } from './publish-dialog'
 import { cn } from '@/lib/utils'
@@ -27,8 +26,6 @@ const DEFAULT_VISIBLE_COLUMNS = new Set([
 
 function PricingRulesContent() {
   const router = useRouter()
-  const { state, setEditingRule, stageCreate } = usePricingRules()
-  
   // UI state
   const [density, setDensity] = useState<'comfortable' | 'compact' | 'spacious'>('comfortable')
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(DEFAULT_VISIBLE_COLUMNS)
@@ -45,10 +42,6 @@ function PricingRulesContent() {
 
   const handleNewRule = () => {
     router.push('/rules/new')
-  }
-
-  const handleEditDialogClose = () => {
-    setEditingRule(null)
   }
 
   return (
@@ -95,15 +88,6 @@ function PricingRulesContent() {
           visibleColumns={visibleColumns}
         />
       </div>
-
-      {/* Edit Rule Dialog */}
-      <EditRuleDialog
-        rule={state.editingRule}
-        open={state.editingRule !== null}
-        onOpenChange={(open) => {
-          if (!open) handleEditDialogClose()
-        }}
-      />
 
       {/* Rule Builder Dialog - create new rule sets */}
       <RuleBuilderDialog

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -236,6 +236,38 @@ function getCountiesForState(state: string): string[] {
   return SAMPLE_COUNTIES_BY_STATE[state] ?? []
 }
 
+const BLANK_DEFAULTS = createBlankRule(0)
+
+function getActiveFiltersFromRule(rule: PricingRule): Set<FilterKey> {
+  const active = new Set<FilterKey>()
+  if (rule.LTVMin !== BLANK_DEFAULTS.LTVMin || rule.LTVMax !== BLANK_DEFAULTS.LTVMax) active.add('ltv')
+  if (rule.FICOMin !== BLANK_DEFAULTS.FICOMin || rule.FICOMax !== BLANK_DEFAULTS.FICOMax) active.add('fico')
+  if (rule.LoanAmountMin !== BLANK_DEFAULTS.LoanAmountMin || rule.LoanAmountMax !== BLANK_DEFAULTS.LoanAmountMax) active.add('loanAmount')
+  if (rule.PropertyTypes.length) active.add('propertyTypes')
+  if (rule.PropertyUsage.length) active.add('propertyUsage')
+  if (rule.LoanTypes.length) active.add('loanTypes')
+  if (rule.QuotingChannels.length) active.add('quotingChannels')
+  if (rule.LockPeriods.length) active.add('lockPeriod')
+  if (rule.BorrowerFilters.length) active.add('borrowerFilters')
+  if (rule.PointGroups.length) active.add('pointGroups')
+  if (rule.States.length) active.add('states')
+  return active
+}
+
+function getActiveProgramsFromRule(rule: PricingRule): Set<ProgramKey> {
+  const active = new Set<ProgramKey>()
+  if (rule.Lenders.length) active.add('lenders')
+  if (rule.ProductFamilies.length) active.add('productFamilies')
+  if (rule.ProductClasses.length) active.add('productClasses')
+  if (rule.ProductTypes.length) active.add('productTypes')
+  if (rule.ProductTerms.length) active.add('productTerms')
+  return active
+}
+
+function ruleHasSchedule(rule: PricingRule): boolean {
+  return !!(rule.StartDate || rule.EndDate || rule.StartTime || rule.EndTime)
+}
+
 function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
@@ -293,13 +325,37 @@ function AccordionSectionHeader({
 
 function NewRuleContent() {
   const router = useRouter()
-  const { stageCreate } = usePricingRules()
+  const searchParams = useSearchParams()
+  const { stageCreate, stageUpdate, getRuleWithDraft, getDraftForRule } = usePricingRules()
 
-  const [formData, setFormData] = useState<PricingRule>(() => createBlankRule(-Date.now()))
-  const [filtersEnabled, setFiltersEnabled] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set())
-  const [activePrograms, setActivePrograms] = useState<Set<ProgramKey>>(new Set())
-  const [scheduleEnabled, setScheduleEnabled] = useState(false)
+  const ruleIdParam = searchParams.get('ruleId')
+  const ruleId = ruleIdParam ? Number.parseInt(ruleIdParam, 10) : NaN
+  const isEdit = Number.isFinite(ruleId)
+
+  const initialRule = useMemo(() => {
+    if (!isEdit) return createBlankRule(-Date.now())
+    return { ...getRuleWithDraft(ruleId) }
+    // Only resolve once on mount for the given ruleId
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, ruleId])
+
+  const originalRule = useMemo(() => {
+    if (!isEdit) return null
+    return getDraftForRule(ruleId)?.originalRule ?? getRuleWithDraft(ruleId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, ruleId])
+
+  const [formData, setFormData] = useState<PricingRule>(() => initialRule)
+  const [filtersEnabled, setFiltersEnabled] = useState(() =>
+    isEdit && (getActiveFiltersFromRule(initialRule).size > 0 || getActiveProgramsFromRule(initialRule).size > 0)
+  )
+  const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(() =>
+    isEdit ? getActiveFiltersFromRule(initialRule) : new Set()
+  )
+  const [activePrograms, setActivePrograms] = useState<Set<ProgramKey>>(() =>
+    isEdit ? getActiveProgramsFromRule(initialRule) : new Set()
+  )
+  const [scheduleEnabled, setScheduleEnabled] = useState(() => isEdit && ruleHasSchedule(initialRule))
 
   const update = <K extends keyof PricingRule>(field: K, value: PricingRule[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -324,9 +380,17 @@ function NewRuleContent() {
   const toggleAllPrograms = () => setActivePrograms(allProgramsActive ? new Set() : new Set(allProgramKeys))
 
   const handleSave = () => {
-    stageCreate(formData)
+    if (isEdit && originalRule) {
+      stageUpdate(originalRule, formData)
+    } else {
+      stageCreate(formData)
+    }
     router.push('/')
   }
+
+  const pageTitle = isEdit
+    ? `Pricing Rules: Edit (${formData.RuleId})`
+    : 'Pricing Rules: New'
 
   const programs = [
     { id: 0, lender: 'Achieve', program: 'Home Equity Loan - Fixed 20 Year', family: 'HOMEEQUITY', cls: 'EQUITY', type: 'FIXED', term: '20' },
@@ -351,7 +415,7 @@ function NewRuleContent() {
           <img src="/loantek-logo.webp" alt="LoanTek" className="h-7 sm:h-8 shrink-0" />
           <div className="h-8 w-px bg-gray-300 shrink-0" />
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Pricing Rules: New</h1>
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">{pageTitle}</h1>
             <p className="text-xs sm:text-sm text-gray-600">Configure rule details, criteria, and schedule.</p>
           </div>
         </div>
@@ -839,7 +903,9 @@ function NewRuleContent() {
 export function NewRulePage() {
   return (
     <PricingRulesProvider>
-      <NewRuleContent />
+      <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+        <NewRuleContent />
+      </Suspense>
     </PricingRulesProvider>
   )
 }
